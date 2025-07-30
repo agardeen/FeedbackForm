@@ -89,7 +89,10 @@
 <body class="bg-gray-100 flex items-center justify-center min-h-screen py-6 px-4">
 
     <div class="w-full max-w-lg p-6 space-y-4 bg-white rounded-xl shadow-lg">
-        <div class="text-center">
+        <div class="flex justify-between items-center">
+             <a href="https://altimatemedical.com/" target="_blank">
+                <img src="https://altimatemedical.com/wp-content/uploads/2024/02/AltimateMedical-logo-v01-on-transparent-background-1.png" alt="Altimate Medical Logo" class="h-10 w-auto">
+            </a>
             <h1 class="text-3xl font-bold text-gray-800">Field Feedback</h1>
         </div>
 
@@ -354,8 +357,11 @@
 
 
             <!-- Submit Button (outside tabs) -->
-            <div class="pt-6">
-                <button type="submit" class="w-full px-4 py-3 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+            <div class="pt-6 flex space-x-4">
+                <button type="button" id="clear-btn" class="w-1/2 px-4 py-3 font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition duration-150 ease-in-out">
+                    Clear
+                </button>
+                <button type="submit" class="w-1/2 px-4 py-3 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
                     Save
                 </button>
             </div>
@@ -386,10 +392,24 @@
             <option data-category="Funding" value="MCO">
         </datalist>
         <datalist id="question-list">
-            <option value="What do you wish the Zing offered that is not currently available?">
-            <option value="What would allow you to prescribe more Altimate Medical products?">
-            <option value="Have you taken our Education?">
-            <option value="What do you like about the Evolv?">
+            <option data-category="Zing Survey" value="Rank you top standing frame sales by product name?">
+            <option data-category="Zing Survey" value="What products are you using instead of the Zing?">
+            <option data-category="Zing Survey" value="What are the features on those products that stand out the most?">
+            <option data-category="Zing Survey" value="What specific options are you selling the most?">
+            <option data-category="Zing Survey" value="What specific options are you lacking on the Zing">
+            <option data-category="Zing Survey" value="Does price make a difference?">
+            <option data-category="Zing Survey" value="Has anything changed with funding in your state?">
+            <option data-category="Zing Survey" value="What funding sources are approving more MPS style standers?">
+            <option data-category="Zing Survey" value="What funding sources are approving less MPS style standers?">
+            <option data-category="Zing Survey" value="Have protocols changed in regard to trial periods?">
+            <option data-category="Zing Survey" value="Are there enough Zing demos available to you?">
+            <option data-category="Zing Survey" value="Are other standing product demos more available to you?">
+            <option data-category="Zing Survey" value="What gets reimbursed better in your states?  Single Position or Multi-position">
+            <option data-category="Zing Survey" value="Is there any marketing material that would make a difference?">
+            <option data-category="Zing Survey" value="Has there been any problems with the Zing deliveries?">
+            <option data-category="Zing Survey" value="Have there been changes with your ATP or tech staffing?">
+            <option data-category="Zing Survey" value="Have there been changes in your referral staffing?">
+            <option data-category="Zing Survey" value="What else can you share with us that would make the Zing more saleable?">
         </datalist>
         <datalist id="product-list">
             <option value="Bantam Small">
@@ -689,6 +709,40 @@ Thoughts: ${quickThoughts}
 
                 showToast("Feedback has been logged.");
             });
+            
+            // --- Question Filtering Logic ---
+            const questionList = document.getElementById('question-list');
+            const originalQuestions = Array.from(questionList.options);
+            const topicInput = document.getElementById('topic');
+            const productInput = document.getElementById('product');
+
+            const updateQuestionFilter = () => {
+                const topicValue = topicInput.value.toLowerCase();
+                const productValue = productInput.value.toLowerCase();
+
+                // If both filters are empty, show all questions
+                if (!topicValue && !productValue) {
+                    questionList.innerHTML = '';
+                    originalQuestions.forEach(option => questionList.appendChild(option.cloneNode(true)));
+                    return;
+                }
+
+                const filteredQuestions = originalQuestions.filter(option => {
+                    const questionText = option.value.toLowerCase();
+                    const category = option.getAttribute('data-category')?.toLowerCase() || '';
+                    
+                    const matchesTopic = topicValue && (questionText.includes(topicValue) || category.includes(topicValue));
+                    const matchesProduct = productValue && (questionText.includes(productValue) || category.includes(productValue));
+                    
+                    return matchesTopic || matchesProduct;
+                });
+
+                questionList.innerHTML = '';
+                filteredQuestions.forEach(option => questionList.appendChild(option.cloneNode(true)));
+            };
+
+            topicInput.addEventListener('input', updateQuestionFilter);
+            productInput.addEventListener('input', updateQuestionFilter);
 
 
             // --- Form Submission Handler ---
@@ -696,6 +750,29 @@ Thoughts: ${quickThoughts}
                 e.preventDefault();
                 console.log("Form submitted!");
                 showToast("Your feedback has been saved!");
+            });
+
+            // --- Clear Button Logic ---
+            const clearBtn = document.getElementById('clear-btn');
+            clearBtn.addEventListener('click', () => {
+                const activeTab = document.querySelector('.tab-content.active');
+                if (activeTab) {
+                    const inputs = activeTab.querySelectorAll('input, textarea, select');
+                    inputs.forEach(input => {
+                        if (input.type === 'date') {
+                            input.value = new Date().toISOString().split('T')[0];
+                        } else if (input.tagName === 'SELECT') {
+                            input.selectedIndex = 0;
+                        } else {
+                            input.value = '';
+                        }
+                    });
+                     if (activeTab.id === 'tab1') {
+                        document.getElementById('file-preview-container').innerHTML = '';
+                        document.getElementById('camera-upload').value = '';
+                        document.getElementById('document-upload').value = '';
+                    }
+                }
             });
         });
     </script>
