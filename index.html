@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice-to-Text Form with Web Speech API</title>
+    <!-- Include Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Use the Inter font family for a clean, modern look */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Style for the microphone button */
+        .mic-btn {
+            cursor: pointer;
+            transition: color 0.2s ease-in-out, transform 0.2s ease-in-out;
+        }
+        /* Style for when the microphone is actively listening */
+        .mic-btn.is-listening {
+            color: #3B82F6; /* blue-500 */
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        /* Custom styling for the select dropdown arrow to ensure consistency */
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg fill="gray" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+        /* Style date input to show calendar icon on Safari/Chrome */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            opacity: 0.6;
+        }
+        /* Hide tab content by default */
+        .tab-content {
+            display: none;
+        }
+        /* Show active tab content */
+        .tab-content.active {
+            display: block;
+        }
+        /* Visually hide the file input but keep it accessible */
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            margin: -1px;
+            padding: 0;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
+        /* Custom styles for the notification toast */
+        #toast-notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: 8px;
+            background-color: #2d3748; /* gray-800 */
+            color: white;
+            z-index: 50;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s, transform 0.3s;
+        }
+        #toast-notification.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -10px);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen py-6 px-4">
+
+    <div class="w-full max-w-lg p-6 space-y-4 bg-white rounded-xl shadow-lg">
+        <div class="text-center">
+            <h1 class="text-3xl font-bold text-gray-800">Field Feedback</h1>
+        </div>
+
+        <!-- Tab Buttons -->
+        <div class="border-b border-gray-200">
+            <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                <button class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600" data-tab="tab1">
+                    Feedback
+                </button>
+                <button class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab2">
+                    Questions
+                </button>
+                <button class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab3">
+                    Log
+                </button>
+                 <button class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab4">
+                    User
+                </button>
+            </nav>
+        </div>
+
+        <!-- 
+            IMPORTANT: The 'action' attribute should point to the URL 
+            on your server that will process the form data.
+        -->
+        <form id="feedback-form" class="space-y-6">
+            
+            <!-- Tab 1 Content: Feedback -->
+            <div id="tab1" class="tab-content active space-y-6">
+                 <!-- Quick Thoughts Field -->
+                <div>
+                    <label for="message" class="block text-sm font-medium text-gray-700">Quick Thoughts</label>
+                    <div class="mt-1 relative">
+                        <textarea id="message" name="user_message" rows="5" required class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="Start typing or click the microphone to speak..."></textarea>
+                        <button type="button" class="mic-btn absolute top-0 right-0 mt-3 mr-3 text-gray-400 hover:text-gray-600" data-target="message" aria-label="Use microphone for Quick Thoughts">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <!-- Person and Company Fields -->
+                <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-6 sm:space-y-0">
+                    <div class="w-full sm:w-1/2">
+                        <label for="person" class="block text-sm font-medium text-gray-700">Person</label>
+                        <div class="mt-1 relative">
+                            <input type="text" id="person" name="user_person" required class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="e.g., John Smith">
+                            <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="person" aria-label="Use microphone for Person">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="w-full sm:w-1/2">
+                        <label for="company" class="block text-sm font-medium text-gray-700">Company</label>
+                        <div class="mt-1 relative">
+                            <input type="text" id="company" name="user_company" required class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="e.g., Acme Inc.">
+                            <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="company" aria-label="Use microphone for Company">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Subject Field -->
+                <div>
+                    <label for="subject" class="block text-sm font-medium text-gray-700">Subject</label>
+                    <div class="mt-1 relative">
+                        <input type="text" id="subject" name="user_subject" list="subject-list" required class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="Select or type a subject...">
+                        <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="subject" aria-label="Use microphone for Subject">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                        </button>
+                    </div>
+                </div>
+                 <!-- Attachment Section -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Attachments</label>
+                    <div class="mt-2 flex items-center space-x-4">
+                        <!-- Camera Upload -->
+                        <label for="camera-upload" class="cursor-pointer p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
+                            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        </label>
+                        <input id="camera-upload" name="camera_upload" type="file" accept="image/*" capture="environment" class="visually-hidden">
+                        
+                        <!-- Document Upload -->
+                        <label for="document-upload" class="cursor-pointer p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
+                            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        </label>
+                        <input id="document-upload" name="document_upload" type="file" class="visually-hidden" multiple>
+                    </div>
+                    <!-- File Preview Area -->
+                    <div id="file-preview-container" class="mt-2 text-sm text-gray-500 space-y-1"></div>
+                </div>
+                 <!-- Log Feedback Button -->
+                <div class="pt-2">
+                    <button type="button" id="log-feedback-btn" class="w-full px-4 py-2 font-semibold text-blue-600 bg-white border border-blue-600 rounded-lg hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                        Log Feedback
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Tab 2 Content: Questions -->
+            <div id="tab2" class="tab-content space-y-6">
+                <!-- Question Field -->
+                <div>
+                    <label for="question" class="block text-sm font-medium text-gray-700">Question</label>
+                    <div class="mt-1 relative">
+                        <select id="question" name="user_question" required class="w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out">
+                            <option value="" disabled selected>Select a question</option>
+                            <option value="zing_features">What do you wish the Zing offered that is not currently available?</option>
+                            <option value="prescribe_more">What would allow you to prescribe more Altimate Medical products?</option>
+                            <option value="education">Have you taken our Education?</option>
+                            <option value="evolv_likes">What do you like about the Evolv?</option>
+                        </select>
+                        <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="question" style="padding-right: 2.75rem;" aria-label="Use microphone for Question">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Answer Field -->
+                <div>
+                    <label for="answer" class="block text-sm font-medium text-gray-700">Answer</label>
+                    <div class="mt-1 relative">
+                        <textarea id="answer" name="user_answer" rows="4" required class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="Provide an answer..."></textarea>
+                        <button type="button" class="mic-btn absolute top-0 right-0 mt-3 mr-3 text-gray-400 hover:text-gray-600" data-target="answer" aria-label="Use microphone for Answer">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Next Question Button -->
+                <div class="pt-2">
+                    <button type="button" id="next-question-btn" class="w-full px-4 py-2 font-semibold text-blue-600 bg-white border border-blue-600 rounded-lg hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                        Next Question
+                    </button>
+                </div>
+
+                <!-- Subject Field -->
+                <div>
+                    <label for="topic" class="block text-sm font-medium text-gray-700">Subject</label>
+                    <div class="mt-1 relative">
+                         <input type="text" id="topic" name="user_topic" list="subject-list" required class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="Select or type a subject...">
+                         <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="topic" aria-label="Use microphone for Subject">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <!-- Question Log -->
+                <div class="pt-4">
+                    <label for="question-log" class="block text-sm font-medium text-gray-700">Question Log</label>
+                    <div class="mt-1">
+                        <textarea id="question-log" name="question_log" rows="6" readonly class="w-full px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3 Content: Log -->
+            <div id="tab3" class="tab-content space-y-6">
+                <div>
+                    <label for="activity-log" class="block text-sm font-medium text-gray-700">Activity Log</label>
+                    <div class="mt-2">
+                        <textarea id="activity-log" name="activity_log" rows="12" readonly class="w-full p-4 bg-gray-50 border rounded-lg text-gray-600 text-sm overflow-y-auto"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 4 Content: User -->
+            <div id="tab4" class="tab-content space-y-6">
+                <!-- User and Date Fields -->
+                <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-6 sm:space-y-0">
+                    <div class="w-full sm:w-1/2">
+                        <label for="name" class="block text-sm font-medium text-gray-700">User</label>
+                        <div class="mt-1 relative">
+                            <input type="text" id="name" name="user_name" required class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="e.g., Jane Doe">
+                            <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="name" aria-label="Use microphone for User">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="w-full sm:w-1/2">
+                        <label for="date" class="block text-sm font-medium text-gray-700">Date</label>
+                        <div class="mt-1">
+                            <input type="date" id="date" name="request_date" required class="w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Email Field -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
+                    <div class="mt-1 relative">
+                        <input type="email" id="email" name="user_email" required class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="you@example.com">
+                        <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="email" aria-label="Use microphone for Email Address">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Submit Button (outside tabs) -->
+            <div class="pt-6">
+                <button type="submit" class="w-full px-4 py-3 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                    Save
+                </button>
+            </div>
+            
+        </form>
+        <!-- Datalist for Subject Autocomplete -->
+        <datalist id="subject-list">
+            <option value="Bantam Small">
+            <option value="Bantam Extra Small">
+            <option value="Bantam Medium">
+            <option value="Evolv Large">
+            <option value="Evolv Medium">
+            <option value="Evolv XT">
+            <option value="Glider Large">
+            <option value="Glider Medium">
+            <option value="StrapStand">
+            <option value="Zing Size 1 Portable">
+            <option value="Zing Size 1 MPS">
+            <option value="Zing Size 1 Supine">
+            <option value="Zing Size 1 MPS TT">
+            <option value="Zing Size 1 Supine TT">
+            <option value="Zing Size 1 Prone">
+            <option value="Zing Size 2 MPS">
+            <option value="Zing Size 2 Supine">
+            <option value="Zing Size 2 MPS TT">
+            <option value="Zing Size 2 Supine TT">
+            <option value="Zing Size 2 Prone">
+            <option value="SC">
+            <option value="202">
+            <option value="101">
+            <option value="600">
+            <option value="285">
+            <option value="285TR">
+            <option value="720">
+            <option value="922">
+            <option value="1100">
+            <option value="1218">
+            <option value="Parts - AMI">
+            <option value="Parts-ActiveAid">
+            <option value="AMI Sample Sales">
+            <option value="AMI Installation">
+            <option value="EasyStand">
+            <option value="Zing">
+            <option value="Activeaid">
+            <option value="Zingstanders.com">
+            <option value="Justify If">
+            <option value="Education">
+            <option value="Easystand.com">
+            <option value="Activeaid.com">
+            <option value="Therafin.com">
+            <option value="AltimateMedical.com">
+            <option value="EasyStand Demos">
+            <option value="Evolv Demos">
+            <option value="Zing Demos">
+            <option value="Bantam Demos">
+            <option value="Demo Policy">
+            <option value="Demo Unit">
+            <option value="Insurance">
+            <option value="Medicaid">
+            <option value="MCO">
+        </datalist>
+        <!-- Subtitle moved to the bottom -->
+        <div class="text-center pt-2">
+            <p class="text-gray-600 text-sm">Click the 🎤 icon to use your voice.</p>
+        </div>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div id="toast-notification"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Tab Switching Logic ---
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tabId = button.getAttribute('data-tab');
+
+                    // Update button styles for active/inactive states
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('border-blue-500', 'text-blue-600');
+                        btn.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+                    });
+                    button.classList.add('border-blue-500', 'text-blue-600');
+                    button.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+
+                    // Show the correct tab content
+                    tabContents.forEach(content => {
+                        content.classList.toggle('active', content.id === tabId);
+                    });
+                });
+            });
+
+            // --- Auto-populate today's date ---
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
+
+            // --- Web Speech API Logic ---
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                console.error("Speech Recognition API not supported in this browser.");
+                document.querySelectorAll('.mic-btn').forEach(btn => btn.style.display = 'none');
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            let activeMicButton = null;
+            let targetInput = null;
+            
+            // --- Toast Notification Logic ---
+            const toast = document.getElementById('toast-notification');
+            const showToast = (message) => {
+                toast.textContent = message;
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            };
+
+            // --- Speech Recognition Event Handlers ---
+            recognition.onstart = () => {
+                const targetId = targetInput.id;
+                activeMicButton = document.querySelector(`.mic-btn[data-target="${targetId}"]`);
+                if(activeMicButton) activeMicButton.classList.add('is-listening');
+            };
+            
+            recognition.onend = () => {
+                if (activeMicButton) activeMicButton.classList.remove('is-listening');
+                activeMicButton = null;
+                targetInput = null;
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Speech recognition error:", event.error);
+                if (event.error === 'no-speech') {
+                    showToast("No speech was detected. Please try again.");
+                } else {
+                    showToast("An error occurred with speech recognition.");
+                }
+                if (activeMicButton) activeMicButton.classList.remove('is-listening');
+                activeMicButton = null;
+                targetInput = null;
+            };
+
+            recognition.onresult = (event) => {
+                const transcriptResult = event.results[event.results.length - 1][0].transcript.trim();
+                if (targetInput.tagName === 'SELECT') {
+                    const options = Array.from(targetInput.options);
+                    const lowerCaseTranscript = transcriptResult.toLowerCase();
+                    const matchedOption = options.find(option => 
+                        lowerCaseTranscript.includes(option.text.toLowerCase()) || 
+                        (option.value && lowerCaseTranscript.includes(option.value.toLowerCase()))
+                    );
+                    if (matchedOption) targetInput.value = matchedOption.value;
+                } else {
+                    targetInput.value = recognition.continuous ? (targetInput.value + ' ' + transcriptResult).trim() : transcriptResult;
+                }
+            };
+
+            // --- Microphone Button Click Handler ---
+            document.querySelectorAll('.mic-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (button === activeMicButton) {
+                        recognition.stop();
+                        return;
+                    }
+                    if (activeMicButton) recognition.stop();
+                    
+                    const targetId = button.getAttribute('data-target');
+                    targetInput = document.getElementById(targetId);
+                    recognition.continuous = (targetId === 'message' || targetId === 'answer');
+                    
+                    try {
+                        recognition.start();
+                    } catch(err) {
+                        console.error("Error starting recognition:", err);
+                    }
+                });
+            });
+
+            // --- File Upload Logic ---
+            const cameraInput = document.getElementById('camera-upload');
+            const documentInput = document.getElementById('document-upload');
+            const previewContainer = document.getElementById('file-preview-container');
+
+            const handleFiles = (files) => {
+                for (const file of files) {
+                    const filePreview = document.createElement('div');
+                    filePreview.textContent = file.name;
+                    filePreview.className = 'px-2 py-1 bg-gray-100 rounded-md';
+                    previewContainer.appendChild(filePreview);
+                }
+            };
+
+            cameraInput.addEventListener('change', (e) => handleFiles(e.target.files));
+            documentInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+            // --- Question Log Logic ---
+            const nextQuestionBtn = document.getElementById('next-question-btn');
+            const questionSelect = document.getElementById('question');
+            const answerTextarea = document.getElementById('answer');
+            const questionLogTextarea = document.getElementById('question-log');
+
+            nextQuestionBtn.addEventListener('click', () => {
+                const selectedQuestionOption = questionSelect.options[questionSelect.selectedIndex];
+                const questionText = selectedQuestionOption.text;
+                const answerText = answerTextarea.value.trim();
+
+                if (selectedQuestionOption.value && answerText) {
+                    const timestamp = new Date().toLocaleTimeString();
+                    const logEntry = `[${timestamp}] \nQ: ${questionText}\nA: ${answerText}\n\n`;
+                    
+                    questionLogTextarea.value += logEntry;
+                    questionLogTextarea.scrollTop = questionLogTextarea.scrollHeight; // Auto-scroll to bottom
+
+                    // Reset fields for next entry
+                    questionSelect.selectedIndex = 0;
+                    answerTextarea.value = '';
+                } else {
+                    showToast("Please select a question and provide an answer.");
+                }
+            });
+
+            // --- Feedback Log Logic ---
+            const logFeedbackBtn = document.getElementById('log-feedback-btn');
+            const activityLog = document.getElementById('activity-log');
+
+            logFeedbackBtn.addEventListener('click', () => {
+                // Gather data from Feedback and User tabs
+                const quickThoughts = document.getElementById('message').value.trim();
+                const person = document.getElementById('person').value.trim();
+                const company = document.getElementById('company').value.trim();
+                const subject = document.getElementById('subject').value.trim();
+                const user = document.getElementById('name').value.trim();
+                const date = document.getElementById('date').value;
+                const email = document.getElementById('email').value.trim();
+
+                if (!quickThoughts || !person || !company || !subject) {
+                    showToast("Please fill out all fields on the Feedback tab.");
+                    return;
+                }
+
+                const timestamp = new Date().toLocaleString();
+                const logEntry = 
+`[${timestamp}] - Feedback Logged
+---------------------------------
+User: ${user} (${email})
+Date: ${date}
+Contact: ${person} at ${company}
+Subject: ${subject}
+Thoughts: ${quickThoughts}
+---------------------------------\n\n`;
+
+                activityLog.value += logEntry;
+                activityLog.scrollTop = activityLog.scrollHeight;
+
+                // Clear feedback fields
+                document.getElementById('message').value = '';
+                document.getElementById('person').value = '';
+                document.getElementById('company').value = '';
+                document.getElementById('subject').value = '';
+                document.getElementById('file-preview-container').innerHTML = '';
+                document.getElementById('camera-upload').value = '';
+                document.getElementById('document-upload').value = '';
+
+
+                showToast("Feedback has been logged.");
+            });
+
+
+            // --- Form Submission Handler ---
+            document.getElementById('feedback-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                console.log("Form submitted!");
+                showToast("Your feedback has been saved!");
+            });
+        });
+    </script>
+
+</body>
+</html>
