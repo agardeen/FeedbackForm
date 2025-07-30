@@ -150,14 +150,25 @@
                         </div>
                     </div>
                 </div>
-                <!-- Subject Field -->
-                <div>
-                    <label for="subject" class="block text-sm font-medium text-gray-700">Subject</label>
-                    <div class="mt-1 relative">
-                        <input type="text" id="subject" name="user_subject" list="subject-list" required class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="Select or type a subject...">
-                        <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="subject" aria-label="Use microphone for Subject">
-                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
-                        </button>
+                <!-- Subject and Product Fields -->
+                <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-6 sm:space-y-0 -mt-2">
+                    <div class="w-full sm:w-1/2">
+                        <label for="subject" class="block text-sm font-medium text-gray-700">Subject</label>
+                        <div class="mt-1 relative">
+                            <input type="text" id="subject" name="user_subject" list="subject-list" required class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="Select or type a subject...">
+                            <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="subject" aria-label="Use microphone for Subject">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="w-full sm:w-1/2">
+                        <label for="product-feedback" class="block text-sm font-medium text-gray-700">Product</label>
+                        <div class="mt-1 relative">
+                            <input type="text" id="product-feedback" name="user_product_feedback" list="product-list" required class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="e.g., Zing Size 1">
+                            <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="product-feedback" aria-label="Use microphone for Product">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
                  <!-- Attachment Section -->
@@ -193,14 +204,8 @@
                 <div>
                     <label for="question" class="block text-sm font-medium text-gray-700">Question</label>
                     <div class="mt-1 relative">
-                        <select id="question" name="user_question" required class="w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out">
-                            <option value="" disabled selected>Select a question</option>
-                            <option value="zing_features">What do you wish the Zing offered that is not currently available?</option>
-                            <option value="prescribe_more">What would allow you to prescribe more Altimate Medical products?</option>
-                            <option value="education">Have you taken our Education?</option>
-                            <option value="evolv_likes">What do you like about the Evolv?</option>
-                        </select>
-                        <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="question" style="padding-right: 2.75rem;" aria-label="Use microphone for Question">
+                        <input type="text" id="question" name="user_question" list="question-list" required class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="Select or input question">
+                        <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="question" aria-label="Use microphone for Question">
                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
                         </button>
                     </div>
@@ -224,14 +229,47 @@
                     </button>
                 </div>
 
-                <!-- Subject Field -->
-                <div>
-                    <label for="topic" class="block text-sm font-medium text-gray-700">Subject</label>
-                    <div class="mt-1 relative">
-                         <input type="text" id="topic" name="user_topic" list="subject-list" required class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="Select or type a subject...">
-                         <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="topic" aria-label="Use microphone for Subject">
-                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
-                        </button>
+                <!-- Person and Company Fields -->
+                <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-6 sm:space-y-0">
+                    <div class="w-full sm:w-1/2">
+                        <label for="person-q" class="block text-sm font-medium text-gray-700">Person</label>
+                        <div class="mt-1 relative">
+                            <input type="text" id="person-q" name="user_person_q" required class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="e.g., John Smith">
+                            <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="person-q" aria-label="Use microphone for Person">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="w-full sm:w-1/2">
+                        <label for="company-q" class="block text-sm font-medium text-gray-700">Company</label>
+                        <div class="mt-1 relative">
+                            <input type="text" id="company-q" name="user_company_q" required class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="e.g., Acme Inc.">
+                            <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="company-q" aria-label="Use microphone for Company">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subject and Product Fields -->
+                <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-6 sm:space-y-0 -mt-2">
+                    <div class="w-full sm:w-1/2">
+                        <label for="topic" class="block text-sm font-medium text-gray-700">Subject</label>
+                        <div class="mt-1 relative">
+                             <input type="text" id="topic" name="user_topic" list="subject-list" required class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="Select or type a subject...">
+                             <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="topic" aria-label="Use microphone for Subject">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                             </button>
+                        </div>
+                    </div>
+                    <div class="w-full sm:w-1/2">
+                        <label for="product" class="block text-sm font-medium text-gray-700">Product</label>
+                        <div class="mt-1 relative">
+                            <input type="text" id="product" name="user_product" list="product-list" required class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="e.g., Zing Size 1">
+                            <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="product" aria-label="Use microphone for Product">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <!-- Question Log -->
@@ -284,6 +322,34 @@
                         </button>
                     </div>
                 </div>
+                 <!-- Event and Location Fields -->
+                <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-6 sm:space-y-0">
+                    <div class="w-full sm:w-1/2">
+                        <label for="event" class="block text-sm font-medium text-gray-700">Event</label>
+                        <div class="mt-1 relative">
+                            <select id="event" name="user_event" required class="w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out">
+                                <option value="" disabled selected>Select an option</option>
+                                <option value="inservice">Inservice</option>
+                                <option value="tradeshow">Tradeshow</option>
+                                <option value="seminar">Seminar</option>
+                                <option value="phone_call">Phone Call</option>
+                                <option value="email">Email</option>
+                            </select>
+                             <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="event" style="padding-right: 2.75rem;" aria-label="Use microphone for Event">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                             </button>
+                        </div>
+                    </div>
+                    <div class="w-full sm:w-1/2">
+                        <label for="location" class="block text-sm font-medium text-gray-700">Location</label>
+                        <div class="mt-1 relative">
+                            <input type="text" id="location" name="user_location" required class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="Fetching location...">
+                            <button type="button" id="get-location-btn" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" aria-label="Get current location">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
 
@@ -295,8 +361,37 @@
             </div>
             
         </form>
-        <!-- Datalist for Subject Autocomplete -->
+        <!-- Datalists -->
         <datalist id="subject-list">
+            <option data-category="Demos" value="AMI Sample Sales">
+            <option data-category="Service" value="AMI Installation">
+            <option data-category="Product" value="EasyStand">
+            <option data-category="Product" value="Zing">
+            <option data-category="Product" value="Activeaid">
+            <option data-category="Websites" value="Zingstanders.com">
+            <option data-category="Education" value="Justify If">
+            <option data-category="Education" value="Education">
+            <option data-category="Websites" value="Easystand.com">
+            <option data-category="Websites" value="Activeaid.com">
+            <option data-category="Websites" value="Therafin.com">
+            <option data-category="Websites" value="AltimateMedical.com">
+            <option data-category="Demos" value="EasyStand Demos">
+            <option data-category="Demos" value="Evolv Demos">
+            <option data-category="Demos" value="Zing Demos">
+            <option data-category="Demos" value="Bantam Demos">
+            <option data-category="Demos" value="Demo Policy">
+            <option data-category="Demos" value="Demo Unit">
+            <option data-category="Funding" value="Insurance">
+            <option data-category="Funding" value="Medicaid">
+            <option data-category="Funding" value="MCO">
+        </datalist>
+        <datalist id="question-list">
+            <option value="What do you wish the Zing offered that is not currently available?">
+            <option value="What would allow you to prescribe more Altimate Medical products?">
+            <option value="Have you taken our Education?">
+            <option value="What do you like about the Evolv?">
+        </datalist>
+        <datalist id="product-list">
             <option value="Bantam Small">
             <option value="Bantam Extra Small">
             <option value="Bantam Medium">
@@ -309,14 +404,8 @@
             <option value="Zing Size 1 Portable">
             <option value="Zing Size 1 MPS">
             <option value="Zing Size 1 Supine">
-            <option value="Zing Size 1 MPS TT">
-            <option value="Zing Size 1 Supine TT">
-            <option value="Zing Size 1 Prone">
             <option value="Zing Size 2 MPS">
             <option value="Zing Size 2 Supine">
-            <option value="Zing Size 2 MPS TT">
-            <option value="Zing Size 2 Supine TT">
-            <option value="Zing Size 2 Prone">
             <option value="SC">
             <option value="202">
             <option value="101">
@@ -329,27 +418,6 @@
             <option value="1218">
             <option value="Parts - AMI">
             <option value="Parts-ActiveAid">
-            <option value="AMI Sample Sales">
-            <option value="AMI Installation">
-            <option value="EasyStand">
-            <option value="Zing">
-            <option value="Activeaid">
-            <option value="Zingstanders.com">
-            <option value="Justify If">
-            <option value="Education">
-            <option value="Easystand.com">
-            <option value="Activeaid.com">
-            <option value="Therafin.com">
-            <option value="AltimateMedical.com">
-            <option value="EasyStand Demos">
-            <option value="Evolv Demos">
-            <option value="Zing Demos">
-            <option value="Bantam Demos">
-            <option value="Demo Policy">
-            <option value="Demo Unit">
-            <option value="Insurance">
-            <option value="Medicaid">
-            <option value="MCO">
         </datalist>
         <!-- Subtitle moved to the bottom -->
         <div class="text-center pt-2">
@@ -414,6 +482,63 @@
                     toast.classList.remove('show');
                 }, 3000);
             };
+
+            // --- Geolocation Logic ---
+            const locationInput = document.getElementById('location');
+            const getLocationBtn = document.getElementById('get-location-btn');
+
+            const getLocation = () => {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(async (position) => {
+                        const { latitude, longitude } = position.coords;
+                        locationInput.value = `Lat: ${latitude.toFixed(4)}, Lon: ${longitude.toFixed(4)}`;
+                        try {
+                            // Use a free reverse geocoding service (OpenStreetMap)
+                            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                            const data = await response.json();
+                            if (data.address) {
+                                const city = data.address.city || data.address.town || data.address.village || '';
+                                const state = data.address.state || '';
+                                if (city && state) {
+                                    locationInput.value = `${city}, ${state}`;
+                                }
+                            }
+                        } catch (error) {
+                            console.error("Error fetching location details:", error);
+                            showToast("Could not fetch city/state.");
+                        }
+                    }, (error) => {
+                        let errorMessage = "Could not get location.";
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage = "Location access was denied.";
+                                locationInput.value = "Permission denied";
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage = "Location information is unavailable.";
+                                locationInput.value = "Unavailable";
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage = "The request to get user location timed out.";
+                                locationInput.value = "Timeout";
+                                break;
+                            case error.UNKNOWN_ERROR:
+                                errorMessage = "An unknown error occurred.";
+                                locationInput.value = "Error";
+                                break;
+                        }
+                        showToast(errorMessage);
+                        console.error("Geolocation error:", error);
+                    });
+                } else {
+                    locationInput.value = "Not supported";
+                    showToast("Geolocation is not supported by this browser.");
+                }
+            };
+
+            getLocation(); // Get location on page load
+            getLocationBtn.addEventListener('click', getLocation);
+
 
             // --- Speech Recognition Event Handlers ---
             recognition.onstart = () => {
@@ -496,16 +621,15 @@
 
             // --- Question Log Logic ---
             const nextQuestionBtn = document.getElementById('next-question-btn');
-            const questionSelect = document.getElementById('question');
+            const questionInput = document.getElementById('question');
             const answerTextarea = document.getElementById('answer');
             const questionLogTextarea = document.getElementById('question-log');
 
             nextQuestionBtn.addEventListener('click', () => {
-                const selectedQuestionOption = questionSelect.options[questionSelect.selectedIndex];
-                const questionText = selectedQuestionOption.text;
+                const questionText = questionInput.value.trim();
                 const answerText = answerTextarea.value.trim();
 
-                if (selectedQuestionOption.value && answerText) {
+                if (questionText && answerText) {
                     const timestamp = new Date().toLocaleTimeString();
                     const logEntry = `[${timestamp}] \nQ: ${questionText}\nA: ${answerText}\n\n`;
                     
@@ -513,10 +637,10 @@
                     questionLogTextarea.scrollTop = questionLogTextarea.scrollHeight; // Auto-scroll to bottom
 
                     // Reset fields for next entry
-                    questionSelect.selectedIndex = 0;
+                    questionInput.value = '';
                     answerTextarea.value = '';
                 } else {
-                    showToast("Please select a question and provide an answer.");
+                    showToast("Please select or input a question and provide an answer.");
                 }
             });
 
