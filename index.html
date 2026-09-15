@@ -110,17 +110,14 @@
         <!-- Tab Buttons -->
         <div class="border-b border-gray-200 overflow-x-auto">
             <nav class="-mb-px flex space-x-4 w-max" aria-label="Tabs">
-                <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600" data-tab="tab1">
-                    Feedback
-                </button>
-                <button class="tab-btn flex-shrink-0 flex items-center justify-center whitespace-nowrap py-2.5 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab5" aria-label="Contact" title="Contact">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0Zm4 8c0 1-1 1-1 1H1s-1 0-1-1 1-4 6-4 6 3 6 4Zm-1-.004c-.001-.246-.154-.986-.832-1.664C9.516 10.68 8.289 10 6 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10.002ZM12 5.5a.5.5 0 0 0-1 0V7h-1.5a.5.5 0 0 0 0 1H11v1.5a.5.5 0 0 0 1 0V8h1.5a.5.5 0 0 0 0-1H12V5.5Z"/></svg>
-                </button>
                 <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab6">
                     Quick Capture
                 </button>
                 <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab7">
                     Meeting Notes
+                </button>
+                <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600" data-tab="tab1">
+                    Feedback
                 </button>
                 <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab2">
                     Survey
@@ -133,6 +130,9 @@
                 </button>
                  <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab4">
                     User
+                </button>
+                <button class="tab-btn flex-shrink-0 flex items-center justify-center whitespace-nowrap py-2.5 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab5" aria-label="Contact" title="Contact">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0Zm4 8c0 1-1 1-1 1H1s-1 0-1-1 1-4 6-4 6 3 6 4Zm-1-.004c-.001-.246-.154-.986-.832-1.664C9.516 10.68 8.289 10 6 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10.002ZM12 5.5a.5.5 0 0 0-1 0V7h-1.5a.5.5 0 0 0 0 1H11v1.5a.5.5 0 0 0 1 0V8h1.5a.5.5 0 0 0 0-1H12V5.5Z"/></svg>
                 </button>
             </nav>
         </div>
@@ -344,8 +344,34 @@
             <!-- Tab 6 Content: Quick Capture -->
             <div id="tab6" class="tab-content space-y-6">
                 <div>
-                    <label for="quick-capture-text" class="block text-sm font-medium text-gray-700">Quick Capture</label>
-                    <p class="mt-1 text-xs text-gray-500">The fastest way to jot something down — no other fields needed.</p>
+                    <p class="text-xs text-gray-500">The fastest way to jot something down — no other fields needed.</p>
+                    <div class="mt-2 flex flex-nowrap items-center gap-1.5">
+                        <label for="quick-doc-input" class="relative cursor-pointer p-1.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors" aria-label="Scan a document for text (OCR)" title="Scan a document for text — adds it to Notes">
+                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            <span class="absolute bottom-0 right-0 flex items-center justify-center w-3 h-3 bg-blue-600 rounded-full ring-2 ring-gray-100">
+                                <svg class="w-1.5 h-1.5 text-white" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" viewBox="0 0 24 24"><circle cx="10" cy="10" r="7"></circle><line x1="21" y1="21" x2="15.5" y2="15.5"></line></svg>
+                            </span>
+                        </label>
+                        <input id="quick-doc-input" name="quick_document" type="file" accept="image/*" capture="environment" class="visually-hidden">
+
+                        <label for="quick-pic-input" class="cursor-pointer p-1.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors" aria-label="Take a picture" title="Take a picture — kept as a photo only">
+                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        </label>
+                        <input id="quick-pic-input" name="quick_picture" type="file" accept="image/*" capture="environment" multiple class="visually-hidden">
+
+                        <div class="flex items-center gap-2 ml-2 pl-2 border-l border-gray-200">
+                            <button type="button" id="quick-audio-toggle" role="switch" aria-checked="false" aria-label="Toggle audio capture" class="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-300 transition-colors flex-shrink-0">
+                                <span class="inline-block h-4 w-4 translate-x-1 transform rounded-full bg-white transition-transform"></span>
+                            </button>
+                            <span class="text-xs text-gray-500">Audio</span>
+                        </div>
+                    </div>
+                    <p id="quick-doc-scan-status" class="mt-1 text-xs text-gray-500"></p>
+                    <div id="quick-attach-preview" class="mt-2 flex flex-wrap gap-2"></div>
+                </div>
+
+                <div>
+                    <label for="quick-capture-text" class="block text-sm font-medium text-gray-700">Notes</label>
                     <div class="mt-1 relative">
                         <textarea id="quick-capture-text" name="quick_capture_text" rows="5" class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="Type or speak anything..."></textarea>
                         <button type="button" class="mic-btn absolute top-0 right-0 mt-3 mr-3 text-gray-400 hover:text-gray-600" data-target="quick-capture-text" aria-label="Use microphone for Quick Capture">
@@ -353,16 +379,27 @@
                         </button>
                     </div>
                 </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Tags <span class="text-gray-400 font-normal">(optional)</span></label>
+                    <div id="quick-tags" class="mt-1 flex flex-wrap gap-1.5">
+                        <button type="button" class="quick-tag-btn px-2.5 py-1 text-xs font-medium rounded-full border transition-colors duration-150 bg-transparent text-amber-700 border-amber-300 opacity-50 hover:opacity-75" data-tag="Idea" aria-pressed="false" data-active-class="bg-amber-600 text-white border-amber-600 opacity-100" data-inactive-class="bg-transparent text-amber-700 border-amber-300 opacity-50">Idea</button>
+                        <button type="button" class="quick-tag-btn px-2.5 py-1 text-xs font-medium rounded-full border transition-colors duration-150 bg-transparent text-red-700 border-red-300 opacity-50 hover:opacity-75" data-tag="Issue" aria-pressed="false" data-active-class="bg-red-600 text-white border-red-600 opacity-100" data-inactive-class="bg-transparent text-red-700 border-red-300 opacity-50">Issue</button>
+                        <button type="button" class="quick-tag-btn px-2.5 py-1 text-xs font-medium rounded-full border transition-colors duration-150 bg-transparent text-sky-700 border-sky-300 opacity-50 hover:opacity-75" data-tag="Question" aria-pressed="false" data-active-class="bg-sky-600 text-white border-sky-600 opacity-100" data-inactive-class="bg-transparent text-sky-700 border-sky-300 opacity-50">Question</button>
+                        <button type="button" class="quick-tag-btn px-2.5 py-1 text-xs font-medium rounded-full border transition-colors duration-150 bg-transparent text-violet-700 border-violet-300 opacity-50 hover:opacity-75" data-tag="Follow-up" aria-pressed="false" data-active-class="bg-violet-600 text-white border-violet-600 opacity-100" data-inactive-class="bg-transparent text-violet-700 border-violet-300 opacity-50">Follow-up</button>
+                        <button type="button" class="quick-tag-btn px-2.5 py-1 text-xs font-medium rounded-full border transition-colors duration-150 bg-transparent text-emerald-700 border-emerald-300 opacity-50 hover:opacity-75" data-tag="Praise" aria-pressed="false" data-active-class="bg-emerald-600 text-white border-emerald-600 opacity-100" data-inactive-class="bg-transparent text-emerald-700 border-emerald-300 opacity-50">Praise</button>
+                        <button type="button" class="quick-tag-btn px-2.5 py-1 text-xs font-medium rounded-full border transition-colors duration-150 bg-transparent text-slate-700 border-slate-300 opacity-50 hover:opacity-75" data-tag="Competitor" aria-pressed="false" data-active-class="bg-slate-600 text-white border-slate-600 opacity-100" data-inactive-class="bg-transparent text-slate-700 border-slate-300 opacity-50">Competitor</button>
+                    </div>
+                </div>
+
                 <div class="pt-2">
                     <button type="button" id="quick-capture-btn" class="w-full px-4 py-2 font-semibold text-blue-600 bg-white border border-blue-600 rounded-lg hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
                         Capture
                     </button>
                 </div>
                 <div class="pt-4">
-                    <label for="quick-capture-log" class="block text-sm font-medium text-gray-700">Recent Captures</label>
-                    <div class="mt-1">
-                        <textarea id="quick-capture-log" name="quick_capture_log" rows="8" readonly class="w-full px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"></textarea>
-                    </div>
+                    <label class="block text-sm font-medium text-gray-700">Recent Captures</label>
+                    <div id="quick-capture-log" class="mt-1 h-40 overflow-y-auto border border-gray-200 rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600 leading-5"></div>
                 </div>
             </div>
 
@@ -371,13 +408,15 @@
                 <div>
                     <label for="meeting-notes-text" class="flex items-center gap-2 text-sm font-medium text-gray-700">Notes <span id="meeting-save-indicator" class="text-xs text-gray-400 font-normal"></span></label>
                     <div id="meeting-notes-wrap" class="mt-1 relative">
-                        <textarea id="meeting-notes-text" name="meeting_notes_text" rows="6" class="w-full h-full px-4 py-2 pr-16 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="What was discussed..."></textarea>
+                        <textarea id="meeting-notes-text" name="meeting_notes_text" rows="6" class="w-full h-full px-4 py-2 pr-16 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="...type notes here"></textarea>
                         <div class="absolute top-0 right-0 mt-3 mr-3 flex items-center gap-2">
-                            <button type="button" id="meeting-notes-expand-btn" class="text-gray-400 hover:text-gray-600" aria-label="Expand notes to full screen">
-                                <svg id="meeting-notes-expand-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M5.828 10.172a.5.5 0 0 0-.707 0l-4.096 4.096V11.5a.5.5 0 0 0-1 0v3.975a.5.5 0 0 0 .5.5H4.5a.5.5 0 0 0 0-1H1.732l4.096-4.096a.5.5 0 0 0 0-.707zm4.344-4.344a.5.5 0 0 0 .707 0l4.096-4.096V4.5a.5.5 0 1 0 1 0V.525a.5.5 0 0 0-.5-.5H11.5a.5.5 0 0 0 0 1h2.768l-4.096 4.096a.5.5 0 0 0 0 .707z"/></svg>
-                            </button>
                             <button type="button" class="mic-btn text-gray-400 hover:text-gray-600" data-target="meeting-notes-text" aria-label="Use microphone for Notes">
                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                            </button>
+                        </div>
+                        <div class="absolute bottom-0 right-0 mb-3 mr-3 flex items-center gap-2">
+                            <button type="button" id="meeting-notes-expand-btn" class="text-gray-400 hover:text-gray-600" aria-label="Expand notes">
+                                <svg id="meeting-notes-expand-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M5.828 10.172a.5.5 0 0 0-.707 0l-4.096 4.096V11.5a.5.5 0 0 0-1 0v3.975a.5.5 0 0 0 .5.5H4.5a.5.5 0 0 0 0-1H1.732l4.096-4.096a.5.5 0 0 0 0-.707zm4.344-4.344a.5.5 0 0 0 .707 0l4.096-4.096V4.5a.5.5 0 1 0 1 0V.525a.5.5 0 0 0-.5-.5H11.5a.5.5 0 0 0 0 1h2.768l-4.096 4.096a.5.5 0 0 0 0 .707z"/></svg>
                             </button>
                         </div>
                     </div>
@@ -426,26 +465,26 @@
 
                 <!-- Date, Time, and the two capture icons share one compact line -->
                 <div>
-                    <div class="flex flex-wrap items-end gap-3">
-                        <div>
+                    <div class="flex flex-nowrap items-end gap-2">
+                        <div class="flex-1 min-w-0">
                             <label for="meeting-date" class="block text-sm font-medium text-gray-700">Date</label>
-                            <input type="date" id="meeting-date" name="meeting_date" class="mt-1 w-36 px-3 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out">
+                            <input type="date" id="meeting-date" name="meeting_date" class="mt-1 w-full min-w-0 px-1.5 py-2 text-sm text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out">
                         </div>
-                        <div>
+                        <div class="flex-1 min-w-0">
                             <label for="meeting-time" class="block text-sm font-medium text-gray-700">Time</label>
-                            <input type="time" id="meeting-time" name="meeting_time" class="mt-1 w-28 px-3 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out">
+                            <input type="time" id="meeting-time" name="meeting_time" class="mt-1 w-full min-w-0 px-1.5 py-2 text-sm text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out">
                         </div>
-                        <div class="flex items-center gap-3 pb-0.5">
-                            <label for="meeting-doc-input" class="relative cursor-pointer p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors" aria-label="Scan a document for text (OCR)" title="Scan a document for text — adds it to Notes">
-                                <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                <span class="absolute bottom-0.5 right-0.5 flex items-center justify-center w-3.5 h-3.5 bg-blue-600 rounded-full ring-2 ring-gray-100">
-                                    <svg class="w-2 h-2 text-white" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" viewBox="0 0 24 24"><circle cx="10" cy="10" r="7"></circle><line x1="21" y1="21" x2="15.5" y2="15.5"></line></svg>
+                        <div class="flex items-center gap-1.5 pb-0.5 flex-shrink-0">
+                            <label for="meeting-doc-input" class="relative cursor-pointer p-1.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors" aria-label="Scan a document for text (OCR)" title="Scan a document for text — adds it to Notes">
+                                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                <span class="absolute bottom-0 right-0 flex items-center justify-center w-3 h-3 bg-blue-600 rounded-full ring-2 ring-gray-100">
+                                    <svg class="w-1.5 h-1.5 text-white" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" viewBox="0 0 24 24"><circle cx="10" cy="10" r="7"></circle><line x1="21" y1="21" x2="15.5" y2="15.5"></line></svg>
                                 </span>
                             </label>
                             <input id="meeting-doc-input" name="meeting_document" type="file" accept="image/*" capture="environment" class="visually-hidden">
 
-                            <label for="meeting-pic-input" class="cursor-pointer p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors" aria-label="Take a picture" title="Take a picture — kept as a photo only">
-                                <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            <label for="meeting-pic-input" class="cursor-pointer p-1.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors" aria-label="Take a picture" title="Take a picture — kept as a photo only">
+                                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                             </label>
                             <input id="meeting-pic-input" name="meeting_picture" type="file" accept="image/*" capture="environment" multiple class="visually-hidden">
                         </div>
@@ -927,6 +966,8 @@
             if (!SpeechRecognition) {
                 console.error("Speech Recognition API not supported in this browser.");
                 document.querySelectorAll('.mic-btn').forEach(btn => btn.style.display = 'none');
+                const quickAudioToggleUnsupported = document.getElementById('quick-audio-toggle');
+                if (quickAudioToggleUnsupported) quickAudioToggleUnsupported.disabled = true;
                 const audioToggleUnsupported = document.getElementById('audio-capture-toggle');
                 if (audioToggleUnsupported) {
                     audioToggleUnsupported.disabled = true;
@@ -1497,27 +1538,265 @@ ${entry.tags && entry.tags.length ? 'Tags: ' + entry.tags.join(', ') + '\n' : ''
                 }
             });
 
+            // --- Shared helper: one line in a compact, always-visible scrolling log feed ---
+            const addLogLine = (container, text, href) => {
+                const line = document.createElement(href ? 'a' : 'div');
+                line.textContent = text;
+                line.className = href ? 'block truncate text-blue-600 hover:underline' : 'truncate';
+                if (href) { line.href = href; line.target = '_blank'; line.rel = 'noopener'; }
+                container.appendChild(line);
+            };
+
             // --- Quick Capture Logic (zero required fields — fastest possible entry) ---
             const quickCaptureText = document.getElementById('quick-capture-text');
             const quickCaptureLog = document.getElementById('quick-capture-log');
+            const quickPicInput = document.getElementById('quick-pic-input');
+            const quickDocInput = document.getElementById('quick-doc-input');
+            const quickDocScanStatus = document.getElementById('quick-doc-scan-status');
+            const quickAttachPreview = document.getElementById('quick-attach-preview');
 
-            const formatQuickCaptureEntry = (entry) => `[${entry.timestamp}] ${entry.text}\n\n`;
+            // --- Photo / document attachments (same on-device pattern as Meeting Notes) ---
+            let pendingQuickAttachments = [];
 
+            const renderPendingQuickAttachments = () => {
+                quickAttachPreview.innerHTML = '';
+                pendingQuickAttachments.forEach((att) => {
+                    const wrap = document.createElement('div');
+                    wrap.className = 'relative';
+                    const img = document.createElement('img');
+                    img.src = att.previewUrl;
+                    img.className = 'w-16 h-16 object-cover rounded-lg border border-gray-200';
+                    const badge = document.createElement('span');
+                    badge.textContent = att.kind === 'document' ? 'Doc' : 'Pic';
+                    badge.className = 'absolute bottom-0 left-0 px-1 text-[10px] leading-tight bg-gray-800 text-white rounded-tr rounded-bl-lg';
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.textContent = '×';
+                    removeBtn.setAttribute('aria-label', 'Remove photo');
+                    removeBtn.className = 'absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center bg-gray-800 text-white rounded-full text-xs leading-none';
+                    removeBtn.addEventListener('click', () => {
+                        URL.revokeObjectURL(att.previewUrl);
+                        pendingQuickAttachments = pendingQuickAttachments.filter((a) => a.tempId !== att.tempId);
+                        renderPendingQuickAttachments();
+                    });
+                    wrap.append(img, badge, removeBtn);
+                    quickAttachPreview.appendChild(wrap);
+                });
+            };
+
+            const addPendingQuickAttachment = (file, kind) => {
+                pendingQuickAttachments.push({
+                    tempId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                    id: `att-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                    file,
+                    kind,
+                    previewUrl: URL.createObjectURL(file),
+                });
+                renderPendingQuickAttachments();
+            };
+
+            // Picture: kept as a photo only, e.g. handwritten pages — never OCR'd.
+            quickPicInput.addEventListener('change', () => {
+                Array.from(quickPicInput.files || []).forEach((file) => addPendingQuickAttachment(file, 'picture'));
+                quickPicInput.value = '';
+            });
+
+            // Document: scanned via on-device OCR and the extracted text is appended to Notes,
+            // in addition to being kept as a photo attachment.
+            quickDocInput.addEventListener('change', async () => {
+                const file = quickDocInput.files && quickDocInput.files[0];
+                quickDocInput.value = '';
+                if (!file) return;
+
+                addPendingQuickAttachment(file, 'document');
+
+                quickDocScanStatus.textContent = 'Loading scanner…';
+                try {
+                    await loadTesseract();
+                    quickDocScanStatus.textContent = 'Scanning document…';
+                    const { data: { text } } = await Tesseract.recognize(file, 'eng', {
+                        workerPath: `${TESSERACT_BASE}/tesseract.js@5.1.1/dist/worker.min.js`,
+                        corePath: `${TESSERACT_BASE}/tesseract.js-core@5.1.1/tesseract-core-simd.wasm.js`,
+                        langPath: `${TESSERACT_BASE}/@tesseract.js-data/eng@1.0.0/4.0.0_best_int`,
+                        logger: (m) => {
+                            if (m.status === 'recognizing text' && typeof m.progress === 'number') {
+                                quickDocScanStatus.textContent = `Scanning document… ${Math.round(m.progress * 100)}%`;
+                            }
+                        },
+                    });
+                    const cleaned = text.trim();
+                    if (cleaned) {
+                        quickCaptureText.value = quickCaptureText.value
+                            ? `${quickCaptureText.value}\n\n--- Scanned document ---\n${cleaned}`
+                            : `--- Scanned document ---\n${cleaned}`;
+                        quickDocScanStatus.textContent = 'Document text added to Notes — check it for scan errors.';
+                    } else {
+                        quickDocScanStatus.textContent = "Couldn't read any text from that photo. The photo was still attached.";
+                    }
+                } catch (err) {
+                    console.error('Document scan failed:', err);
+                    quickDocScanStatus.textContent = '';
+                    showToast('Scan failed — needs a connection the first time it runs. The photo was still attached.');
+                }
+            });
+
+            // --- Audio toggle: continuous dictation straight into Notes ---
+            if (SpeechRecognition) {
+                const quickAudioToggleBtn = document.getElementById('quick-audio-toggle');
+                const quickAudioToggleKnob = quickAudioToggleBtn.querySelector('span');
+                const quickAudioRecognition = new SpeechRecognition();
+                quickAudioRecognition.lang = 'en-US';
+                quickAudioRecognition.continuous = true;
+                quickAudioRecognition.interimResults = false;
+                let quickAudioCaptureOn = false;
+
+                const setQuickAudioToggleUI = (on) => {
+                    quickAudioToggleBtn.setAttribute('aria-checked', on ? 'true' : 'false');
+                    quickAudioToggleBtn.classList.toggle('bg-blue-600', on);
+                    quickAudioToggleBtn.classList.toggle('bg-gray-300', !on);
+                    quickAudioToggleKnob.classList.toggle('translate-x-6', on);
+                    quickAudioToggleKnob.classList.toggle('translate-x-1', !on);
+                };
+
+                quickAudioRecognition.onresult = (event) => {
+                    let finalChunk = '';
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        if (event.results[i].isFinal) finalChunk += event.results[i][0].transcript + ' ';
+                    }
+                    if (finalChunk) quickCaptureText.value = (quickCaptureText.value + ' ' + finalChunk).trim();
+                };
+
+                quickAudioRecognition.onerror = (event) => {
+                    console.error('Quick capture audio error:', event.error);
+                    if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                        showToast('Microphone access is blocked. Check your browser/app permissions.');
+                        quickAudioCaptureOn = false;
+                        setQuickAudioToggleUI(false);
+                    } else if (event.error === 'network') {
+                        showToast('Audio capture needs a connection.');
+                        quickAudioCaptureOn = false;
+                        setQuickAudioToggleUI(false);
+                    }
+                };
+
+                quickAudioRecognition.onend = () => {
+                    if (quickAudioCaptureOn) {
+                        try { quickAudioRecognition.start(); } catch (err) { /* already running */ }
+                    }
+                };
+
+                quickAudioToggleBtn.addEventListener('click', () => {
+                    quickAudioCaptureOn = !quickAudioCaptureOn;
+                    setQuickAudioToggleUI(quickAudioCaptureOn);
+                    if (quickAudioCaptureOn) {
+                        // Avoid two simultaneous recognition sessions targeting the same field / device mic.
+                        const qcMicBtn = document.querySelector('.mic-btn[data-target="quick-capture-text"]');
+                        if (qcMicBtn && qcMicBtn.classList.contains('is-listening')) qcMicBtn.click();
+                        const meetingAudioBtn = document.getElementById('audio-capture-toggle');
+                        if (meetingAudioBtn && meetingAudioBtn.getAttribute('aria-checked') === 'true') meetingAudioBtn.click();
+                        try { quickAudioRecognition.start(); } catch (err) { console.error('Error starting quick audio capture:', err); }
+                    } else {
+                        quickAudioRecognition.stop();
+                    }
+                });
+            }
+
+            // --- Tags: transparent when unselected, opaque color when selected ---
+            let selectedQuickTags = [];
+            const quickTagButtons = Array.from(document.querySelectorAll('#quick-tags .quick-tag-btn'));
+            const setQuickTagSelected = (btn, selected) => {
+                btn.dataset.inactiveClass.split(' ').forEach((c) => btn.classList.remove(c));
+                btn.dataset.activeClass.split(' ').forEach((c) => btn.classList.remove(c));
+                (selected ? btn.dataset.activeClass : btn.dataset.inactiveClass).split(' ').forEach((c) => btn.classList.add(c));
+                btn.setAttribute('aria-pressed', selected ? 'true' : 'false');
+            };
+            quickTagButtons.forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const tag = btn.dataset.tag;
+                    const nowSelected = !selectedQuickTags.includes(tag);
+                    selectedQuickTags = nowSelected ? [...selectedQuickTags, tag] : selectedQuickTags.filter((t) => t !== tag);
+                    setQuickTagSelected(btn, nowSelected);
+                });
+            });
+            const resetQuickTags = () => {
+                selectedQuickTags = [];
+                quickTagButtons.forEach((btn) => setQuickTagSelected(btn, false));
+            };
+
+            let quickThumbUrls = [];
             const renderQuickCaptureLog = () => {
-                quickCaptureLog.value = quickCaptureEntries.map(formatQuickCaptureEntry).join('');
+                quickThumbUrls.forEach((url) => URL.revokeObjectURL(url));
+                quickThumbUrls = [];
+                quickCaptureLog.innerHTML = '';
+
+                if (!quickCaptureEntries.length) {
+                    addLogLine(quickCaptureLog, 'No quick captures yet.');
+                } else {
+                    quickCaptureEntries.forEach((entry) => {
+                        addLogLine(quickCaptureLog, `[${entry.timestamp}] ${entry.text}`);
+                        if (entry.tags && entry.tags.length) addLogLine(quickCaptureLog, `Tags: ${entry.tags.join(', ')}`);
+
+                        const attachmentLines = document.createElement('div');
+                        quickCaptureLog.appendChild(attachmentLines);
+                        if (entry.attachmentIds && entry.attachmentIds.length) {
+                            Promise.all(entry.attachmentIds.map((id) => getAttachment(id).catch(() => null))).then((atts) => {
+                                atts.filter((att) => att && att.blob).forEach((att) => {
+                                    const url = URL.createObjectURL(att.blob);
+                                    quickThumbUrls.push(url);
+                                    addLogLine(attachmentLines, `Picture: ${att.filename || 'photo'}`, url);
+                                });
+                                quickCaptureLog.scrollTop = quickCaptureLog.scrollHeight;
+                            }).catch((err) => console.error('Failed to load attachment:', err));
+                        }
+                    });
+                }
+
                 quickCaptureLog.scrollTop = quickCaptureLog.scrollHeight;
             };
 
-            const captureQuick = () => {
+            const captureQuick = async () => {
                 const text = quickCaptureText.value.trim();
-                if (!text) {
-                    showToast('Type or speak something to capture.');
+                const tags = selectedQuickTags.slice();
+                if (!text && !tags.length && !pendingQuickAttachments.length) {
+                    showToast('Type or speak something, add a tag, or attach a photo to capture.');
                     return false;
                 }
-                quickCaptureEntries.push({ timestamp: new Date().toLocaleString(), text });
+
+                const entryId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+                try {
+                    await Promise.all(pendingQuickAttachments.map((att, i) => saveAttachment({
+                        id: att.id,
+                        quickCaptureId: entryId,
+                        blob: att.file,
+                        filename: att.file.name || `${att.kind}-${i + 1}.jpg`,
+                        mimeType: att.file.type,
+                        kind: att.kind,
+                        timestamp: new Date().toLocaleString(),
+                    })));
+                } catch (err) {
+                    console.error('Failed to save attachment:', err);
+                    showToast('A photo failed to save on this device.');
+                }
+
+                quickCaptureEntries.push({
+                    id: entryId,
+                    timestamp: new Date().toLocaleString(),
+                    text,
+                    tags,
+                    attachmentIds: pendingQuickAttachments.map((att) => att.id),
+                });
                 saveJSON(STORAGE_KEYS.quickCaptures, quickCaptureEntries);
                 renderQuickCaptureLog();
+
                 quickCaptureText.value = '';
+                resetQuickTags();
+                pendingQuickAttachments.forEach((att) => URL.revokeObjectURL(att.previewUrl));
+                pendingQuickAttachments = [];
+                quickPicInput.value = '';
+                quickDocInput.value = '';
+                quickDocScanStatus.textContent = '';
+                renderPendingQuickAttachments();
+
                 showToast('Captured.');
                 return true;
             };
@@ -1536,7 +1815,6 @@ ${entry.tags && entry.tags.length ? 'Tags: ' + entry.tags.join(', ') + '\n' : ''
             const meetingDocScanStatus = document.getElementById('meeting-doc-scan-status');
             const meetingAttachPreview = document.getElementById('meeting-attach-preview');
             const meetingNotesLog = document.getElementById('meeting-notes-log');
-            const toggleMeetingLogBtn = document.getElementById('toggle-meeting-log-btn');
 
             const setMeetingDateTimeToNow = () => {
                 const now = new Date();
@@ -1545,24 +1823,19 @@ ${entry.tags && entry.tags.length ? 'Tags: ' + entry.tags.join(', ') + '\n' : ''
             };
             setMeetingDateTimeToNow();
 
-            // --- Notes field: expand to full screen for distraction-free writing ---
-            const meetingNotesWrap = document.getElementById('meeting-notes-wrap');
+            // --- Notes field: expand from 6 to 15 rows for more writing room ---
             const meetingNotesExpandBtn = document.getElementById('meeting-notes-expand-btn');
             const meetingNotesExpandIcon = document.getElementById('meeting-notes-expand-icon');
+            const NOTES_ROWS_COLLAPSED = 6;
+            const NOTES_ROWS_EXPANDED = 15;
             const EXPAND_ICON = '<path fill-rule="evenodd" d="M5.828 10.172a.5.5 0 0 0-.707 0l-4.096 4.096V11.5a.5.5 0 0 0-1 0v3.975a.5.5 0 0 0 .5.5H4.5a.5.5 0 0 0 0-1H1.732l4.096-4.096a.5.5 0 0 0 0-.707zm4.344-4.344a.5.5 0 0 0 .707 0l4.096-4.096V4.5a.5.5 0 1 0 1 0V.525a.5.5 0 0 0-.5-.5H11.5a.5.5 0 0 0 0 1h2.768l-4.096 4.096a.5.5 0 0 0 0 .707z"/>';
             const COLLAPSE_ICON = '<path fill-rule="evenodd" d="M.172 15.828a.5.5 0 0 0 .707 0l4.096-4.096V14.5a.5.5 0 1 0 1 0v-3.975a.5.5 0 0 0-.5-.5H1.5a.5.5 0 0 0 0 1h2.768L.172 15.121a.5.5 0 0 0 0 .707zM15.828.172a.5.5 0 0 0-.707 0l-4.096 4.096V1.5a.5.5 0 1 0-1 0v3.975a.5.5 0 0 0 .5.5H14.5a.5.5 0 0 0 0-1h-2.768L15.828.879a.5.5 0 0 0 0-.707z"/>';
             let notesExpanded = false;
             const setNotesExpanded = (expanded) => {
                 notesExpanded = expanded;
-                meetingNotesWrap.classList.toggle('fixed', expanded);
-                meetingNotesWrap.classList.toggle('inset-0', expanded);
-                meetingNotesWrap.classList.toggle('z-50', expanded);
-                meetingNotesWrap.classList.toggle('bg-white', expanded);
-                meetingNotesWrap.classList.toggle('p-4', expanded);
-                meetingNotesText.classList.toggle('h-full', expanded);
-                document.body.classList.toggle('overflow-hidden', expanded);
+                meetingNotesText.rows = expanded ? NOTES_ROWS_EXPANDED : NOTES_ROWS_COLLAPSED;
                 meetingNotesExpandIcon.innerHTML = expanded ? COLLAPSE_ICON : EXPAND_ICON;
-                meetingNotesExpandBtn.setAttribute('aria-label', expanded ? 'Collapse notes' : 'Expand notes to full screen');
+                meetingNotesExpandBtn.setAttribute('aria-label', expanded ? 'Collapse notes' : 'Expand notes');
             };
             meetingNotesExpandBtn.addEventListener('click', () => setNotesExpanded(!notesExpanded));
 
@@ -1681,6 +1954,8 @@ ${entry.tags && entry.tags.length ? 'Tags: ' + entry.tags.join(', ') + '\n' : ''
                 renderPendingMeetingAttachments();
             };
 
+            // A compact, always-visible scrolling feed: one line per fact, auto-scrolled so the
+            // newest line stays in view as older ones scroll up and out of the fixed-height box.
             let meetingThumbUrls = [];
             const renderMeetingNotesLog = () => {
                 meetingThumbUrls.forEach((url) => URL.revokeObjectURL(url));
@@ -1688,76 +1963,45 @@ ${entry.tags && entry.tags.length ? 'Tags: ' + entry.tags.join(', ') + '\n' : ''
                 meetingNotesLog.innerHTML = '';
 
                 if (!meetingNoteEntries.length) {
-                    const empty = document.createElement('p');
-                    empty.className = 'text-sm text-gray-400';
-                    empty.textContent = 'No meeting notes yet.';
-                    meetingNotesLog.appendChild(empty);
+                    addLogLine(meetingNotesLog, 'No meeting notes yet.');
                 } else {
-                    [...meetingNoteEntries].reverse().forEach((entry) => {
-                        const card = document.createElement('div');
-                        card.className = 'p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm';
-
-                        const headerLine = document.createElement('p');
-                        headerLine.className = 'text-xs text-gray-400';
-                        const who = [entry.person, entry.company].filter(Boolean).join(' — ');
-                        headerLine.textContent = [entry.timestamp, who, entry.subject].filter(Boolean).join('  •  ');
-                        card.appendChild(headerLine);
-
-                        const notesP = document.createElement('p');
-                        notesP.className = 'text-gray-700 mt-1 whitespace-pre-wrap';
-                        notesP.textContent = entry.notes;
-                        card.appendChild(notesP);
+                    meetingNoteEntries.forEach((entry) => {
+                        if (entry.subject) addLogLine(meetingNotesLog, `Meeting Subject: ${entry.subject}`);
+                        if (entry.person) addLogLine(meetingNotesLog, `People: ${entry.person}`);
+                        if (entry.company) addLogLine(meetingNotesLog, `Company: ${entry.company}`);
+                        if (entry.notes) addLogLine(meetingNotesLog, `Notes: ${entry.notes}`);
 
                         if (entry.audioSegments && entry.audioSegments.length) {
-                            // Each on/off period of audio capture is its own logged line, tied to this meeting.
+                            // Each on/off period of audio capture logs its own capture line and transcription line.
                             entry.audioSegments.forEach((seg) => {
-                                const segP = document.createElement('p');
-                                segP.className = 'text-gray-500 mt-1 text-xs whitespace-pre-wrap';
-                                segP.textContent = `🎙 [${seg.start}–${seg.end}] ${seg.text}`;
-                                card.appendChild(segP);
+                                addLogLine(meetingNotesLog, `Audio Capture: ${seg.start}–${seg.end}`);
+                                addLogLine(meetingNotesLog, `Transcription: ${seg.text}`);
                             });
                         } else if (entry.audioTranscript) {
-                            const transcriptP = document.createElement('p');
-                            transcriptP.className = 'text-gray-500 mt-1 text-xs whitespace-pre-wrap';
-                            transcriptP.textContent = `🎙 ${entry.audioTranscript}`;
-                            card.appendChild(transcriptP);
+                            addLogLine(meetingNotesLog, `Transcription: ${entry.audioTranscript}`);
                         }
 
+                        // Placeholder holds this entry's spot in the feed while attachments load async.
+                        const attachmentLines = document.createElement('div');
+                        meetingNotesLog.appendChild(attachmentLines);
                         if (entry.attachmentIds && entry.attachmentIds.length) {
-                            const thumbRow = document.createElement('div');
-                            thumbRow.className = 'mt-2 flex flex-wrap gap-2';
-                            card.appendChild(thumbRow);
-                            entry.attachmentIds.forEach((attId) => {
-                                getAttachment(attId).then((att) => {
-                                    if (!att || !att.blob) return;
+                            Promise.all(entry.attachmentIds.map((id) => getAttachment(id).catch(() => null))).then((atts) => {
+                                atts.filter((att) => att && att.blob).forEach((att) => {
                                     const url = URL.createObjectURL(att.blob);
                                     meetingThumbUrls.push(url);
-                                    const link = document.createElement('a');
-                                    link.href = url;
-                                    link.target = '_blank';
-                                    link.rel = 'noopener';
-                                    const img = document.createElement('img');
-                                    img.src = url;
-                                    img.className = 'w-14 h-14 object-cover rounded-md border border-gray-200';
-                                    img.alt = att.filename || 'Attachment';
-                                    link.appendChild(img);
-                                    thumbRow.appendChild(link);
-                                }).catch((err) => console.error('Failed to load attachment:', err));
-                            });
+                                    addLogLine(attachmentLines, `Picture: ${att.filename || 'photo'}`, url);
+                                    if (att.kind === 'document') {
+                                        addLogLine(attachmentLines, `OCR: ${att.filename || 'photo'}`, url);
+                                    }
+                                });
+                                meetingNotesLog.scrollTop = meetingNotesLog.scrollHeight;
+                            }).catch((err) => console.error('Failed to load attachment:', err));
                         }
-
-                        meetingNotesLog.appendChild(card);
                     });
                 }
 
-                const isHidden = meetingNotesLog.classList.contains('hidden');
-                toggleMeetingLogBtn.textContent = `${isHidden ? 'View' : 'Hide'} Meeting Notes Log (${meetingNoteEntries.length})`;
+                meetingNotesLog.scrollTop = meetingNotesLog.scrollHeight;
             };
-
-            toggleMeetingLogBtn.addEventListener('click', () => {
-                meetingNotesLog.classList.toggle('hidden');
-                renderMeetingNotesLog();
-            });
 
             // --- Auto-save: the compose form is a live draft, upserted in place as you type,
             // with no button required. Leaving the tab (or "New Meeting Note") finalizes it.
@@ -1889,10 +2133,6 @@ ${entry.tags && entry.tags.length ? 'Tags: ' + entry.tags.join(', ') + '\n' : ''
                 meetingSaveIndicator.textContent = '';
             };
 
-            document.getElementById('new-meeting-note-btn').addEventListener('click', async () => {
-                const hadDraft = await finalizeMeetingDraft();
-                showToast(hadDraft ? 'Meeting note saved. Ready for a new one.' : 'Ready for a new meeting note.');
-            });
 
             // --- Todo Logic (follow-ups, optionally linked to a contact) ---
             const todoPersonInput = document.getElementById('todo-person');
@@ -2027,8 +2267,8 @@ ${entry.tags && entry.tags.length ? 'Tags: ' + entry.tags.join(', ') + '\n' : ''
 
             document.getElementById('export-quick-csv-btn').addEventListener('click', () => {
                 if (!quickCaptureEntries.length) { showToast('No quick captures yet.'); return; }
-                const headers = ['Timestamp', 'Text'];
-                const rows = quickCaptureEntries.map((e) => [e.timestamp, e.text].map(toCSVValue).join(','));
+                const headers = ['Timestamp', 'Text', 'Tags', 'Attachments'];
+                const rows = quickCaptureEntries.map((e) => [e.timestamp, e.text, (e.tags || []).join('; '), (e.attachmentIds || []).length].map(toCSVValue).join(','));
                 downloadFile(`quick-captures-${Date.now()}.csv`, [headers.join(','), ...rows].join('\n'), 'text/csv');
             });
 
