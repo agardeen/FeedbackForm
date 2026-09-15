@@ -3,12 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voice-to-Text Form with Web Speech API</title>
+    <title>Field Feedback</title>
     <!-- Include Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- PWA: installable, works offline once cached -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png">
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Field Feedback">
+
     <style>
         /* Use the Inter font family for a clean, modern look */
         body {
@@ -88,27 +99,39 @@
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen py-6 px-4">
 
-    <div class="w-full max-w-lg p-6 space-y-4 bg-white rounded-xl shadow-lg">
+    <div class="w-full max-w-lg p-4 space-y-2 bg-white rounded-xl shadow-lg">
         <div class="flex justify-between items-center">
              <a href="https://altimatemedical.com/" target="_blank">
-                <img src="https://altimatemedical.com/wp-content/uploads/2024/02/AltimateMedical-logo-v01-on-transparent-background-1.png" alt="Altimate Medical Logo" class="h-10 w-auto">
+                <img src="https://altimatemedical.com/wp-content/uploads/2024/02/AltimateMedical-logo-v01-on-transparent-background-1.png" alt="Altimate Medical Logo" class="h-5 w-auto">
             </a>
-            <h1 class="text-3xl font-bold text-gray-800">Field Feedback</h1>
+            <h1 class="text-base font-bold text-gray-800">Field Feedback</h1>
         </div>
 
         <!-- Tab Buttons -->
-        <div class="border-b border-gray-200">
-            <nav class="-mb-px flex space-x-6" aria-label="Tabs">
-                <button class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600" data-tab="tab1">
+        <div class="border-b border-gray-200 overflow-x-auto">
+            <nav class="-mb-px flex space-x-4 w-max" aria-label="Tabs">
+                <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600" data-tab="tab1">
                     Feedback
                 </button>
-                <button class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab2">
-                    Questions
+                <button class="tab-btn flex-shrink-0 flex items-center justify-center whitespace-nowrap py-2.5 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab5" aria-label="Contact" title="Contact">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0Zm4 8c0 1-1 1-1 1H1s-1 0-1-1 1-4 6-4 6 3 6 4Zm-1-.004c-.001-.246-.154-.986-.832-1.664C9.516 10.68 8.289 10 6 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10.002ZM12 5.5a.5.5 0 0 0-1 0V7h-1.5a.5.5 0 0 0 0 1H11v1.5a.5.5 0 0 0 1 0V8h1.5a.5.5 0 0 0 0-1H12V5.5Z"/></svg>
                 </button>
-                <button class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab3">
+                <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab6">
+                    Quick Capture
+                </button>
+                <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab7">
+                    Meeting Notes
+                </button>
+                <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab2">
+                    Survey
+                </button>
+                <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab8">
+                    Todo
+                </button>
+                <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab3">
                     Log
                 </button>
-                 <button class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab4">
+                 <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab4">
                     User
                 </button>
             </nav>
@@ -201,7 +224,291 @@
                 </div>
             </div>
             
-            <!-- Tab 2 Content: Questions -->
+            <!-- Tab 5 Content: Contact -->
+            <div id="tab5" class="tab-content space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Scan a Business Card or Badge</label>
+                    <p class="mt-1 text-xs text-gray-500">Take a photo and we'll try to pull out the name, company, phone, email, and website. The scanner needs a connection the first time it's used, then works offline. It won't be perfect — check the fields before saving.</p>
+                    <div class="mt-2 flex items-center space-x-4">
+                        <label for="card-photo-input" class="cursor-pointer p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
+                            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        </label>
+                        <input id="card-photo-input" name="card_photo" type="file" accept="image/*" capture="environment" class="visually-hidden">
+                        <button type="button" id="scan-card-btn" class="px-4 py-2 text-sm font-semibold text-blue-600 bg-white border border-blue-600 rounded-lg hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            Scan Card
+                        </button>
+                    </div>
+                    <img id="card-photo-preview" class="hidden mt-3 max-h-40 rounded-lg border border-gray-200" alt="Business card preview">
+                    <p id="scan-status" class="mt-2 text-sm text-gray-500"></p>
+                </div>
+
+                <div id="scan-unassigned" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700">Other text found on the card</label>
+                    <p class="mt-1 text-xs text-gray-500">Tap a line to drop it into Name or Company.</p>
+                    <div id="scan-unassigned-list" class="mt-2 space-y-1"></div>
+                </div>
+
+                <!-- Contact Name and Company -->
+                <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-6 sm:space-y-0">
+                    <div class="w-full sm:w-1/2">
+                        <label for="contact-name" class="block text-sm font-medium text-gray-700">Name</label>
+                        <div class="mt-1 relative">
+                            <input type="text" id="contact-name" name="contact_name" class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="e.g., John Smith">
+                            <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="contact-name" aria-label="Use microphone for Name">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="w-full sm:w-1/2">
+                        <label for="contact-company" class="block text-sm font-medium text-gray-700">Company</label>
+                        <div class="mt-1 relative">
+                            <input type="text" id="contact-company" name="contact_company" class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="e.g., Acme Inc.">
+                            <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="contact-company" aria-label="Use microphone for Company">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Phone and Title -->
+                <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-6 sm:space-y-0">
+                    <div class="w-full sm:w-1/2">
+                        <label for="contact-phone" class="block text-sm font-medium text-gray-700">Phone</label>
+                        <input type="tel" id="contact-phone" name="contact_phone" class="mt-1 w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="e.g., (555) 123-4567">
+                    </div>
+                    <div class="w-full sm:w-1/2">
+                        <label for="contact-title" class="block text-sm font-medium text-gray-700">Title</label>
+                        <div class="mt-1 relative">
+                            <input type="text" id="contact-title" name="contact_title" class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="e.g., Sales Manager">
+                            <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="contact-title" aria-label="Use microphone for Title">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Email and Tags -->
+                <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-6 sm:space-y-0">
+                    <div class="w-full sm:w-1/2">
+                        <label for="contact-email" class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" id="contact-email" name="contact_email" class="mt-1 w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="you@example.com">
+                    </div>
+                    <div class="w-full sm:w-1/2">
+                        <label class="block text-sm font-medium text-gray-700">Tags</label>
+                        <div id="contact-tag-group" class="mt-1 flex flex-wrap gap-1.5">
+                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="PT">PT</button>
+                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="OT">OT</button>
+                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Dealer">Dealer</button>
+                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Distributor">Distributor</button>
+                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="ATP">ATP</button>
+                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="RTS">RTS</button>
+                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="EndUser">EndUser</button>
+                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Supplier">Supplier</button>
+                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Funder">Funder</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Website -->
+                <div>
+                    <label for="contact-website" class="block text-sm font-medium text-gray-700">Website</label>
+                    <input type="text" id="contact-website" name="contact_website" class="mt-1 w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="e.g., acme.com">
+                </div>
+
+                <!-- Contact Notes -->
+                <div>
+                    <label for="contact-notes" class="block text-sm font-medium text-gray-700">Notes</label>
+                    <div class="mt-1 relative">
+                        <textarea id="contact-notes" name="contact_notes" rows="3" class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="e.g., met at booth, interested in Zing Size 2"></textarea>
+                        <button type="button" class="mic-btn absolute top-0 right-0 mt-3 mr-3 text-gray-400 hover:text-gray-600" data-target="contact-notes" aria-label="Use microphone for Notes">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button type="button" id="save-contact-btn" class="w-full px-4 py-2 font-semibold text-blue-600 bg-white border border-blue-600 rounded-lg hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                        Save Contact
+                    </button>
+                </div>
+
+                <!-- Contact Log -->
+                <div class="pt-4">
+                    <label for="contact-log" class="block text-sm font-medium text-gray-700">Saved Contacts</label>
+                    <div class="mt-1">
+                        <textarea id="contact-log" name="contact_log" rows="6" readonly class="w-full px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 6 Content: Quick Capture -->
+            <div id="tab6" class="tab-content space-y-6">
+                <div>
+                    <label for="quick-capture-text" class="block text-sm font-medium text-gray-700">Quick Capture</label>
+                    <p class="mt-1 text-xs text-gray-500">The fastest way to jot something down — no other fields needed.</p>
+                    <div class="mt-1 relative">
+                        <textarea id="quick-capture-text" name="quick_capture_text" rows="5" class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="Type or speak anything..."></textarea>
+                        <button type="button" class="mic-btn absolute top-0 right-0 mt-3 mr-3 text-gray-400 hover:text-gray-600" data-target="quick-capture-text" aria-label="Use microphone for Quick Capture">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="pt-2">
+                    <button type="button" id="quick-capture-btn" class="w-full px-4 py-2 font-semibold text-blue-600 bg-white border border-blue-600 rounded-lg hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                        Capture
+                    </button>
+                </div>
+                <div class="pt-4">
+                    <label for="quick-capture-log" class="block text-sm font-medium text-gray-700">Recent Captures</label>
+                    <div class="mt-1">
+                        <textarea id="quick-capture-log" name="quick_capture_log" rows="8" readonly class="w-full px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 7 Content: Meeting Notes -->
+            <div id="tab7" class="tab-content space-y-6">
+                <div>
+                    <label for="meeting-notes-text" class="flex items-center gap-2 text-sm font-medium text-gray-700">Notes <span id="meeting-save-indicator" class="text-xs text-gray-400 font-normal"></span></label>
+                    <div id="meeting-notes-wrap" class="mt-1 relative">
+                        <textarea id="meeting-notes-text" name="meeting_notes_text" rows="6" class="w-full h-full px-4 py-2 pr-16 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="What was discussed..."></textarea>
+                        <div class="absolute top-0 right-0 mt-3 mr-3 flex items-center gap-2">
+                            <button type="button" id="meeting-notes-expand-btn" class="text-gray-400 hover:text-gray-600" aria-label="Expand notes to full screen">
+                                <svg id="meeting-notes-expand-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M5.828 10.172a.5.5 0 0 0-.707 0l-4.096 4.096V11.5a.5.5 0 0 0-1 0v3.975a.5.5 0 0 0 .5.5H4.5a.5.5 0 0 0 0-1H1.732l4.096-4.096a.5.5 0 0 0 0-.707zm4.344-4.344a.5.5 0 0 0 .707 0l4.096-4.096V4.5a.5.5 0 1 0 1 0V.525a.5.5 0 0 0-.5-.5H11.5a.5.5 0 0 0 0 1h2.768l-4.096 4.096a.5.5 0 0 0 0 .707z"/></svg>
+                            </button>
+                            <button type="button" class="mic-btn text-gray-400 hover:text-gray-600" data-target="meeting-notes-text" aria-label="Use microphone for Notes">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between">
+                        <label class="block text-sm font-medium text-gray-700">Audio Capture — Transcription</label>
+                        <button type="button" id="audio-capture-toggle" role="switch" aria-checked="false" aria-label="Toggle audio capture" class="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-300 transition-colors flex-shrink-0">
+                            <span class="inline-block h-4 w-4 translate-x-1 transform rounded-full bg-white transition-transform"></span>
+                        </button>
+                    </div>
+                    <textarea id="audio-transcript-box" rows="3" readonly class="mt-1 w-full px-4 py-2 text-gray-600 text-sm bg-gray-100 border border-gray-300 rounded-lg" placeholder="Turn on to start transcribing the conversation..."></textarea>
+                </div>
+
+                <div>
+                    <label for="meeting-subject" class="block text-sm font-medium text-gray-700">Meeting Subject</label>
+                    <div class="mt-1 relative">
+                        <input type="text" id="meeting-subject" name="meeting_subject" list="subject-list" class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="Select or type a subject...">
+                        <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="meeting-subject" aria-label="Use microphone for Meeting Subject">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-6 sm:space-y-0">
+                    <div class="w-full sm:w-1/2">
+                        <label for="meeting-person" class="block text-sm font-medium text-gray-700">People</label>
+                        <div class="mt-1 relative">
+                            <input type="text" id="meeting-person" name="meeting_person" class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="e.g., John Smith">
+                            <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="meeting-person" aria-label="Use microphone for People">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="w-full sm:w-1/2">
+                        <label for="meeting-company" class="block text-sm font-medium text-gray-700">Company</label>
+                        <div class="mt-1 relative">
+                            <input type="text" id="meeting-company" name="meeting_company" class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="e.g., Acme Inc.">
+                            <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="meeting-company" aria-label="Use microphone for Company">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Date, Time, and the two capture icons share one compact line -->
+                <div>
+                    <div class="flex flex-wrap items-end gap-3">
+                        <div>
+                            <label for="meeting-date" class="block text-sm font-medium text-gray-700">Date</label>
+                            <input type="date" id="meeting-date" name="meeting_date" class="mt-1 w-36 px-3 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out">
+                        </div>
+                        <div>
+                            <label for="meeting-time" class="block text-sm font-medium text-gray-700">Time</label>
+                            <input type="time" id="meeting-time" name="meeting_time" class="mt-1 w-28 px-3 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out">
+                        </div>
+                        <div class="flex items-center gap-3 pb-0.5">
+                            <label for="meeting-doc-input" class="relative cursor-pointer p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors" aria-label="Scan a document for text (OCR)" title="Scan a document for text — adds it to Notes">
+                                <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                <span class="absolute bottom-0.5 right-0.5 flex items-center justify-center w-3.5 h-3.5 bg-blue-600 rounded-full ring-2 ring-gray-100">
+                                    <svg class="w-2 h-2 text-white" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" viewBox="0 0 24 24"><circle cx="10" cy="10" r="7"></circle><line x1="21" y1="21" x2="15.5" y2="15.5"></line></svg>
+                                </span>
+                            </label>
+                            <input id="meeting-doc-input" name="meeting_document" type="file" accept="image/*" capture="environment" class="visually-hidden">
+
+                            <label for="meeting-pic-input" class="cursor-pointer p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors" aria-label="Take a picture" title="Take a picture — kept as a photo only">
+                                <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            </label>
+                            <input id="meeting-pic-input" name="meeting_picture" type="file" accept="image/*" capture="environment" multiple class="visually-hidden">
+                        </div>
+                    </div>
+                    <p id="meeting-doc-scan-status" class="mt-1 text-xs text-gray-500"></p>
+                    <div id="meeting-attach-preview" class="mt-2 flex flex-wrap gap-2"></div>
+                </div>
+
+                <!-- Meeting Log: a compact, always-visible scrolling feed — stays a few lines tall,
+                     auto-scrolls so the newest line is in view as older ones scroll out of sight. -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Meeting Log</label>
+                    <div id="meeting-notes-log" class="mt-1 h-28 overflow-y-auto border border-gray-200 rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600 leading-5"></div>
+                </div>
+            </div>
+
+            <!-- Tab 8 Content: Todo -->
+            <div id="tab8" class="tab-content space-y-6">
+                <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-6 sm:space-y-0">
+                    <div class="w-full sm:w-1/2">
+                        <label for="todo-person" class="block text-sm font-medium text-gray-700">Person <span class="text-gray-400 font-normal">(optional)</span></label>
+                        <div class="mt-1 relative">
+                            <input type="text" id="todo-person" name="todo_person" class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="e.g., John Smith">
+                            <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="todo-person" aria-label="Use microphone for Person">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="w-full sm:w-1/2">
+                        <label for="todo-company" class="block text-sm font-medium text-gray-700">Company <span class="text-gray-400 font-normal">(optional)</span></label>
+                        <div class="mt-1 relative">
+                            <input type="text" id="todo-company" name="todo_company" class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="e.g., Acme Inc.">
+                            <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="todo-company" aria-label="Use microphone for Company">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label for="todo-task" class="block text-sm font-medium text-gray-700">Follow-up</label>
+                    <div class="mt-1 relative">
+                        <input type="text" id="todo-task" name="todo_task" class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="e.g., Send Zing brochure">
+                        <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="todo-task" aria-label="Use microphone for Follow-up">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label for="todo-due" class="block text-sm font-medium text-gray-700">Due Date <span class="text-gray-400 font-normal">(optional)</span></label>
+                    <input type="date" id="todo-due" name="todo_due" class="mt-1 w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out">
+                </div>
+                <div class="pt-2">
+                    <button type="button" id="add-todo-btn" class="w-full px-4 py-2 font-semibold text-blue-600 bg-white border border-blue-600 rounded-lg hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                        Add Follow-up
+                    </button>
+                </div>
+                <div class="pt-4">
+                    <label class="block text-sm font-medium text-gray-700">Follow-ups</label>
+                    <div id="todo-list" class="mt-2 space-y-2"></div>
+                </div>
+            </div>
+
+            <!-- Tab 2 Content: Survey -->
             <div id="tab2" class="tab-content space-y-6">
                 <!-- Question Field -->
                 <div>
@@ -275,9 +582,9 @@
                         </div>
                     </div>
                 </div>
-                <!-- Question Log -->
+                <!-- Survey Log -->
                 <div class="pt-4">
-                    <label for="question-log" class="block text-sm font-medium text-gray-700">Question Log</label>
+                    <label for="question-log" class="block text-sm font-medium text-gray-700">Survey Log</label>
                     <div class="mt-1">
                         <textarea id="question-log" name="question_log" rows="6" readonly class="w-full px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"></textarea>
                     </div>
@@ -290,6 +597,19 @@
                     <label for="activity-log" class="block text-sm font-medium text-gray-700">Activity Log</label>
                     <div class="mt-2">
                         <textarea id="activity-log" name="activity_log" rows="12" readonly class="w-full p-4 bg-gray-50 border rounded-lg text-gray-600 text-sm overflow-y-auto"></textarea>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 mb-2">Entries are saved on this device automatically. Export regularly to back them up or share them.</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" id="export-feedback-csv-btn" class="px-3 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-600 rounded-lg hover:bg-blue-50">Export Feedback CSV</button>
+                        <button type="button" id="export-qa-csv-btn" class="px-3 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-600 rounded-lg hover:bg-blue-50">Export Survey CSV</button>
+                        <button type="button" id="export-contacts-csv-btn" class="px-3 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-600 rounded-lg hover:bg-blue-50">Export Contacts CSV</button>
+                        <button type="button" id="export-quick-csv-btn" class="px-3 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-600 rounded-lg hover:bg-blue-50">Export Quick Captures CSV</button>
+                        <button type="button" id="export-meeting-csv-btn" class="px-3 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-600 rounded-lg hover:bg-blue-50">Export Meeting Notes CSV</button>
+                        <button type="button" id="export-todo-csv-btn" class="px-3 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-600 rounded-lg hover:bg-blue-50">Export Todos CSV</button>
+                        <button type="button" id="export-json-btn" class="px-3 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-600 rounded-lg hover:bg-blue-50">Export All (JSON)</button>
+                        <button type="button" id="clear-all-logs-btn" class="px-3 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50">Clear All Logs</button>
                     </div>
                 </div>
             </div>
@@ -441,8 +761,9 @@
             <option value="Parts-ActiveAid">
         </datalist>
         <!-- Subtitle moved to the bottom -->
-        <div class="text-center pt-2">
+        <div class="text-center pt-2 space-y-1">
             <p class="text-gray-600 text-sm">Click the 🎤 icon to use your voice.</p>
+            <p id="install-hint" class="text-gray-400 text-xs" hidden>Tip: for offline use, add this to your home screen — Android: browser menu → Install app. iPhone: Share → Add to Home Screen.</p>
         </div>
     </div>
     
@@ -450,7 +771,113 @@
     <div id="toast-notification"></div>
 
     <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch((err) => console.error('SW registration failed:', err));
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
+            // --- Local storage helpers (offline-first persistence) ---
+            const STORAGE_KEYS = {
+                feedback: 'ff_feedback_entries',
+                qa: 'ff_qa_entries',
+                contacts: 'ff_contacts',
+                quickCaptures: 'ff_quick_captures',
+                meetingNotes: 'ff_meeting_notes',
+                todos: 'ff_todos',
+                profile: 'ff_user_profile',
+            };
+            const loadJSON = (key, fallback) => {
+                try {
+                    const raw = localStorage.getItem(key);
+                    return raw ? JSON.parse(raw) : fallback;
+                } catch (err) {
+                    console.error(`Failed to read ${key} from storage`, err);
+                    return fallback;
+                }
+            };
+            const saveJSON = (key, value) => {
+                try {
+                    localStorage.setItem(key, JSON.stringify(value));
+                } catch (err) {
+                    console.error(`Failed to save ${key} to storage`, err);
+                    showToast('Could not save — device storage may be full.');
+                }
+            };
+            let feedbackEntries = loadJSON(STORAGE_KEYS.feedback, []);
+            let qaEntries = loadJSON(STORAGE_KEYS.qa, []);
+            let contactEntries = loadJSON(STORAGE_KEYS.contacts, []);
+            let quickCaptureEntries = loadJSON(STORAGE_KEYS.quickCaptures, []);
+            let meetingNoteEntries = loadJSON(STORAGE_KEYS.meetingNotes, []);
+            let todoEntries = loadJSON(STORAGE_KEYS.todos, []);
+            let audioTranscript = '';
+            let audioSegments = []; // each on/off period logged separately: {start, end, text}
+            let audioCaptureOn = false;
+            let finalizeMeetingDraft = async () => {}; // reassigned once the Meeting Notes tab logic sets up
+
+            // --- IndexedDB helpers (binary attachments — localStorage is too small/text-only for photos) ---
+            const ATTACHMENT_DB = 'field-feedback-db';
+            const ATTACHMENT_STORE = 'meeting-attachments';
+            let attachmentDbPromise = null;
+            const openAttachmentDb = () => {
+                if (attachmentDbPromise) return attachmentDbPromise;
+                attachmentDbPromise = new Promise((resolve, reject) => {
+                    if (!window.indexedDB) { reject(new Error('IndexedDB not supported')); return; }
+                    const req = indexedDB.open(ATTACHMENT_DB, 1);
+                    req.onupgradeneeded = () => {
+                        if (!req.result.objectStoreNames.contains(ATTACHMENT_STORE)) {
+                            req.result.createObjectStore(ATTACHMENT_STORE, { keyPath: 'id' });
+                        }
+                    };
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => reject(req.error);
+                });
+                return attachmentDbPromise;
+            };
+            const saveAttachment = async (attachment) => {
+                const db = await openAttachmentDb();
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(ATTACHMENT_STORE, 'readwrite');
+                    tx.objectStore(ATTACHMENT_STORE).put(attachment);
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = () => reject(tx.error);
+                });
+            };
+            const getAttachment = async (id) => {
+                const db = await openAttachmentDb();
+                return new Promise((resolve, reject) => {
+                    const req = db.transaction(ATTACHMENT_STORE, 'readonly').objectStore(ATTACHMENT_STORE).get(id);
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => reject(req.error);
+                });
+            };
+            const deleteAttachment = async (id) => {
+                const db = await openAttachmentDb();
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(ATTACHMENT_STORE, 'readwrite');
+                    tx.objectStore(ATTACHMENT_STORE).delete(id);
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = () => reject(tx.error);
+                });
+            };
+            const clearAttachmentStore = async () => {
+                const db = await openAttachmentDb();
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(ATTACHMENT_STORE, 'readwrite');
+                    tx.objectStore(ATTACHMENT_STORE).clear();
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = () => reject(tx.error);
+                });
+            };
+
+            // --- Install hint (shown only when not already running as an installed app) ---
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+            if (!isStandalone) {
+                const hint = document.getElementById('install-hint');
+                if (hint) hint.hidden = false;
+            }
+
             // --- Tab Switching Logic ---
             const tabButtons = document.querySelectorAll('.tab-btn');
             const tabContents = document.querySelectorAll('.tab-content');
@@ -458,6 +885,7 @@
             tabButtons.forEach(button => {
                 button.addEventListener('click', () => {
                     const tabId = button.getAttribute('data-tab');
+                    const leavingMeetingNotes = document.getElementById('tab7').classList.contains('active') && tabId !== 'tab7';
 
                     // Update button styles for active/inactive states
                     tabButtons.forEach(btn => {
@@ -471,6 +899,10 @@
                     tabContents.forEach(content => {
                         content.classList.toggle('active', content.id === tabId);
                     });
+
+                    // Leaving Meeting Notes finalizes whatever draft is in progress (auto-save,
+                    // no button needed) so the form is fresh next time this tab is opened.
+                    if (leavingMeetingNotes) finalizeMeetingDraft();
                 });
             });
 
@@ -478,22 +910,35 @@
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('date').value = today;
 
+            // --- Remember user profile (name/email) across sessions on this device ---
+            const nameInput = document.getElementById('name');
+            const emailInput = document.getElementById('email');
+            const profile = loadJSON(STORAGE_KEYS.profile, {});
+            if (profile.name) nameInput.value = profile.name;
+            if (profile.email) emailInput.value = profile.email;
+            const saveProfile = () => saveJSON(STORAGE_KEYS.profile, { name: nameInput.value.trim(), email: emailInput.value.trim() });
+            nameInput.addEventListener('change', saveProfile);
+            emailInput.addEventListener('change', saveProfile);
+
             // --- Web Speech API Logic ---
+            // Note: no early return here even when unsupported — the rest of this handler
+            // (geolocation, saving, exports) must still run regardless of mic support.
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
                 console.error("Speech Recognition API not supported in this browser.");
                 document.querySelectorAll('.mic-btn').forEach(btn => btn.style.display = 'none');
-                return;
+                const audioToggleUnsupported = document.getElementById('audio-capture-toggle');
+                if (audioToggleUnsupported) {
+                    audioToggleUnsupported.disabled = true;
+                    audioToggleUnsupported.classList.add('opacity-40', 'cursor-not-allowed');
+                }
+                const audioBoxUnsupported = document.getElementById('audio-transcript-box');
+                if (audioBoxUnsupported) audioBoxUnsupported.placeholder = 'Voice typing not supported in this browser.';
             }
-
-            const recognition = new SpeechRecognition();
-            recognition.lang = 'en-US';
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
 
             let activeMicButton = null;
             let targetInput = null;
-            
+
             // --- Toast Notification Logic ---
             const toast = document.getElementById('toast-notification');
             const showToast = (message) => {
@@ -561,67 +1006,158 @@
             getLocationBtn.addEventListener('click', getLocation);
 
 
-            // --- Speech Recognition Event Handlers ---
-            recognition.onstart = () => {
-                const targetId = targetInput.id;
-                activeMicButton = document.querySelector(`.mic-btn[data-target="${targetId}"]`);
-                if(activeMicButton) activeMicButton.classList.add('is-listening');
-            };
-            
-            recognition.onend = () => {
-                if (activeMicButton) activeMicButton.classList.remove('is-listening');
-                activeMicButton = null;
-                targetInput = null;
-            };
+            if (SpeechRecognition) {
+                const recognition = new SpeechRecognition();
+                recognition.lang = 'en-US';
+                recognition.interimResults = false;
+                recognition.maxAlternatives = 1;
 
-            recognition.onerror = (event) => {
-                console.error("Speech recognition error:", event.error);
-                if (event.error === 'no-speech') {
-                    showToast("No speech was detected. Please try again.");
-                } else {
-                    showToast("An error occurred with speech recognition.");
-                }
-                if (activeMicButton) activeMicButton.classList.remove('is-listening');
-                activeMicButton = null;
-                targetInput = null;
-            };
+                // --- Speech Recognition Event Handlers ---
+                recognition.onstart = () => {
+                    const targetId = targetInput.id;
+                    activeMicButton = document.querySelector(`.mic-btn[data-target="${targetId}"]`);
+                    if(activeMicButton) activeMicButton.classList.add('is-listening');
+                };
 
-            recognition.onresult = (event) => {
-                const transcriptResult = event.results[event.results.length - 1][0].transcript.trim();
-                if (targetInput.tagName === 'SELECT') {
-                    const options = Array.from(targetInput.options);
-                    const lowerCaseTranscript = transcriptResult.toLowerCase();
-                    const matchedOption = options.find(option => 
-                        lowerCaseTranscript.includes(option.text.toLowerCase()) || 
-                        (option.value && lowerCaseTranscript.includes(option.value.toLowerCase()))
-                    );
-                    if (matchedOption) targetInput.value = matchedOption.value;
-                } else {
-                    targetInput.value = recognition.continuous ? (targetInput.value + ' ' + transcriptResult).trim() : transcriptResult;
-                }
-            };
+                recognition.onend = () => {
+                    if (activeMicButton) activeMicButton.classList.remove('is-listening');
+                    activeMicButton = null;
+                    targetInput = null;
+                };
 
-            // --- Microphone Button Click Handler ---
-            document.querySelectorAll('.mic-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    if (button === activeMicButton) {
-                        recognition.stop();
-                        return;
+                recognition.onerror = (event) => {
+                    console.error("Speech recognition error:", event.error);
+                    if (event.error === 'no-speech') {
+                        showToast("No speech was detected. Please try again.");
+                    } else if (event.error === 'network') {
+                        showToast("Voice typing needs a connection. Try your phone keyboard's built-in dictation mic instead.");
+                    } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                        showToast("Microphone access is blocked. Check your browser/app permissions.");
+                    } else {
+                        showToast("An error occurred with speech recognition.");
                     }
-                    if (activeMicButton) recognition.stop();
-                    
-                    const targetId = button.getAttribute('data-target');
-                    targetInput = document.getElementById(targetId);
-                    recognition.continuous = (targetId === 'message' || targetId === 'answer');
-                    
-                    try {
-                        recognition.start();
-                    } catch(err) {
-                        console.error("Error starting recognition:", err);
+                    if (activeMicButton) activeMicButton.classList.remove('is-listening');
+                    activeMicButton = null;
+                    targetInput = null;
+                };
+
+                recognition.onresult = (event) => {
+                    const transcriptResult = event.results[event.results.length - 1][0].transcript.trim();
+                    if (targetInput.tagName === 'SELECT') {
+                        const options = Array.from(targetInput.options);
+                        const lowerCaseTranscript = transcriptResult.toLowerCase();
+                        const matchedOption = options.find(option =>
+                            lowerCaseTranscript.includes(option.text.toLowerCase()) ||
+                            (option.value && lowerCaseTranscript.includes(option.value.toLowerCase()))
+                        );
+                        if (matchedOption) targetInput.value = matchedOption.value;
+                    } else {
+                        targetInput.value = recognition.continuous ? (targetInput.value + ' ' + transcriptResult).trim() : transcriptResult;
+                    }
+                };
+
+                // --- Microphone Button Click Handler ---
+                document.querySelectorAll('.mic-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        if (button === activeMicButton) {
+                            recognition.stop();
+                            return;
+                        }
+                        if (activeMicButton) recognition.stop();
+                        if (audioCaptureOn) audioToggleBtn.click(); // avoid two simultaneous recognition sessions
+
+                        const targetId = button.getAttribute('data-target');
+                        targetInput = document.getElementById(targetId);
+                        recognition.continuous = (targetId === 'message' || targetId === 'answer');
+
+                        try {
+                            recognition.start();
+                        } catch(err) {
+                            console.error("Error starting recognition:", err);
+                        }
+                    });
+                });
+
+                // --- Audio Capture Toggle (continuous transcription, separate from the per-field mic buttons) ---
+                const audioToggleBtn = document.getElementById('audio-capture-toggle');
+                const audioToggleKnob = audioToggleBtn.querySelector('span');
+                const audioTranscriptBox = document.getElementById('audio-transcript-box');
+                const audioRecognition = new SpeechRecognition();
+                audioRecognition.lang = 'en-US';
+                audioRecognition.continuous = true;
+                audioRecognition.interimResults = true;
+
+                let currentSegmentStart = null;
+                let currentSegmentText = '';
+                const timeLabel = (date) => date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                const setAudioToggleUI = (on) => {
+                    audioToggleBtn.setAttribute('aria-checked', on ? 'true' : 'false');
+                    audioToggleBtn.classList.toggle('bg-blue-600', on);
+                    audioToggleBtn.classList.toggle('bg-gray-300', !on);
+                    audioToggleKnob.classList.toggle('translate-x-6', on);
+                    audioToggleKnob.classList.toggle('translate-x-1', !on);
+                };
+
+                audioRecognition.onresult = (event) => {
+                    let finalChunk = '';
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        if (event.results[i].isFinal) finalChunk += event.results[i][0].transcript + ' ';
+                    }
+                    if (finalChunk) {
+                        audioTranscript = (audioTranscript + ' ' + finalChunk).trim();
+                        currentSegmentText = (currentSegmentText + ' ' + finalChunk).trim();
+                        audioTranscriptBox.value = audioTranscript;
+                        audioTranscriptBox.scrollTop = audioTranscriptBox.scrollHeight;
+                        scheduleMeetingAutosave();
+                    }
+                };
+
+                audioRecognition.onerror = (event) => {
+                    console.error('Audio capture error:', event.error);
+                    if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                        showToast('Microphone access is blocked. Check your browser/app permissions.');
+                        audioCaptureOn = false;
+                        setAudioToggleUI(false);
+                    } else if (event.error === 'network') {
+                        showToast('Audio capture needs a connection.');
+                        audioCaptureOn = false;
+                        setAudioToggleUI(false);
+                    }
+                    // other errors (e.g. no-speech) are recoverable — onend below decides whether to restart
+                };
+
+                audioRecognition.onend = () => {
+                    if (audioCaptureOn) {
+                        try { audioRecognition.start(); } catch (err) { /* already running */ }
+                    }
+                };
+
+                audioToggleBtn.addEventListener('click', () => {
+                    audioCaptureOn = !audioCaptureOn;
+                    setAudioToggleUI(audioCaptureOn);
+                    if (audioCaptureOn) {
+                        if (activeMicButton) recognition.stop(); // avoid two simultaneous recognition sessions
+                        currentSegmentStart = new Date();
+                        currentSegmentText = '';
+                        try { audioRecognition.start(); } catch (err) { console.error('Error starting audio capture:', err); }
+                    } else {
+                        audioRecognition.stop();
+                        // Each on/off period becomes its own logged segment, tied to this meeting's draft.
+                        if (currentSegmentText.trim() && currentSegmentStart) {
+                            audioSegments.push({
+                                start: timeLabel(currentSegmentStart),
+                                end: timeLabel(new Date()),
+                                text: currentSegmentText.trim(),
+                            });
+                            scheduleMeetingAutosave();
+                        }
+                        currentSegmentStart = null;
+                        currentSegmentText = '';
                     }
                 });
-            });
+            }
 
             // --- File Upload Logic ---
             const cameraInput = document.getElementById('camera-upload');
@@ -646,30 +1182,63 @@
             const answerTextarea = document.getElementById('answer');
             const questionLogTextarea = document.getElementById('question-log');
 
-            nextQuestionBtn.addEventListener('click', () => {
+            const formatQaEntry = (entry) =>
+                `[${entry.timestamp}] ${entry.person ? `${entry.person}${entry.company ? ' @ ' + entry.company : ''} — ` : ''}${entry.topic || ''}${entry.product ? ' / ' + entry.product : ''}\nQ: ${entry.question}\nA: ${entry.answer}\n\n`;
+
+            const renderQuestionLog = () => {
+                questionLogTextarea.value = qaEntries.map(formatQaEntry).join('');
+                questionLogTextarea.scrollTop = questionLogTextarea.scrollHeight;
+            };
+
+            const logQuestion = () => {
                 const questionText = questionInput.value.trim();
                 const answerText = answerTextarea.value.trim();
 
-                if (questionText && answerText) {
-                    const timestamp = new Date().toLocaleTimeString();
-                    const logEntry = `[${timestamp}] \nQ: ${questionText}\nA: ${answerText}\n\n`;
-                    
-                    questionLogTextarea.value += logEntry;
-                    questionLogTextarea.scrollTop = questionLogTextarea.scrollHeight; // Auto-scroll to bottom
-
-                    // Reset fields for next entry
-                    questionInput.value = '';
-                    answerTextarea.value = '';
-                } else {
+                if (!questionText || !answerText) {
                     showToast("Please select or input a question and provide an answer.");
+                    return false;
                 }
-            });
+
+                qaEntries.push({
+                    timestamp: new Date().toLocaleTimeString(),
+                    question: questionText,
+                    answer: answerText,
+                    person: document.getElementById('person-q').value.trim(),
+                    company: document.getElementById('company-q').value.trim(),
+                    topic: topicInput.value.trim(),
+                    product: productInput.value.trim(),
+                });
+                saveJSON(STORAGE_KEYS.qa, qaEntries);
+                renderQuestionLog();
+
+                // Reset fields for next entry
+                questionInput.value = '';
+                answerTextarea.value = '';
+                return true;
+            };
+
+            nextQuestionBtn.addEventListener('click', logQuestion);
 
             // --- Feedback Log Logic ---
             const logFeedbackBtn = document.getElementById('log-feedback-btn');
             const activityLog = document.getElementById('activity-log');
 
-            logFeedbackBtn.addEventListener('click', () => {
+            const formatFeedbackEntry = (entry) =>
+`[${entry.timestamp}] - Feedback Logged
+---------------------------------
+User: ${entry.user} (${entry.email})
+Date: ${entry.date}
+Contact: ${entry.person} at ${entry.company}
+Subject: ${entry.subject}${entry.event ? `\nEvent: ${entry.event}` : ''}${entry.location ? `   Location: ${entry.location}` : ''}
+Thoughts: ${entry.thoughts}
+---------------------------------\n\n`;
+
+            const renderActivityLog = () => {
+                activityLog.value = feedbackEntries.map(formatFeedbackEntry).join('');
+                activityLog.scrollTop = activityLog.scrollHeight;
+            };
+
+            const logFeedback = () => {
                 // Gather data from Feedback and User tabs
                 const quickThoughts = document.getElementById('message').value.trim();
                 const person = document.getElementById('person').value.trim();
@@ -681,34 +1250,845 @@
 
                 if (!quickThoughts || !person || !company || !subject) {
                     showToast("Please fill out all fields on the Feedback tab.");
-                    return;
+                    return false;
                 }
 
-                const timestamp = new Date().toLocaleString();
-                const logEntry = 
-`[${timestamp}] - Feedback Logged
----------------------------------
-User: ${user} (${email})
-Date: ${date}
-Contact: ${person} at ${company}
-Subject: ${subject}
-Thoughts: ${quickThoughts}
----------------------------------\n\n`;
-
-                activityLog.value += logEntry;
-                activityLog.scrollTop = activityLog.scrollHeight;
+                feedbackEntries.push({
+                    timestamp: new Date().toLocaleString(),
+                    user, email, date, person, company, subject,
+                    product: document.getElementById('product-feedback').value.trim(),
+                    event: document.getElementById('event').value,
+                    location: document.getElementById('location').value.trim(),
+                    thoughts: quickThoughts,
+                });
+                saveJSON(STORAGE_KEYS.feedback, feedbackEntries);
+                renderActivityLog();
 
                 // Clear feedback fields
                 document.getElementById('message').value = '';
                 document.getElementById('person').value = '';
                 document.getElementById('company').value = '';
                 document.getElementById('subject').value = '';
+                document.getElementById('product-feedback').value = '';
                 document.getElementById('file-preview-container').innerHTML = '';
                 document.getElementById('camera-upload').value = '';
                 document.getElementById('document-upload').value = '';
 
-
                 showToast("Feedback has been logged.");
+                return true;
+            };
+
+            logFeedbackBtn.addEventListener('click', logFeedback);
+
+            // --- Contact Logic (manual entry + business card / badge scan) ---
+            const contactNameInput = document.getElementById('contact-name');
+            const contactCompanyInput = document.getElementById('contact-company');
+            const contactPhoneInput = document.getElementById('contact-phone');
+            const contactTitleInput = document.getElementById('contact-title');
+            const contactEmailInput = document.getElementById('contact-email');
+            const contactWebsiteInput = document.getElementById('contact-website');
+            const contactNotesInput = document.getElementById('contact-notes');
+            const contactLog = document.getElementById('contact-log');
+
+            // --- Tags: quick-select chips, multiple can be active at once ---
+            let selectedContactTags = [];
+            const contactTagButtons = Array.from(document.querySelectorAll('#contact-tag-group .tag-chip'));
+            const renderContactTagButtons = () => {
+                contactTagButtons.forEach((btn) => {
+                    const active = selectedContactTags.includes(btn.dataset.tag);
+                    btn.classList.toggle('bg-blue-600', active);
+                    btn.classList.toggle('text-white', active);
+                    btn.classList.toggle('border-blue-600', active);
+                    btn.classList.toggle('bg-white', !active);
+                    btn.classList.toggle('text-gray-600', !active);
+                    btn.classList.toggle('border-gray-300', !active);
+                });
+            };
+            contactTagButtons.forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const tag = btn.dataset.tag;
+                    selectedContactTags = selectedContactTags.includes(tag)
+                        ? selectedContactTags.filter((t) => t !== tag)
+                        : [...selectedContactTags, tag];
+                    renderContactTagButtons();
+                });
+            });
+
+            const formatContactEntry = (entry) =>
+`[${entry.timestamp}] ${entry.name || '(no name)'}${entry.title ? ', ' + entry.title : ''}${entry.company ? ' — ' + entry.company : ''}
+${entry.phone ? 'Phone: ' + entry.phone + '   ' : ''}${entry.email ? 'Email: ' + entry.email : ''}${entry.website ? '   Web: ' + entry.website : ''}
+${entry.tags && entry.tags.length ? 'Tags: ' + entry.tags.join(', ') + '\n' : ''}${entry.notes ? 'Notes: ' + entry.notes + '\n' : ''}---------------------------------\n\n`;
+
+            const renderContactLog = () => {
+                contactLog.value = contactEntries.map(formatContactEntry).join('');
+                contactLog.scrollTop = contactLog.scrollHeight;
+            };
+
+            const saveContact = () => {
+                const name = contactNameInput.value.trim();
+                const company = contactCompanyInput.value.trim();
+                const phone = contactPhoneInput.value.trim();
+                const title = contactTitleInput.value.trim();
+                const email = contactEmailInput.value.trim();
+                const website = contactWebsiteInput.value.trim();
+                const notes = contactNotesInput.value.trim();
+                const tags = selectedContactTags.slice();
+
+                if (!name && !company && !phone && !email) {
+                    showToast('Add at least a name, company, phone, or email before saving.');
+                    return false;
+                }
+
+                contactEntries.push({ timestamp: new Date().toLocaleString(), name, title, company, phone, email, website, tags, notes });
+                saveJSON(STORAGE_KEYS.contacts, contactEntries);
+                renderContactLog();
+
+                contactNameInput.value = '';
+                contactCompanyInput.value = '';
+                contactPhoneInput.value = '';
+                contactTitleInput.value = '';
+                contactEmailInput.value = '';
+                contactWebsiteInput.value = '';
+                contactNotesInput.value = '';
+                selectedContactTags = [];
+                renderContactTagButtons();
+                resetCardScan();
+
+                showToast('Contact saved.');
+                return true;
+            };
+
+            document.getElementById('save-contact-btn').addEventListener('click', saveContact);
+
+            // --- Business Card / Badge Scan (on-device OCR — needs a connection the first time only) ---
+            const cardPhotoInput = document.getElementById('card-photo-input');
+            const cardPhotoPreview = document.getElementById('card-photo-preview');
+            const scanCardBtn = document.getElementById('scan-card-btn');
+            const scanStatus = document.getElementById('scan-status');
+            const scanUnassignedSection = document.getElementById('scan-unassigned');
+            const scanUnassignedList = document.getElementById('scan-unassigned-list');
+
+            const TESSERACT_BASE = 'https://cdn.jsdelivr.net/npm';
+            let tesseractLoadPromise = null;
+            const loadTesseract = () => {
+                if (window.Tesseract) return Promise.resolve();
+                if (tesseractLoadPromise) return tesseractLoadPromise;
+                tesseractLoadPromise = new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = `${TESSERACT_BASE}/tesseract.js@5.1.1/dist/tesseract.min.js`;
+                    script.onload = () => resolve();
+                    script.onerror = () => reject(new Error('Failed to load scanner library'));
+                    document.head.appendChild(script);
+                });
+                return tesseractLoadPromise;
+            };
+
+            const renderUnassignedLines = (lines) => {
+                scanUnassignedList.innerHTML = '';
+                scanUnassignedSection.classList.toggle('hidden', lines.length === 0);
+                lines.forEach((line) => {
+                    const row = document.createElement('div');
+                    row.className = 'flex items-center justify-between gap-2 px-2 py-1 bg-gray-50 border border-gray-200 rounded-md text-sm';
+                    const span = document.createElement('span');
+                    span.textContent = line;
+                    span.className = 'truncate';
+                    const btnGroup = document.createElement('div');
+                    btnGroup.className = 'flex gap-1 shrink-0';
+                    const nameBtn = document.createElement('button');
+                    nameBtn.type = 'button';
+                    nameBtn.textContent = '→ Name';
+                    nameBtn.className = 'px-2 py-0.5 text-xs text-blue-600 border border-blue-600 rounded hover:bg-blue-50';
+                    nameBtn.addEventListener('click', () => { contactNameInput.value = line; });
+                    const companyBtn = document.createElement('button');
+                    companyBtn.type = 'button';
+                    companyBtn.textContent = '→ Company';
+                    companyBtn.className = 'px-2 py-0.5 text-xs text-blue-600 border border-blue-600 rounded hover:bg-blue-50';
+                    companyBtn.addEventListener('click', () => { contactCompanyInput.value = line; });
+                    const titleBtn = document.createElement('button');
+                    titleBtn.type = 'button';
+                    titleBtn.textContent = '→ Title';
+                    titleBtn.className = 'px-2 py-0.5 text-xs text-blue-600 border border-blue-600 rounded hover:bg-blue-50';
+                    titleBtn.addEventListener('click', () => { contactTitleInput.value = line; });
+                    btnGroup.append(nameBtn, companyBtn, titleBtn);
+                    row.append(span, btnGroup);
+                    scanUnassignedList.appendChild(row);
+                });
+            };
+
+            const parseCardText = (rawText) => {
+                const lines = rawText.split('\n').map((l) => l.trim()).filter(Boolean);
+                const emailRe = /[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}/;
+                const phoneRe = /(?:\+?\d{1,3}[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/;
+                const websiteRe = /\b(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9-]+\.(?:com|net|org|io|co|us|biz|info)\b\S*/i;
+
+                let email = '', phone = '', website = '';
+                const remaining = [];
+
+                for (const line of lines) {
+                    const emailMatch = !email && line.match(emailRe);
+                    if (emailMatch) { email = emailMatch[0]; continue; }
+                    const phoneMatch = !phone && line.match(phoneRe);
+                    if (phoneMatch) { phone = phoneMatch[0]; continue; }
+                    const siteMatch = !website && line.match(websiteRe);
+                    if (siteMatch) { website = siteMatch[0]; continue; }
+                    remaining.push(line);
+                }
+                return { email, phone, website, remaining };
+            };
+
+            const resetCardScan = () => {
+                cardPhotoInput.value = '';
+                cardPhotoPreview.classList.add('hidden');
+                cardPhotoPreview.src = '';
+                scanCardBtn.disabled = true;
+                scanStatus.textContent = '';
+                renderUnassignedLines([]);
+            };
+
+            cardPhotoInput.addEventListener('change', () => {
+                const file = cardPhotoInput.files && cardPhotoInput.files[0];
+                scanStatus.textContent = '';
+                renderUnassignedLines([]);
+                if (file) {
+                    cardPhotoPreview.src = URL.createObjectURL(file);
+                    cardPhotoPreview.classList.remove('hidden');
+                    scanCardBtn.disabled = false;
+                } else {
+                    cardPhotoPreview.classList.add('hidden');
+                    scanCardBtn.disabled = true;
+                }
+            });
+
+            scanCardBtn.addEventListener('click', async () => {
+                const file = cardPhotoInput.files && cardPhotoInput.files[0];
+                if (!file) { showToast('Take or choose a photo first.'); return; }
+
+                scanCardBtn.disabled = true;
+                scanStatus.textContent = 'Loading scanner…';
+                try {
+                    await loadTesseract();
+                    scanStatus.textContent = 'Reading card…';
+                    const { data: { text } } = await Tesseract.recognize(file, 'eng', {
+                        workerPath: `${TESSERACT_BASE}/tesseract.js@5.1.1/dist/worker.min.js`,
+                        corePath: `${TESSERACT_BASE}/tesseract.js-core@5.1.1/tesseract-core-simd.wasm.js`,
+                        langPath: `${TESSERACT_BASE}/@tesseract.js-data/eng@1.0.0/4.0.0_best_int`,
+                        logger: (m) => {
+                            if (m.status === 'recognizing text' && typeof m.progress === 'number') {
+                                scanStatus.textContent = `Reading card… ${Math.round(m.progress * 100)}%`;
+                            }
+                        },
+                    });
+
+                    const { email, phone, website, remaining } = parseCardText(text);
+                    if (email && !contactEmailInput.value) contactEmailInput.value = email;
+                    if (phone && !contactPhoneInput.value) contactPhoneInput.value = phone;
+                    if (website && !contactWebsiteInput.value) contactWebsiteInput.value = website;
+                    renderUnassignedLines(remaining);
+
+                    scanStatus.textContent = (email || phone || website || remaining.length)
+                        ? 'Scan complete — check the fields below before saving.'
+                        : "Couldn't read much from that photo — try a clearer, well-lit shot, or type the details in manually.";
+                } catch (err) {
+                    console.error('OCR failed:', err);
+                    scanStatus.textContent = '';
+                    showToast('Scan failed — needs a connection the first time it runs. You can still type the details in manually.');
+                } finally {
+                    scanCardBtn.disabled = false;
+                }
+            });
+
+            // --- Quick Capture Logic (zero required fields — fastest possible entry) ---
+            const quickCaptureText = document.getElementById('quick-capture-text');
+            const quickCaptureLog = document.getElementById('quick-capture-log');
+
+            const formatQuickCaptureEntry = (entry) => `[${entry.timestamp}] ${entry.text}\n\n`;
+
+            const renderQuickCaptureLog = () => {
+                quickCaptureLog.value = quickCaptureEntries.map(formatQuickCaptureEntry).join('');
+                quickCaptureLog.scrollTop = quickCaptureLog.scrollHeight;
+            };
+
+            const captureQuick = () => {
+                const text = quickCaptureText.value.trim();
+                if (!text) {
+                    showToast('Type or speak something to capture.');
+                    return false;
+                }
+                quickCaptureEntries.push({ timestamp: new Date().toLocaleString(), text });
+                saveJSON(STORAGE_KEYS.quickCaptures, quickCaptureEntries);
+                renderQuickCaptureLog();
+                quickCaptureText.value = '';
+                showToast('Captured.');
+                return true;
+            };
+
+            document.getElementById('quick-capture-btn').addEventListener('click', captureQuick);
+
+            // --- Meeting Notes Logic ---
+            const meetingNotesText = document.getElementById('meeting-notes-text');
+            const meetingSubjectInput = document.getElementById('meeting-subject');
+            const meetingPersonInput = document.getElementById('meeting-person');
+            const meetingCompanyInput = document.getElementById('meeting-company');
+            const meetingDateInput = document.getElementById('meeting-date');
+            const meetingTimeInput = document.getElementById('meeting-time');
+            const meetingPicInput = document.getElementById('meeting-pic-input');
+            const meetingDocInput = document.getElementById('meeting-doc-input');
+            const meetingDocScanStatus = document.getElementById('meeting-doc-scan-status');
+            const meetingAttachPreview = document.getElementById('meeting-attach-preview');
+            const meetingNotesLog = document.getElementById('meeting-notes-log');
+            const toggleMeetingLogBtn = document.getElementById('toggle-meeting-log-btn');
+
+            const setMeetingDateTimeToNow = () => {
+                const now = new Date();
+                meetingDateInput.value = now.toISOString().split('T')[0];
+                meetingTimeInput.value = now.toTimeString().slice(0, 5);
+            };
+            setMeetingDateTimeToNow();
+
+            // --- Notes field: expand to full screen for distraction-free writing ---
+            const meetingNotesWrap = document.getElementById('meeting-notes-wrap');
+            const meetingNotesExpandBtn = document.getElementById('meeting-notes-expand-btn');
+            const meetingNotesExpandIcon = document.getElementById('meeting-notes-expand-icon');
+            const EXPAND_ICON = '<path fill-rule="evenodd" d="M5.828 10.172a.5.5 0 0 0-.707 0l-4.096 4.096V11.5a.5.5 0 0 0-1 0v3.975a.5.5 0 0 0 .5.5H4.5a.5.5 0 0 0 0-1H1.732l4.096-4.096a.5.5 0 0 0 0-.707zm4.344-4.344a.5.5 0 0 0 .707 0l4.096-4.096V4.5a.5.5 0 1 0 1 0V.525a.5.5 0 0 0-.5-.5H11.5a.5.5 0 0 0 0 1h2.768l-4.096 4.096a.5.5 0 0 0 0 .707z"/>';
+            const COLLAPSE_ICON = '<path fill-rule="evenodd" d="M.172 15.828a.5.5 0 0 0 .707 0l4.096-4.096V14.5a.5.5 0 1 0 1 0v-3.975a.5.5 0 0 0-.5-.5H1.5a.5.5 0 0 0 0 1h2.768L.172 15.121a.5.5 0 0 0 0 .707zM15.828.172a.5.5 0 0 0-.707 0l-4.096 4.096V1.5a.5.5 0 1 0-1 0v3.975a.5.5 0 0 0 .5.5H14.5a.5.5 0 0 0 0-1h-2.768L15.828.879a.5.5 0 0 0 0-.707z"/>';
+            let notesExpanded = false;
+            const setNotesExpanded = (expanded) => {
+                notesExpanded = expanded;
+                meetingNotesWrap.classList.toggle('fixed', expanded);
+                meetingNotesWrap.classList.toggle('inset-0', expanded);
+                meetingNotesWrap.classList.toggle('z-50', expanded);
+                meetingNotesWrap.classList.toggle('bg-white', expanded);
+                meetingNotesWrap.classList.toggle('p-4', expanded);
+                meetingNotesText.classList.toggle('h-full', expanded);
+                document.body.classList.toggle('overflow-hidden', expanded);
+                meetingNotesExpandIcon.innerHTML = expanded ? COLLAPSE_ICON : EXPAND_ICON;
+                meetingNotesExpandBtn.setAttribute('aria-label', expanded ? 'Collapse notes' : 'Expand notes to full screen');
+            };
+            meetingNotesExpandBtn.addEventListener('click', () => setNotesExpanded(!notesExpanded));
+
+            let pendingMeetingAttachments = [];
+
+            const renderPendingMeetingAttachments = () => {
+                meetingAttachPreview.innerHTML = '';
+                pendingMeetingAttachments.forEach((att) => {
+                    const wrap = document.createElement('div');
+                    wrap.className = 'relative';
+                    const img = document.createElement('img');
+                    img.src = att.previewUrl;
+                    img.className = 'w-16 h-16 object-cover rounded-lg border border-gray-200';
+                    const badge = document.createElement('span');
+                    badge.textContent = att.kind === 'document' ? 'Doc' : 'Pic';
+                    badge.className = 'absolute bottom-0 left-0 px-1 text-[10px] leading-tight bg-gray-800 text-white rounded-tr rounded-bl-lg';
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.textContent = '×';
+                    removeBtn.setAttribute('aria-label', 'Remove photo');
+                    removeBtn.className = 'absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center bg-gray-800 text-white rounded-full text-xs leading-none';
+                    removeBtn.addEventListener('click', () => {
+                        URL.revokeObjectURL(att.previewUrl);
+                        if (att.committed) deleteAttachment(att.id).catch((err) => console.error('Failed to delete attachment:', err));
+                        pendingMeetingAttachments = pendingMeetingAttachments.filter((a) => a.tempId !== att.tempId);
+                        renderPendingMeetingAttachments();
+                        scheduleMeetingAutosave();
+                    });
+                    wrap.append(img, badge, removeBtn);
+                    meetingAttachPreview.appendChild(wrap);
+                });
+            };
+
+            const addPendingAttachment = (file, kind) => {
+                pendingMeetingAttachments.push({
+                    tempId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                    id: `att-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                    file,
+                    kind,
+                    previewUrl: URL.createObjectURL(file),
+                    committed: false,
+                });
+                renderPendingMeetingAttachments();
+                scheduleMeetingAutosave();
+            };
+
+            // Picture: kept as a photo only, e.g. handwritten pages — never OCR'd.
+            meetingPicInput.addEventListener('change', () => {
+                Array.from(meetingPicInput.files || []).forEach((file) => addPendingAttachment(file, 'picture'));
+                meetingPicInput.value = '';
+            });
+
+            // Document: scanned via on-device OCR and the extracted text is appended to Notes,
+            // in addition to being kept as a photo attachment.
+            meetingDocInput.addEventListener('change', async () => {
+                const file = meetingDocInput.files && meetingDocInput.files[0];
+                meetingDocInput.value = '';
+                if (!file) return;
+
+                addPendingAttachment(file, 'document');
+
+                meetingDocScanStatus.textContent = 'Loading scanner…';
+                try {
+                    await loadTesseract();
+                    meetingDocScanStatus.textContent = 'Scanning document…';
+                    const { data: { text } } = await Tesseract.recognize(file, 'eng', {
+                        workerPath: `${TESSERACT_BASE}/tesseract.js@5.1.1/dist/worker.min.js`,
+                        corePath: `${TESSERACT_BASE}/tesseract.js-core@5.1.1/tesseract-core-simd.wasm.js`,
+                        langPath: `${TESSERACT_BASE}/@tesseract.js-data/eng@1.0.0/4.0.0_best_int`,
+                        logger: (m) => {
+                            if (m.status === 'recognizing text' && typeof m.progress === 'number') {
+                                meetingDocScanStatus.textContent = `Scanning document… ${Math.round(m.progress * 100)}%`;
+                            }
+                        },
+                    });
+                    const cleaned = text.trim();
+                    if (cleaned) {
+                        meetingNotesText.value = meetingNotesText.value
+                            ? `${meetingNotesText.value}\n\n--- Scanned document ---\n${cleaned}`
+                            : `--- Scanned document ---\n${cleaned}`;
+                        meetingDocScanStatus.textContent = 'Document text added to Notes — check it for scan errors.';
+                        scheduleMeetingAutosave();
+                    } else {
+                        meetingDocScanStatus.textContent = "Couldn't read any text from that photo. The photo was still attached.";
+                    }
+                } catch (err) {
+                    console.error('Document scan failed:', err);
+                    meetingDocScanStatus.textContent = '';
+                    showToast('Scan failed — needs a connection the first time it runs. The photo was still attached.');
+                }
+            });
+
+            // Discards any attachments — revokes previews and deletes already-committed
+            // blobs from IndexedDB too. Used when discarding a draft entirely (Clear).
+            const resetMeetingAttachments = () => {
+                pendingMeetingAttachments.forEach((att) => {
+                    URL.revokeObjectURL(att.previewUrl);
+                    if (att.committed) deleteAttachment(att.id).catch((err) => console.error('Failed to delete attachment:', err));
+                });
+                pendingMeetingAttachments = [];
+                meetingPicInput.value = '';
+                meetingDocInput.value = '';
+                meetingDocScanStatus.textContent = '';
+                renderPendingMeetingAttachments();
+            };
+
+            // Clears only the compose-time staging state after a draft has been finalized —
+            // the attachments are already safely committed to IndexedDB and belong to the
+            // saved entry now, so (unlike resetMeetingAttachments) this must NOT delete them.
+            const clearComposeAttachmentState = () => {
+                pendingMeetingAttachments.forEach((att) => URL.revokeObjectURL(att.previewUrl));
+                pendingMeetingAttachments = [];
+                meetingPicInput.value = '';
+                meetingDocInput.value = '';
+                meetingDocScanStatus.textContent = '';
+                renderPendingMeetingAttachments();
+            };
+
+            let meetingThumbUrls = [];
+            const renderMeetingNotesLog = () => {
+                meetingThumbUrls.forEach((url) => URL.revokeObjectURL(url));
+                meetingThumbUrls = [];
+                meetingNotesLog.innerHTML = '';
+
+                if (!meetingNoteEntries.length) {
+                    const empty = document.createElement('p');
+                    empty.className = 'text-sm text-gray-400';
+                    empty.textContent = 'No meeting notes yet.';
+                    meetingNotesLog.appendChild(empty);
+                } else {
+                    [...meetingNoteEntries].reverse().forEach((entry) => {
+                        const card = document.createElement('div');
+                        card.className = 'p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm';
+
+                        const headerLine = document.createElement('p');
+                        headerLine.className = 'text-xs text-gray-400';
+                        const who = [entry.person, entry.company].filter(Boolean).join(' — ');
+                        headerLine.textContent = [entry.timestamp, who, entry.subject].filter(Boolean).join('  •  ');
+                        card.appendChild(headerLine);
+
+                        const notesP = document.createElement('p');
+                        notesP.className = 'text-gray-700 mt-1 whitespace-pre-wrap';
+                        notesP.textContent = entry.notes;
+                        card.appendChild(notesP);
+
+                        if (entry.audioSegments && entry.audioSegments.length) {
+                            // Each on/off period of audio capture is its own logged line, tied to this meeting.
+                            entry.audioSegments.forEach((seg) => {
+                                const segP = document.createElement('p');
+                                segP.className = 'text-gray-500 mt-1 text-xs whitespace-pre-wrap';
+                                segP.textContent = `🎙 [${seg.start}–${seg.end}] ${seg.text}`;
+                                card.appendChild(segP);
+                            });
+                        } else if (entry.audioTranscript) {
+                            const transcriptP = document.createElement('p');
+                            transcriptP.className = 'text-gray-500 mt-1 text-xs whitespace-pre-wrap';
+                            transcriptP.textContent = `🎙 ${entry.audioTranscript}`;
+                            card.appendChild(transcriptP);
+                        }
+
+                        if (entry.attachmentIds && entry.attachmentIds.length) {
+                            const thumbRow = document.createElement('div');
+                            thumbRow.className = 'mt-2 flex flex-wrap gap-2';
+                            card.appendChild(thumbRow);
+                            entry.attachmentIds.forEach((attId) => {
+                                getAttachment(attId).then((att) => {
+                                    if (!att || !att.blob) return;
+                                    const url = URL.createObjectURL(att.blob);
+                                    meetingThumbUrls.push(url);
+                                    const link = document.createElement('a');
+                                    link.href = url;
+                                    link.target = '_blank';
+                                    link.rel = 'noopener';
+                                    const img = document.createElement('img');
+                                    img.src = url;
+                                    img.className = 'w-14 h-14 object-cover rounded-md border border-gray-200';
+                                    img.alt = att.filename || 'Attachment';
+                                    link.appendChild(img);
+                                    thumbRow.appendChild(link);
+                                }).catch((err) => console.error('Failed to load attachment:', err));
+                            });
+                        }
+
+                        meetingNotesLog.appendChild(card);
+                    });
+                }
+
+                const isHidden = meetingNotesLog.classList.contains('hidden');
+                toggleMeetingLogBtn.textContent = `${isHidden ? 'View' : 'Hide'} Meeting Notes Log (${meetingNoteEntries.length})`;
+            };
+
+            toggleMeetingLogBtn.addEventListener('click', () => {
+                meetingNotesLog.classList.toggle('hidden');
+                renderMeetingNotesLog();
+            });
+
+            // --- Auto-save: the compose form is a live draft, upserted in place as you type,
+            // with no button required. Leaving the tab (or "New Meeting Note") finalizes it.
+            const meetingSaveIndicator = document.getElementById('meeting-save-indicator');
+            let meetingDraftId = null;
+            let meetingAutosaveTimer = null;
+
+            const meetingDraftHasContent = () =>
+                meetingNotesText.value.trim() || meetingSubjectInput.value.trim()
+                || meetingPersonInput.value.trim() || meetingCompanyInput.value.trim()
+                || audioTranscript.trim() || pendingMeetingAttachments.length > 0;
+
+            const saveMeetingDraftNow = async () => {
+                clearTimeout(meetingAutosaveTimer);
+
+                if (!meetingDraftHasContent()) {
+                    // Everything was typed then deleted again — remove the draft if one exists.
+                    if (meetingDraftId) {
+                        meetingNoteEntries = meetingNoteEntries.filter((e) => e.id !== meetingDraftId);
+                        saveJSON(STORAGE_KEYS.meetingNotes, meetingNoteEntries);
+                        meetingDraftId = null;
+                        renderMeetingNotesLog();
+                    }
+                    meetingSaveIndicator.textContent = '';
+                    return;
+                }
+
+                const isNew = !meetingDraftId;
+                const entryId = meetingDraftId || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+                meetingDraftId = entryId;
+
+                const dateTime = meetingDateInput.value && meetingTimeInput.value
+                    ? new Date(`${meetingDateInput.value}T${meetingTimeInput.value}`)
+                    : new Date();
+
+                const uncommitted = pendingMeetingAttachments.filter((att) => !att.committed);
+                try {
+                    await Promise.all(uncommitted.map((att, i) => {
+                        att.committed = true;
+                        return saveAttachment({
+                            id: att.id,
+                            meetingNoteId: entryId,
+                            blob: att.file,
+                            filename: att.file.name || `${att.kind}-${i + 1}.jpg`,
+                            mimeType: att.file.type,
+                            kind: att.kind,
+                            timestamp: new Date().toLocaleString(),
+                        });
+                    }));
+                } catch (err) {
+                    console.error('Failed to save attachment:', err);
+                    showToast('A photo failed to save on this device.');
+                }
+
+                const entry = {
+                    id: entryId,
+                    timestamp: dateTime.toLocaleString(),
+                    subject: meetingSubjectInput.value.trim(),
+                    person: meetingPersonInput.value.trim(),
+                    company: meetingCompanyInput.value.trim(),
+                    notes: meetingNotesText.value.trim(),
+                    audioTranscript: audioTranscript.trim(),
+                    audioSegments: audioSegments.slice(),
+                    attachmentIds: pendingMeetingAttachments.map((att) => att.id),
+                };
+
+                if (isNew) {
+                    meetingNoteEntries.push(entry);
+                } else {
+                    const idx = meetingNoteEntries.findIndex((e) => e.id === entryId);
+                    if (idx !== -1) meetingNoteEntries[idx] = entry; else meetingNoteEntries.push(entry);
+                }
+                saveJSON(STORAGE_KEYS.meetingNotes, meetingNoteEntries);
+                renderMeetingNotesLog();
+                meetingSaveIndicator.textContent = `Saved ${dateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+            };
+
+            const scheduleMeetingAutosave = () => {
+                clearTimeout(meetingAutosaveTimer);
+                meetingSaveIndicator.textContent = 'Saving…';
+                meetingAutosaveTimer = setTimeout(saveMeetingDraftNow, 900);
+            };
+
+            [meetingNotesText, meetingSubjectInput, meetingPersonInput, meetingCompanyInput].forEach((el) => {
+                el.addEventListener('input', scheduleMeetingAutosave);
+            });
+            [meetingDateInput, meetingTimeInput].forEach((el) => {
+                el.addEventListener('change', scheduleMeetingAutosave);
+            });
+
+            // Finalizes the current draft as a complete entry and resets the form for the next
+            // one. Triggered by leaving the tab, or by "New Meeting Note" for an immediate start.
+            finalizeMeetingDraft = async () => {
+                // Close out any in-progress audio segment first so it's included in the save below.
+                if (audioCaptureOn) document.getElementById('audio-capture-toggle').click();
+                await saveMeetingDraftNow();
+                const hadDraft = !!meetingDraftId;
+                meetingDraftId = null;
+                meetingSubjectInput.value = '';
+                meetingPersonInput.value = '';
+                meetingCompanyInput.value = '';
+                meetingNotesText.value = '';
+                setNotesExpanded(false);
+                setMeetingDateTimeToNow();
+                clearComposeAttachmentState();
+                audioTranscript = '';
+                audioSegments = [];
+                document.getElementById('audio-transcript-box').value = '';
+                meetingSaveIndicator.textContent = '';
+                return hadDraft;
+            };
+
+            // Discards the current draft entirely — unlike finalize, this deletes the entry
+            // (and any attachments already committed to IndexedDB) rather than keeping it.
+            const discardMeetingDraft = async () => {
+                clearTimeout(meetingAutosaveTimer);
+                if (meetingDraftId) {
+                    meetingNoteEntries = meetingNoteEntries.filter((e) => e.id !== meetingDraftId);
+                    saveJSON(STORAGE_KEYS.meetingNotes, meetingNoteEntries);
+                    renderMeetingNotesLog();
+                }
+                meetingDraftId = null;
+                resetMeetingAttachments();
+                setNotesExpanded(false);
+                if (audioCaptureOn) document.getElementById('audio-capture-toggle').click();
+                audioTranscript = '';
+                audioSegments = [];
+                document.getElementById('audio-transcript-box').value = '';
+                meetingSaveIndicator.textContent = '';
+            };
+
+            document.getElementById('new-meeting-note-btn').addEventListener('click', async () => {
+                const hadDraft = await finalizeMeetingDraft();
+                showToast(hadDraft ? 'Meeting note saved. Ready for a new one.' : 'Ready for a new meeting note.');
+            });
+
+            // --- Todo Logic (follow-ups, optionally linked to a contact) ---
+            const todoPersonInput = document.getElementById('todo-person');
+            const todoCompanyInput = document.getElementById('todo-company');
+            const todoTaskInput = document.getElementById('todo-task');
+            const todoDueInput = document.getElementById('todo-due');
+            const todoListEl = document.getElementById('todo-list');
+
+            const renderTodoList = () => {
+                todoListEl.innerHTML = '';
+                if (!todoEntries.length) {
+                    const empty = document.createElement('p');
+                    empty.className = 'text-sm text-gray-400';
+                    empty.textContent = 'No follow-ups yet.';
+                    todoListEl.appendChild(empty);
+                    return;
+                }
+                todoEntries.forEach((todo) => {
+                    const row = document.createElement('div');
+                    row.className = 'flex items-start gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg';
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.checked = todo.done;
+                    checkbox.className = 'mt-1';
+                    checkbox.addEventListener('change', () => {
+                        todo.done = checkbox.checked;
+                        saveJSON(STORAGE_KEYS.todos, todoEntries);
+                        renderTodoList();
+                    });
+
+                    const textWrap = document.createElement('div');
+                    textWrap.className = 'flex-1 min-w-0';
+                    const taskLine = document.createElement('p');
+                    taskLine.textContent = todo.task;
+                    taskLine.className = todo.done ? 'text-sm text-gray-400 line-through truncate' : 'text-sm text-gray-700 truncate';
+                    const subLineParts = [];
+                    if (todo.person || todo.company) subLineParts.push([todo.person, todo.company].filter(Boolean).join(' — '));
+                    if (todo.due) subLineParts.push(`Due ${todo.due}`);
+                    textWrap.appendChild(taskLine);
+                    if (subLineParts.length) {
+                        const subLine = document.createElement('p');
+                        subLine.textContent = subLineParts.join('  •  ');
+                        subLine.className = 'text-xs text-gray-400 truncate';
+                        textWrap.appendChild(subLine);
+                    }
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.type = 'button';
+                    deleteBtn.textContent = '✕';
+                    deleteBtn.setAttribute('aria-label', 'Delete follow-up');
+                    deleteBtn.className = 'text-gray-400 hover:text-red-600 px-1';
+                    deleteBtn.addEventListener('click', () => {
+                        todoEntries = todoEntries.filter((t) => t.id !== todo.id);
+                        saveJSON(STORAGE_KEYS.todos, todoEntries);
+                        renderTodoList();
+                    });
+
+                    row.append(checkbox, textWrap, deleteBtn);
+                    todoListEl.appendChild(row);
+                });
+            };
+
+            const addTodo = () => {
+                const task = todoTaskInput.value.trim();
+                if (!task) {
+                    showToast('Add a follow-up task first.');
+                    return false;
+                }
+                todoEntries.push({
+                    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                    timestamp: new Date().toLocaleString(),
+                    task,
+                    person: todoPersonInput.value.trim(),
+                    company: todoCompanyInput.value.trim(),
+                    due: todoDueInput.value,
+                    done: false,
+                });
+                saveJSON(STORAGE_KEYS.todos, todoEntries);
+                renderTodoList();
+                todoPersonInput.value = '';
+                todoCompanyInput.value = '';
+                todoTaskInput.value = '';
+                todoDueInput.value = '';
+                showToast('Follow-up added.');
+                return true;
+            };
+
+            document.getElementById('add-todo-btn').addEventListener('click', addTodo);
+
+            renderActivityLog();
+            renderQuestionLog();
+            renderContactLog();
+            renderQuickCaptureLog();
+            renderMeetingNotesLog();
+            renderTodoList();
+
+            // --- Export / Clear Logic ---
+            const toCSVValue = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+            const downloadFile = (filename, content, mime) => {
+                const blob = new Blob([content], { type: mime });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+            };
+
+            document.getElementById('export-feedback-csv-btn').addEventListener('click', () => {
+                if (!feedbackEntries.length) { showToast('No feedback logged yet.'); return; }
+                const headers = ['Timestamp', 'User', 'Email', 'Date', 'Person', 'Company', 'Subject', 'Product', 'Event', 'Location', 'Thoughts'];
+                const rows = feedbackEntries.map((e) => [e.timestamp, e.user, e.email, e.date, e.person, e.company, e.subject, e.product, e.event, e.location, e.thoughts].map(toCSVValue).join(','));
+                downloadFile(`feedback-log-${Date.now()}.csv`, [headers.join(','), ...rows].join('\n'), 'text/csv');
+            });
+
+            document.getElementById('export-qa-csv-btn').addEventListener('click', () => {
+                if (!qaEntries.length) { showToast('No survey answers logged yet.'); return; }
+                const headers = ['Timestamp', 'Person', 'Company', 'Topic', 'Product', 'Question', 'Answer'];
+                const rows = qaEntries.map((e) => [e.timestamp, e.person, e.company, e.topic, e.product, e.question, e.answer].map(toCSVValue).join(','));
+                downloadFile(`survey-log-${Date.now()}.csv`, [headers.join(','), ...rows].join('\n'), 'text/csv');
+            });
+
+            document.getElementById('export-contacts-csv-btn').addEventListener('click', () => {
+                if (!contactEntries.length) { showToast('No contacts saved yet.'); return; }
+                const headers = ['Timestamp', 'Name', 'Title', 'Company', 'Phone', 'Email', 'Tags', 'Website', 'Notes'];
+                const rows = contactEntries.map((e) => [e.timestamp, e.name, e.title, e.company, e.phone, e.email, (e.tags || []).join('; '), e.website, e.notes].map(toCSVValue).join(','));
+                downloadFile(`contacts-${Date.now()}.csv`, [headers.join(','), ...rows].join('\n'), 'text/csv');
+            });
+
+            document.getElementById('export-quick-csv-btn').addEventListener('click', () => {
+                if (!quickCaptureEntries.length) { showToast('No quick captures yet.'); return; }
+                const headers = ['Timestamp', 'Text'];
+                const rows = quickCaptureEntries.map((e) => [e.timestamp, e.text].map(toCSVValue).join(','));
+                downloadFile(`quick-captures-${Date.now()}.csv`, [headers.join(','), ...rows].join('\n'), 'text/csv');
+            });
+
+            document.getElementById('export-meeting-csv-btn').addEventListener('click', () => {
+                if (!meetingNoteEntries.length) { showToast('No meeting notes yet.'); return; }
+                const headers = ['Timestamp', 'Subject', 'Person', 'Company', 'Notes', 'Audio Transcript', 'Audio Segments', 'Attachments'];
+                const formatSegments = (segs) => (segs || []).map((s) => `[${s.start}–${s.end}] ${s.text}`).join(' | ');
+                const rows = meetingNoteEntries.map((e) => [e.timestamp, e.subject, e.person, e.company, e.notes, e.audioTranscript, formatSegments(e.audioSegments), (e.attachmentIds || []).length].map(toCSVValue).join(','));
+                downloadFile(`meeting-notes-${Date.now()}.csv`, [headers.join(','), ...rows].join('\n'), 'text/csv');
+            });
+
+            document.getElementById('export-todo-csv-btn').addEventListener('click', () => {
+                if (!todoEntries.length) { showToast('No follow-ups yet.'); return; }
+                const headers = ['Timestamp', 'Task', 'Person', 'Company', 'Due', 'Done'];
+                const rows = todoEntries.map((e) => [e.timestamp, e.task, e.person, e.company, e.due, e.done ? 'Yes' : 'No'].map(toCSVValue).join(','));
+                downloadFile(`todos-${Date.now()}.csv`, [headers.join(','), ...rows].join('\n'), 'text/csv');
+            });
+
+            const hasAnyEntries = () => feedbackEntries.length || qaEntries.length || contactEntries.length
+                || quickCaptureEntries.length || meetingNoteEntries.length || todoEntries.length;
+
+            document.getElementById('export-json-btn').addEventListener('click', () => {
+                if (!hasAnyEntries()) { showToast('Nothing to export yet.'); return; }
+                downloadFile(`field-feedback-export-${Date.now()}.json`, JSON.stringify({
+                    feedback: feedbackEntries,
+                    survey: qaEntries,
+                    contacts: contactEntries,
+                    quickCaptures: quickCaptureEntries,
+                    meetingNotes: meetingNoteEntries,
+                    todos: todoEntries,
+                }, null, 2), 'application/json');
+            });
+
+            document.getElementById('clear-all-logs-btn').addEventListener('click', async () => {
+                if (!hasAnyEntries()) { showToast('Nothing to clear.'); return; }
+                if (!confirm('Clear all logged feedback, survey answers, contacts, quick captures, meeting notes (including attached photos), and todos from this device? Export first if you need a copy.')) return;
+                feedbackEntries = [];
+                qaEntries = [];
+                contactEntries = [];
+                quickCaptureEntries = [];
+                meetingNoteEntries = [];
+                todoEntries = [];
+                saveJSON(STORAGE_KEYS.feedback, feedbackEntries);
+                saveJSON(STORAGE_KEYS.qa, qaEntries);
+                saveJSON(STORAGE_KEYS.contacts, contactEntries);
+                saveJSON(STORAGE_KEYS.quickCaptures, quickCaptureEntries);
+                saveJSON(STORAGE_KEYS.meetingNotes, meetingNoteEntries);
+                saveJSON(STORAGE_KEYS.todos, todoEntries);
+                try {
+                    await clearAttachmentStore();
+                } catch (err) {
+                    console.error('Failed to clear attachment storage:', err);
+                }
+                renderActivityLog();
+                renderQuestionLog();
+                renderContactLog();
+                renderQuickCaptureLog();
+                renderMeetingNotesLog();
+                renderTodoList();
+                showToast('Logs cleared.');
             });
             
             // --- Question Filtering Logic ---
@@ -749,8 +2129,23 @@ Thoughts: ${quickThoughts}
             // --- Form Submission Handler ---
             document.getElementById('feedback-form').addEventListener('submit', (e) => {
                 e.preventDefault();
-                console.log("Form submitted!");
-                showToast("Your feedback has been saved!");
+                saveProfile();
+                const activeTab = document.querySelector('.tab-content.active');
+                if (activeTab && activeTab.id === 'tab1') {
+                    logFeedback();
+                } else if (activeTab && activeTab.id === 'tab2') {
+                    logQuestion();
+                } else if (activeTab && activeTab.id === 'tab5') {
+                    saveContact();
+                } else if (activeTab && activeTab.id === 'tab6') {
+                    captureQuick();
+                } else if (activeTab && activeTab.id === 'tab7') {
+                    finalizeMeetingDraft();
+                } else if (activeTab && activeTab.id === 'tab8') {
+                    addTodo();
+                } else {
+                    showToast("Saved on this device.");
+                }
             });
 
             // --- Clear Button Logic ---
@@ -758,10 +2153,12 @@ Thoughts: ${quickThoughts}
             clearBtn.addEventListener('click', () => {
                 const activeTab = document.querySelector('.tab-content.active');
                 if (activeTab) {
-                    const inputs = activeTab.querySelectorAll('input, textarea, select');
+                    const inputs = activeTab.querySelectorAll('input:not([readonly]), textarea:not([readonly]), select');
                     inputs.forEach(input => {
                         if (input.type === 'date') {
                             input.value = new Date().toISOString().split('T')[0];
+                        } else if (input.type === 'time') {
+                            input.value = new Date().toTimeString().slice(0, 5);
                         } else if (input.tagName === 'SELECT') {
                             input.selectedIndex = 0;
                         } else {
@@ -772,6 +2169,10 @@ Thoughts: ${quickThoughts}
                         document.getElementById('file-preview-container').innerHTML = '';
                         document.getElementById('camera-upload').value = '';
                         document.getElementById('document-upload').value = '';
+                    } else if (activeTab.id === 'tab5') {
+                        resetCardScan();
+                    } else if (activeTab.id === 'tab7') {
+                        discardMeetingDraft();
                     }
                 }
             });
