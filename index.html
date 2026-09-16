@@ -465,13 +465,10 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Tags <span class="text-gray-400 font-normal">(optional)</span></label>
-                    <div id="quick-tags" class="mt-1 flex flex-wrap gap-1.5">
-                        <button type="button" class="quick-tag-btn px-2.5 py-1 text-xs font-medium rounded-full border transition-colors duration-150 bg-transparent text-amber-700 border-amber-300 opacity-50 hover:opacity-75" data-tag="Idea" aria-pressed="false" data-active-class="bg-amber-600 text-white border-amber-600 opacity-100" data-inactive-class="bg-transparent text-amber-700 border-amber-300 opacity-50">Idea</button>
-                        <button type="button" class="quick-tag-btn px-2.5 py-1 text-xs font-medium rounded-full border transition-colors duration-150 bg-transparent text-red-700 border-red-300 opacity-50 hover:opacity-75" data-tag="Issue" aria-pressed="false" data-active-class="bg-red-600 text-white border-red-600 opacity-100" data-inactive-class="bg-transparent text-red-700 border-red-300 opacity-50">Issue</button>
-                        <button type="button" class="quick-tag-btn px-2.5 py-1 text-xs font-medium rounded-full border transition-colors duration-150 bg-transparent text-sky-700 border-sky-300 opacity-50 hover:opacity-75" data-tag="Question" aria-pressed="false" data-active-class="bg-sky-600 text-white border-sky-600 opacity-100" data-inactive-class="bg-transparent text-sky-700 border-sky-300 opacity-50">Question</button>
-                        <button type="button" class="quick-tag-btn px-2.5 py-1 text-xs font-medium rounded-full border transition-colors duration-150 bg-transparent text-violet-700 border-violet-300 opacity-50 hover:opacity-75" data-tag="Follow-up" aria-pressed="false" data-active-class="bg-violet-600 text-white border-violet-600 opacity-100" data-inactive-class="bg-transparent text-violet-700 border-violet-300 opacity-50">Follow-up</button>
-                        <button type="button" class="quick-tag-btn px-2.5 py-1 text-xs font-medium rounded-full border transition-colors duration-150 bg-transparent text-emerald-700 border-emerald-300 opacity-50 hover:opacity-75" data-tag="Praise" aria-pressed="false" data-active-class="bg-emerald-600 text-white border-emerald-600 opacity-100" data-inactive-class="bg-transparent text-emerald-700 border-emerald-300 opacity-50">Praise</button>
-                        <button type="button" class="quick-tag-btn px-2.5 py-1 text-xs font-medium rounded-full border transition-colors duration-150 bg-transparent text-slate-700 border-slate-300 opacity-50 hover:opacity-75" data-tag="Competitor" aria-pressed="false" data-active-class="bg-slate-600 text-white border-slate-600 opacity-100" data-inactive-class="bg-transparent text-slate-700 border-slate-300 opacity-50">Competitor</button>
+                    <p class="mt-1 text-xs text-gray-500">Pick a brand to reveal its products.</p>
+                    <div id="quick-tag-brands" class="mt-1 flex flex-wrap gap-1.5"></div>
+                    <div id="quick-tag-products-wrap" class="hidden mt-2 pt-2 border-t border-gray-100">
+                        <div id="quick-tag-products" class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto content-start"></div>
                     </div>
                 </div>
 
@@ -2239,26 +2236,84 @@ Thoughts: ${entry.thoughts}
                 });
             }
 
-            // --- Tags: transparent when unselected, opaque color when selected ---
-            let selectedQuickTags = [];
-            const quickTagButtons = Array.from(document.querySelectorAll('#quick-tags .quick-tag-btn'));
-            const setQuickTagSelected = (btn, selected) => {
-                btn.dataset.inactiveClass.split(' ').forEach((c) => btn.classList.remove(c));
-                btn.dataset.activeClass.split(' ').forEach((c) => btn.classList.remove(c));
-                (selected ? btn.dataset.activeClass : btn.dataset.inactiveClass).split(' ').forEach((c) => btn.classList.add(c));
-                btn.setAttribute('aria-pressed', selected ? 'true' : 'false');
+            // --- Tags: hierarchical Brand -> Product picker. Product chips for a brand only
+            // appear once that brand is selected; multi-select at both levels. Deselecting a
+            // brand also clears any of its already-selected products (no orphaned selections
+            // under a hidden parent).
+            const QUICK_TAG_TREE = {
+                'EasyStand': ['Evolv', 'Bantam', 'StrapStand', 'Glider'],
+                'Zing': ['Zing MPS', 'Zing Supine', 'Zing Prone'],
+                'ActiveAid': ['Shower Chairs', 'Commodes', 'Bathing', 'Toileting', 'Accessories'],
+                'Therafin': ['Assistive Tech', 'Device Mounts', 'Mount Brackets', 'Joystick Mounts', 'Sip-N-Puff', 'Dressing Aids', 'Eating Aids', 'Mobility Aids', 'Self-Care Aids', 'Patient Movers', 'Transfer Boards', 'Econoglide', 'Offset Boards', 'Superslide', 'Theraslide', 'Wheelhold', 'Abductors', 'Adductors', 'Anterior Supports', 'Footboxes', 'Shoeholders', 'Toe Straps', 'FlexSure Feet', 'FootSure', 'Shoe Sandals', 'Head Supports', 'Hip Belts', 'Hip Guides', 'Lateral Supports', 'Calf Panels', 'Amputee Supports', 'Leg Supports', 'Thigh Supports', 'Knee Supports', 'Stretch Harness', 'Static Harness', 'Arm Therapy', 'Hand/Wrist Therapy', 'Stander Therapy', 'Sensory Cuffs', 'Snug Hug', 'Squeeze Machine', 'Sensory Vests', 'Adapt-A-Tray', 'Full Trays', 'Half Trays', 'Tray Overlays', 'Tray Hardware', 'Tray Pads', 'Arm Troughs', 'Lateral Pads', 'Elbow Pads', 'Center Mounts', 'Wheelchair Seats', 'Wheelchair Backs', 'Easy Clip Backs', 'SunMate FIPS', 'Back Hardware', 'Seat Hardware', 'Seat-Back Hardware', 'Custom Seating', 'Parts', 'Straps', 'Buckles', 'Clips & Clamps', 'Hardware Kits'],
+                'Leggero': ['Enzo', 'Reach', 'Trak', 'Dyno'],
             };
-            quickTagButtons.forEach((btn) => {
-                btn.addEventListener('click', () => {
-                    const tag = btn.dataset.tag;
-                    const nowSelected = !selectedQuickTags.includes(tag);
-                    selectedQuickTags = nowSelected ? [...selectedQuickTags, tag] : selectedQuickTags.filter((t) => t !== tag);
-                    setQuickTagSelected(btn, nowSelected);
+
+            let selectedQuickTags = [];
+            const quickTagBrandsEl = document.getElementById('quick-tag-brands');
+            const quickTagProductsWrap = document.getElementById('quick-tag-products-wrap');
+            const quickTagProductsEl = document.getElementById('quick-tag-products');
+
+            const renderQuickTagChipState = (btn) => {
+                const active = selectedQuickTags.includes(btn.dataset.tag);
+                btn.classList.toggle('bg-blue-600', active);
+                btn.classList.toggle('text-white', active);
+                btn.classList.toggle('border-blue-600', active);
+                btn.classList.toggle('bg-white', !active);
+                btn.classList.toggle('text-gray-600', !active);
+                btn.classList.toggle('border-gray-300', !active);
+            };
+
+            const renderQuickTagProducts = () => {
+                quickTagProductsEl.innerHTML = '';
+                const selectedBrands = Object.keys(QUICK_TAG_TREE).filter((b) => selectedQuickTags.includes(b));
+                if (!selectedBrands.length) {
+                    quickTagProductsWrap.classList.add('hidden');
+                    return;
+                }
+                quickTagProductsWrap.classList.remove('hidden');
+                const products = [...new Set(selectedBrands.flatMap((b) => QUICK_TAG_TREE[b]))];
+                products.forEach((product) => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.textContent = product;
+                    btn.dataset.tag = product;
+                    btn.className = 'px-2.5 py-1 text-xs font-medium rounded-full border';
+                    btn.addEventListener('click', () => {
+                        selectedQuickTags = selectedQuickTags.includes(product)
+                            ? selectedQuickTags.filter((t) => t !== product)
+                            : [...selectedQuickTags, product];
+                        renderQuickTagChipState(btn);
+                    });
+                    renderQuickTagChipState(btn);
+                    quickTagProductsEl.appendChild(btn);
                 });
+            };
+
+            Object.keys(QUICK_TAG_TREE).forEach((brand) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.textContent = brand;
+                btn.dataset.tag = brand;
+                btn.className = 'px-2.5 py-1 text-xs font-semibold rounded-full border';
+                btn.addEventListener('click', () => {
+                    const nowSelected = !selectedQuickTags.includes(brand);
+                    if (nowSelected) {
+                        selectedQuickTags = [...selectedQuickTags, brand];
+                    } else {
+                        const childSet = new Set(QUICK_TAG_TREE[brand]);
+                        selectedQuickTags = selectedQuickTags.filter((t) => t !== brand && !childSet.has(t));
+                    }
+                    renderQuickTagChipState(btn);
+                    renderQuickTagProducts();
+                });
+                renderQuickTagChipState(btn);
+                quickTagBrandsEl.appendChild(btn);
             });
+
             const resetQuickTags = () => {
                 selectedQuickTags = [];
-                quickTagButtons.forEach((btn) => setQuickTagSelected(btn, false));
+                Array.from(quickTagBrandsEl.children).forEach(renderQuickTagChipState);
+                renderQuickTagProducts();
             };
 
             let quickThumbUrls = [];
