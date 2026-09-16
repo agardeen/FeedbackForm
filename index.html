@@ -258,7 +258,7 @@
             <div id="tab5" class="tab-content space-y-6">
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Scan a Business Card or Badge</label>
-                    <p class="mt-1 text-xs text-gray-500">Take a photo and we'll try to pull out the name, company, phone, email, and website. The scanner needs a connection the first time it's used, then works offline. It won't be perfect — check the fields before saving.</p>
+                    <p class="mt-1 text-xs text-gray-500">Take a photo, then pick a scan method. <strong>Scan Card</strong> runs on-device — free, works offline once loaded, less accurate. <strong>Scan with AI</strong> is more accurate but needs a connection and sends the photo to OpenAI. Either way, check the fields before saving.</p>
                     <div class="mt-2 flex items-center space-x-4">
                         <label for="card-photo-input" class="cursor-pointer p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
                             <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
@@ -266,6 +266,9 @@
                         <input id="card-photo-input" name="card_photo" type="file" accept="image/*" capture="environment" class="visually-hidden">
                         <button type="button" id="scan-card-btn" class="px-4 py-2 text-sm font-semibold text-blue-600 bg-white border border-blue-600 rounded-lg hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                             Scan Card
+                        </button>
+                        <button type="button" id="scan-card-ai-btn" class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled title="More accurate, but needs a connection and sends the photo to OpenAI">
+                            Scan with AI
                         </button>
                     </div>
                     <img id="card-photo-preview" class="hidden mt-3 max-h-40 rounded-lg border border-gray-200" alt="Business card preview">
@@ -1829,6 +1832,7 @@ Thoughts: ${entry.thoughts}
             const cardPhotoInput = document.getElementById('card-photo-input');
             const cardPhotoPreview = document.getElementById('card-photo-preview');
             const scanCardBtn = document.getElementById('scan-card-btn');
+            const scanCardAiBtn = document.getElementById('scan-card-ai-btn');
             const scanStatus = document.getElementById('scan-status');
             const scanUnassignedSection = document.getElementById('scan-unassigned');
             const scanUnassignedList = document.getElementById('scan-unassigned-list');
@@ -2160,6 +2164,7 @@ Thoughts: ${entry.thoughts}
                 cardPhotoPreview.classList.add('hidden');
                 cardPhotoPreview.src = '';
                 scanCardBtn.disabled = true;
+                scanCardAiBtn.disabled = true;
                 scanStatus.textContent = '';
                 pendingCardPhoto = null;
                 renderUnassignedLines([]);
@@ -2174,17 +2179,35 @@ Thoughts: ${entry.thoughts}
                     cardPhotoPreview.src = URL.createObjectURL(file);
                     cardPhotoPreview.classList.remove('hidden');
                     scanCardBtn.disabled = false;
+                    scanCardAiBtn.disabled = false;
                 } else {
                     cardPhotoPreview.classList.add('hidden');
                     scanCardBtn.disabled = true;
+                    scanCardAiBtn.disabled = true;
                 }
             });
+
+            // Shared "never overwrite existing contact information automatically" fill logic,
+            // used by both the on-device (Tesseract) and AI scan paths.
+            const applyContactAutofill = ({ name, company, title, phone, mobile, email, email2, website, address, country }) => {
+                if (name && !contactNameInput.value) contactNameInput.value = name;
+                if (company && !contactCompanyInput.value) contactCompanyInput.value = company;
+                if (title && !contactTitleInput.value) contactTitleInput.value = title;
+                if (phone && !contactPhoneField.get('phone')) contactPhoneField.set('phone', phone);
+                if (mobile && !contactPhoneField.get('mobile')) contactPhoneField.set('mobile', mobile);
+                if (email && !contactEmailField.get('email')) contactEmailField.set('email', email);
+                if (email2 && !contactEmailField.get('email2')) contactEmailField.set('email2', email2);
+                if (website && !contactWebsiteInput.value) contactWebsiteInput.value = website;
+                if (address && !contactAddressInput.value) contactAddressInput.value = address;
+                if (country && !contactCountryInput.value) contactCountryInput.value = country;
+            };
 
             scanCardBtn.addEventListener('click', async () => {
                 const file = cardPhotoInput.files && cardPhotoInput.files[0];
                 if (!file) { showToast('Take or choose a photo first.'); return; }
 
                 scanCardBtn.disabled = true;
+                scanCardAiBtn.disabled = true;
                 scanStatus.textContent = 'Loading scanner…';
                 try {
                     await loadTesseract();
@@ -2208,12 +2231,7 @@ Thoughts: ${entry.thoughts}
 
                     const lineDetails = (data.lines || []).map((l) => ({ text: l.text, height: l.bbox.y1 - l.bbox.y0, confidence: l.confidence }));
                     const { email, phone, website, address, name, company, remaining } = parseCardText(data.text, lineDetails);
-                    if (email && !contactEmailField.get('email')) contactEmailField.set('email', email);
-                    if (phone && !contactPhoneField.get('phone')) contactPhoneField.set('phone', phone);
-                    if (website && !contactWebsiteInput.value) contactWebsiteInput.value = website;
-                    if (address && !contactAddressInput.value) contactAddressInput.value = address;
-                    if (name && !contactNameInput.value) contactNameInput.value = name;
-                    if (company && !contactCompanyInput.value) contactCompanyInput.value = company;
+                    applyContactAutofill({ name, company, phone, email, website, address });
                     renderUnassignedLines(remaining);
 
                     scanStatus.textContent = (email || phone || website || address || name || company || remaining.length)
@@ -2225,6 +2243,127 @@ Thoughts: ${entry.thoughts}
                     showToast('Scan failed — needs a connection the first time it runs. You can still type the details in manually.');
                 } finally {
                     scanCardBtn.disabled = false;
+                    scanCardAiBtn.disabled = false;
+                }
+            });
+
+            // --- AI-powered card scan (OpenAI vision, via a Cloudflare Worker that holds the
+            // API key — see worker/README.md). Optional/paid/needs-network alternative to the
+            // on-device Tesseract scan above; never runs unless the user explicitly asks for it.
+            const CARD_SCAN_API_URL = 'https://field-feedback-card-scan.andrew-ea2.workers.dev';
+
+            // Downscale + re-encode before upload: keeps the request small/fast and controls
+            // per-scan token cost. A business card's actual detail rarely benefits from more
+            // than ~1600px on the long edge.
+            const resizeImageForUpload = (file, maxDim, quality) => new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => {
+                    const scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.round(img.naturalWidth * scale);
+                    canvas.height = Math.round(img.naturalHeight * scale);
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    URL.revokeObjectURL(img.src);
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+                img.onerror = reject;
+                img.src = URL.createObjectURL(file);
+            });
+
+            const AI_SCAN_ERROR_MESSAGES = {
+                origin_not_allowed: 'Scan service is not configured for this site yet.',
+                unauthorized: 'Scan service rejected this request.',
+                server_not_configured: 'AI scanning isn’t set up yet on the server.',
+                missing_or_invalid_image: 'That photo could not be read. Try again.',
+                image_too_large: 'That photo is too large — try again (it should auto-resize).',
+                rate_limited: 'AI scanner is busy right now — try again in a moment.',
+                upstream_auth_failed: 'AI scan service is misconfigured (key issue). Try the on-device Scan Card instead.',
+                upstream_error: 'AI scanner had a problem reading that. Try the on-device Scan Card instead.',
+                empty_response: 'AI scanner returned nothing usable. Try again or use Scan Card.',
+                invalid_json_from_model: 'AI scanner returned something unexpected. Try again or use Scan Card.',
+                invalid_model_response: 'AI scanner returned something unexpected. Try again or use Scan Card.',
+                not_a_business_card: 'That doesn’t look like a business card — try a clearer, closer photo.',
+                timeout: 'AI scan timed out — try again, or use the on-device Scan Card.',
+                network_error: 'Could not reach the AI scanner — check your connection, or use Scan Card.',
+            };
+
+            scanCardAiBtn.addEventListener('click', async () => {
+                const file = cardPhotoInput.files && cardPhotoInput.files[0];
+                if (!file) { showToast('Take or choose a photo first.'); return; }
+
+                scanCardBtn.disabled = true;
+                scanCardAiBtn.disabled = true;
+                scanStatus.textContent = 'Preparing photo…';
+                try {
+                    let scanFile = await correctOrientation(file, scanStatus);
+                    scanFile = await openCropModal(scanFile);
+                    if (scanFile !== file) {
+                        cardPhotoPreview.src = URL.createObjectURL(scanFile);
+                        pendingCardPhoto = scanFile;
+                    }
+
+                    scanStatus.textContent = 'Uploading to AI scanner…';
+                    const imageDataUrl = await resizeImageForUpload(scanFile, 1600, 0.85);
+
+                    const controller = new AbortController();
+                    const timeout = setTimeout(() => controller.abort(), 30000);
+                    let res;
+                    try {
+                        res = await fetch(CARD_SCAN_API_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ image: imageDataUrl }),
+                            signal: controller.signal,
+                        });
+                    } finally {
+                        clearTimeout(timeout);
+                    }
+
+                    scanStatus.textContent = 'Reading response…';
+                    const payload = await res.json().catch(() => null);
+
+                    if (!res.ok || !payload || !payload.contact) {
+                        const code = payload && payload.error;
+                        showToast(AI_SCAN_ERROR_MESSAGES[code] || 'AI scan failed. Try again, or use Scan Card.');
+                        scanStatus.textContent = '';
+                        return;
+                    }
+
+                    const c = payload.contact;
+                    const addressParts = c.address
+                        ? [c.address.street, c.address.city && c.address.state ? `${c.address.city}, ${c.address.state}` : (c.address.city || c.address.state), c.address.postal_code].filter(Boolean)
+                        : [];
+                    const noteParts = [c.notes, c.linkedin ? `LinkedIn: ${c.linkedin}` : ''].filter(Boolean);
+
+                    applyContactAutofill({
+                        name: c.full_name || [c.first_name, c.last_name].filter(Boolean).join(' ') || '',
+                        company: c.company || '',
+                        title: c.job_title || '',
+                        phone: c.phone || '',
+                        mobile: c.mobile_phone || '',
+                        email: c.email || '',
+                        email2: '',
+                        website: c.website || '',
+                        address: addressParts.join(', '),
+                        country: (c.address && c.address.country) || '',
+                    });
+                    if (noteParts.length && !contactNotesInput.value) {
+                        contactNotesInput.value = noteParts.join('\n');
+                    }
+                    renderUnassignedLines([]);
+                    scanStatus.textContent = 'AI scan complete — check the fields below before saving.';
+                } catch (err) {
+                    console.error('AI card scan failed:', err.name || err);
+                    scanStatus.textContent = '';
+                    if (err.name === 'AbortError') {
+                        showToast('AI scan timed out. Try again, or use the on-device Scan Card.');
+                    } else {
+                        showToast('Could not reach the AI scanner. Try again, or use the on-device Scan Card.');
+                    }
+                } finally {
+                    scanCardBtn.disabled = false;
+                    scanCardAiBtn.disabled = false;
                 }
             });
 

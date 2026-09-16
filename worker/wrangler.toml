@@ -1,0 +1,17 @@
+name = "field-feedback-card-scan"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+
+[observability]
+enabled = true
+
+# Non-secret config — safe to keep in source control. Change the model here
+# any time without touching code (e.g. to move to a different provider's
+# equivalent, once index.js is adapted for that provider's request shape).
+[vars]
+OPENAI_MODEL = "gpt-4o-mini"
+ALLOWED_ORIGINS = "https://ff.altimate.app,http://localhost:8791"
+
+# Secrets (never put these here) — set once via:
+#   wrangler secret put OPENAI_API_KEY
+#   wrangler secret put APP_SHARED_KEY   (optional, see README)
