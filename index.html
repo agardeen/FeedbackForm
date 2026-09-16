@@ -887,6 +887,24 @@
         </div>
     </div>
     
+    <!-- Crop Modal (shared by every scan flow: business card, meeting/quick-capture document scan) -->
+    <div id="crop-modal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-90 flex flex-col items-center justify-center p-4">
+        <div id="crop-stage" class="relative inline-block overflow-hidden touch-none select-none">
+            <img id="crop-image" class="block" style="max-width: 92vw; max-height: 65vh;" alt="Photo to crop">
+            <div id="crop-rect" class="absolute border-2 border-blue-400 touch-none" style="box-shadow: 0 0 0 9999px rgba(0,0,0,0.55);">
+                <div class="crop-handle absolute w-7 h-7 -top-3.5 -left-3.5 rounded-full bg-blue-500 border-2 border-white touch-none" data-handle="tl"></div>
+                <div class="crop-handle absolute w-7 h-7 -top-3.5 -right-3.5 rounded-full bg-blue-500 border-2 border-white touch-none" data-handle="tr"></div>
+                <div class="crop-handle absolute w-7 h-7 -bottom-3.5 -left-3.5 rounded-full bg-blue-500 border-2 border-white touch-none" data-handle="bl"></div>
+                <div class="crop-handle absolute w-7 h-7 -bottom-3.5 -right-3.5 rounded-full bg-blue-500 border-2 border-white touch-none" data-handle="br"></div>
+            </div>
+        </div>
+        <p class="text-white text-xs mt-4 text-center">Drag the corners to crop just the card/document, or use the full photo.</p>
+        <div class="flex gap-3 mt-4">
+            <button type="button" id="crop-skip-btn" class="px-4 py-2 text-sm font-medium text-white border border-white rounded-lg hover:bg-white hover:bg-opacity-10">Use Full Photo</button>
+            <button type="button" id="crop-confirm-btn" class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">Crop &amp; Continue</button>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
     <div id="toast-notification"></div>
 
@@ -1894,6 +1912,119 @@ Thoughts: ${entry.thoughts}
                 return file;
             };
 
+            // --- Interactive crop — step 2 of every scan flow, after orientation is fixed.
+            // Shared by the business card scan and every "Document" (OCR) capture. Never
+            // blocks a scan: "Use Full Photo" (or any internal error) just passes the photo
+            // through untouched.
+            const cropModal = document.getElementById('crop-modal');
+            const cropStage = document.getElementById('crop-stage');
+            const cropImage = document.getElementById('crop-image');
+            const cropRectEl = document.getElementById('crop-rect');
+            const cropSkipBtn = document.getElementById('crop-skip-btn');
+            const cropConfirmBtn = document.getElementById('crop-confirm-btn');
+
+            const openCropModal = (file) => new Promise((resolve) => {
+                const objectUrl = URL.createObjectURL(file);
+                let rect = { x: 0, y: 0, w: 0, h: 0 }; // rendered-pixel coords, relative to the stage
+                let dragMode = null; // 'move' | 'tl' | 'tr' | 'bl' | 'br'
+                let dragStart = null;
+
+                const applyRectStyle = () => {
+                    cropRectEl.style.left = `${rect.x}px`;
+                    cropRectEl.style.top = `${rect.y}px`;
+                    cropRectEl.style.width = `${rect.w}px`;
+                    cropRectEl.style.height = `${rect.h}px`;
+                };
+
+                const clampRect = () => {
+                    const stageW = cropStage.clientWidth;
+                    const stageH = cropStage.clientHeight;
+                    const minSize = 32;
+                    rect.w = Math.max(minSize, Math.min(rect.w, stageW - rect.x));
+                    rect.h = Math.max(minSize, Math.min(rect.h, stageH - rect.y));
+                    rect.x = Math.max(0, Math.min(rect.x, stageW - rect.w));
+                    rect.y = Math.max(0, Math.min(rect.y, stageH - rect.h));
+                };
+
+                const onPointerMove = (e) => {
+                    if (!dragMode) return;
+                    e.preventDefault();
+                    const dx = e.clientX - dragStart.x;
+                    const dy = e.clientY - dragStart.y;
+                    const start = dragStart.rect;
+                    if (dragMode === 'move') {
+                        rect.x = start.x + dx;
+                        rect.y = start.y + dy;
+                    } else {
+                        if (dragMode.includes('l')) { rect.x = start.x + dx; rect.w = start.w - dx; }
+                        if (dragMode.includes('r')) { rect.w = start.w + dx; }
+                        if (dragMode.includes('t')) { rect.y = start.y + dy; rect.h = start.h - dy; }
+                        if (dragMode.includes('b')) { rect.h = start.h + dy; }
+                    }
+                    clampRect();
+                    applyRectStyle();
+                };
+                const onPointerUp = () => { dragMode = null; };
+                const startDrag = (mode) => (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dragMode = mode;
+                    dragStart = { x: e.clientX, y: e.clientY, rect: { ...rect } };
+                };
+
+                const cleanup = () => {
+                    cropModal.classList.add('hidden');
+                    URL.revokeObjectURL(objectUrl);
+                    document.removeEventListener('pointermove', onPointerMove);
+                    document.removeEventListener('pointerup', onPointerUp);
+                };
+
+                const finish = (useCrop) => {
+                    if (!useCrop) { cleanup(); resolve(file); return; }
+                    try {
+                        const scaleX = cropImage.naturalWidth / cropStage.clientWidth;
+                        const scaleY = cropImage.naturalHeight / cropStage.clientHeight;
+                        const sx = Math.max(0, rect.x * scaleX);
+                        const sy = Math.max(0, rect.y * scaleY);
+                        const sw = Math.min(cropImage.naturalWidth - sx, rect.w * scaleX);
+                        const sh = Math.min(cropImage.naturalHeight - sy, rect.h * scaleY);
+                        const canvas = document.createElement('canvas');
+                        canvas.width = Math.max(1, Math.round(sw));
+                        canvas.height = Math.max(1, Math.round(sh));
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(cropImage, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+                        canvas.toBlob((blob) => {
+                            cleanup();
+                            resolve(blob ? new File([blob], file.name || 'photo.jpg', { type: blob.type }) : file);
+                        }, file.type && file.type.startsWith('image/') ? file.type : 'image/jpeg', 0.92);
+                    } catch (err) {
+                        console.error('Crop failed, using full photo:', err);
+                        cleanup();
+                        resolve(file);
+                    }
+                };
+
+                cropRectEl.onpointerdown = startDrag('move');
+                cropRectEl.querySelectorAll('.crop-handle').forEach((h) => { h.onpointerdown = startDrag(h.dataset.handle); });
+                document.addEventListener('pointermove', onPointerMove);
+                document.addEventListener('pointerup', onPointerUp);
+                cropSkipBtn.onclick = () => finish(false);
+                cropConfirmBtn.onclick = () => finish(true);
+
+                cropImage.onload = () => {
+                    // Modal must already be visible (laid out) before measuring the stage —
+                    // a hidden (display:none) element always reports zero client dimensions.
+                    const stageW = cropStage.clientWidth;
+                    const stageH = cropStage.clientHeight;
+                    const insetX = stageW * 0.08;
+                    const insetY = stageH * 0.08;
+                    rect = { x: insetX, y: insetY, w: stageW - insetX * 2, h: stageH - insetY * 2 };
+                    applyRectStyle();
+                };
+                cropModal.classList.remove('hidden');
+                cropImage.src = objectUrl;
+            });
+
             const renderUnassignedLines = (lines) => {
                 scanUnassignedList.innerHTML = '';
                 scanUnassignedSection.classList.toggle('hidden', lines.length === 0);
@@ -2034,13 +2165,14 @@ Thoughts: ${entry.thoughts}
                 scanStatus.textContent = 'Loading scanner…';
                 try {
                     await loadTesseract();
-                    const uprightFile = await correctOrientation(file, scanStatus);
-                    if (uprightFile !== file) {
-                        cardPhotoPreview.src = URL.createObjectURL(uprightFile);
-                        pendingCardPhoto = uprightFile;
+                    let scanFile = await correctOrientation(file, scanStatus);
+                    scanFile = await openCropModal(scanFile);
+                    if (scanFile !== file) {
+                        cardPhotoPreview.src = URL.createObjectURL(scanFile);
+                        pendingCardPhoto = scanFile;
                     }
                     scanStatus.textContent = 'Reading card…';
-                    const { data } = await Tesseract.recognize(uprightFile, 'eng', {
+                    const { data } = await Tesseract.recognize(scanFile, 'eng', {
                         workerPath: `${TESSERACT_BASE}/tesseract.js@5.1.1/dist/worker.min.js`,
                         corePath: `${TESSERACT_BASE}/tesseract.js-core@5.1.1/tesseract-core-simd.wasm.js`,
                         langPath: `${TESSERACT_BASE}/@tesseract.js-data/eng@1.0.0/4.0.0_best_int`,
@@ -2120,13 +2252,22 @@ Thoughts: ${entry.thoughts}
             };
 
             const addPendingQuickAttachment = (file, kind) => {
-                pendingQuickAttachments.push({
+                const attachment = {
                     tempId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
                     id: `att-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
                     file,
                     kind,
                     previewUrl: URL.createObjectURL(file),
-                });
+                };
+                pendingQuickAttachments.push(attachment);
+                renderPendingQuickAttachments();
+                return attachment;
+            };
+
+            const updatePendingQuickAttachmentFile = (attachment, file) => {
+                URL.revokeObjectURL(attachment.previewUrl);
+                attachment.file = file;
+                attachment.previewUrl = URL.createObjectURL(file);
                 renderPendingQuickAttachments();
             };
 
@@ -2143,13 +2284,17 @@ Thoughts: ${entry.thoughts}
                 quickDocInput.value = '';
                 if (!file) return;
 
-                addPendingQuickAttachment(file, 'document');
+                const attachment = addPendingQuickAttachment(file, 'document');
 
                 quickDocScanStatus.textContent = 'Loading scanner…';
                 try {
                     await loadTesseract();
+                    let scanFile = await correctOrientation(file, quickDocScanStatus);
+                    scanFile = await openCropModal(scanFile);
+                    if (scanFile !== file) updatePendingQuickAttachmentFile(attachment, scanFile);
+
                     quickDocScanStatus.textContent = 'Scanning document…';
-                    const { data: { text } } = await Tesseract.recognize(file, 'eng', {
+                    const { data: { text } } = await Tesseract.recognize(scanFile, 'eng', {
                         workerPath: `${TESSERACT_BASE}/tesseract.js@5.1.1/dist/worker.min.js`,
                         corePath: `${TESSERACT_BASE}/tesseract.js-core@5.1.1/tesseract-core-simd.wasm.js`,
                         langPath: `${TESSERACT_BASE}/@tesseract.js-data/eng@1.0.0/4.0.0_best_int`,
@@ -2506,11 +2651,12 @@ Thoughts: ${entry.thoughts}
                 meetingDocScanStatus.textContent = 'Loading scanner…';
                 try {
                     await loadTesseract();
-                    const uprightFile = await correctOrientation(file, meetingDocScanStatus);
-                    if (uprightFile !== file) updatePendingAttachmentFile(attachment, uprightFile);
+                    let scanFile = await correctOrientation(file, meetingDocScanStatus);
+                    scanFile = await openCropModal(scanFile);
+                    if (scanFile !== file) updatePendingAttachmentFile(attachment, scanFile);
 
                     meetingDocScanStatus.textContent = 'Scanning document…';
-                    const { data: { text } } = await Tesseract.recognize(uprightFile, 'eng', {
+                    const { data: { text } } = await Tesseract.recognize(scanFile, 'eng', {
                         workerPath: `${TESSERACT_BASE}/tesseract.js@5.1.1/dist/worker.min.js`,
                         corePath: `${TESSERACT_BASE}/tesseract.js-core@5.1.1/tesseract-core-simd.wasm.js`,
                         langPath: `${TESSERACT_BASE}/@tesseract.js-data/eng@1.0.0/4.0.0_best_int`,
