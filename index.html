@@ -274,7 +274,7 @@
 
                 <div id="scan-unassigned" class="hidden">
                     <label class="block text-sm font-medium text-gray-700">Other text found on the card</label>
-                    <p class="mt-1 text-xs text-gray-500">Name and Company are filled in automatically when we can tell — tap any remaining line to drop it into Name, Company, or Title.</p>
+                    <p class="mt-1 text-xs text-gray-500">Name and Company are filled in automatically when we can tell — for anything else, tap a letter to drop that line into the matching field.</p>
                     <div id="scan-unassigned-list" class="mt-2 space-y-1"></div>
                 </div>
 
@@ -2025,41 +2025,51 @@ Thoughts: ${entry.thoughts}
                 cropImage.src = objectUrl;
             });
 
+            const activatePhoneTab = (key) => document.querySelector(`.phone-tab[data-key="${key}"]`).click();
+            const activateEmailTab = (key) => document.querySelector(`.email-tab[data-key="${key}"]`).click();
+
+            // Single-letter quick-fill targets for each unassigned OCR line, in field order.
+            // Full names go in the button's title/aria-label (tooltip + screen readers) since
+            // Company/Country both read "C" — position in the row disambiguates them visually.
+            const UNASSIGNED_TARGETS = [
+                { label: 'N', name: 'Name', onClick: (line) => { contactNameInput.value = line; } },
+                { label: 'C', name: 'Company', onClick: (line) => { contactCompanyInput.value = line; } },
+                { label: 'P', name: 'Phone', onClick: (line) => { contactPhoneField.set('phone', line); activatePhoneTab('phone'); } },
+                { label: 'M', name: 'Mobile', onClick: (line) => { contactPhoneField.set('mobile', line); activatePhoneTab('mobile'); } },
+                { label: 'T', name: 'Title', onClick: (line) => { contactTitleInput.value = line; } },
+                { label: 'E', name: 'Email', onClick: (line) => { contactEmailField.set('email', line); activateEmailTab('email'); } },
+                { label: '2', name: 'Email 2', onClick: (line) => { contactEmailField.set('email2', line); activateEmailTab('email2'); } },
+                { label: 'A', name: 'Address', onClick: (line) => {
+                    contactAddressInput.value = contactAddressInput.value ? `${contactAddressInput.value}, ${line}` : line;
+                } },
+                { label: 'C', name: 'Country', onClick: (line) => { contactCountryInput.value = line; } },
+            ];
+
             const renderUnassignedLines = (lines) => {
                 scanUnassignedList.innerHTML = '';
                 scanUnassignedSection.classList.toggle('hidden', lines.length === 0);
                 lines.forEach((line) => {
                     const row = document.createElement('div');
-                    row.className = 'flex items-center justify-between gap-2 px-2 py-1 bg-gray-50 border border-gray-200 rounded-md text-sm';
-                    const span = document.createElement('span');
-                    span.textContent = line;
-                    span.className = 'truncate';
+                    row.className = 'px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-md text-sm space-y-1';
+
+                    const textP = document.createElement('p');
+                    textP.textContent = line;
+                    textP.className = 'text-gray-700 break-words';
+                    row.appendChild(textP);
+
                     const btnGroup = document.createElement('div');
-                    btnGroup.className = 'flex gap-1 shrink-0';
-                    const nameBtn = document.createElement('button');
-                    nameBtn.type = 'button';
-                    nameBtn.textContent = '→ Name';
-                    nameBtn.className = 'px-2 py-0.5 text-xs text-blue-600 border border-blue-600 rounded hover:bg-blue-50';
-                    nameBtn.addEventListener('click', () => { contactNameInput.value = line; });
-                    const companyBtn = document.createElement('button');
-                    companyBtn.type = 'button';
-                    companyBtn.textContent = '→ Company';
-                    companyBtn.className = 'px-2 py-0.5 text-xs text-blue-600 border border-blue-600 rounded hover:bg-blue-50';
-                    companyBtn.addEventListener('click', () => { contactCompanyInput.value = line; });
-                    const titleBtn = document.createElement('button');
-                    titleBtn.type = 'button';
-                    titleBtn.textContent = '→ Title';
-                    titleBtn.className = 'px-2 py-0.5 text-xs text-blue-600 border border-blue-600 rounded hover:bg-blue-50';
-                    titleBtn.addEventListener('click', () => { contactTitleInput.value = line; });
-                    const addressBtn = document.createElement('button');
-                    addressBtn.type = 'button';
-                    addressBtn.textContent = '→ Address';
-                    addressBtn.className = 'px-2 py-0.5 text-xs text-blue-600 border border-blue-600 rounded hover:bg-blue-50';
-                    addressBtn.addEventListener('click', () => {
-                        contactAddressInput.value = contactAddressInput.value ? `${contactAddressInput.value}, ${line}` : line;
+                    btnGroup.className = 'flex flex-wrap gap-1';
+                    UNASSIGNED_TARGETS.forEach(({ label, name, onClick }) => {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.textContent = label;
+                        btn.title = name;
+                        btn.setAttribute('aria-label', `Use this text for ${name}`);
+                        btn.className = 'w-6 h-6 flex items-center justify-center text-xs font-medium text-blue-600 border border-blue-600 rounded hover:bg-blue-50';
+                        btn.addEventListener('click', () => onClick(line));
+                        btnGroup.appendChild(btn);
                     });
-                    btnGroup.append(nameBtn, companyBtn, titleBtn, addressBtn);
-                    row.append(span, btnGroup);
+                    row.appendChild(btnGroup);
                     scanUnassignedList.appendChild(row);
                 });
             };
