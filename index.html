@@ -1775,6 +1775,70 @@ Thoughts: ${entry.thoughts}
                 return tesseractLoadPromise;
             };
 
+            // --- Orientation detection/correction — step 1 of any scan. Uses Tesseract's OSD
+            // (orientation & script detection), which needs the Legacy engine and its own small
+            // "osd" data file, separate from the "eng" LSTM data used for the actual text read.
+            // Falls back to scanning the photo as-is if detection fails for any reason.
+            let osdWorkerPromise = null;
+            const getOsdWorker = async () => {
+                if (osdWorkerPromise) return osdWorkerPromise;
+                osdWorkerPromise = (async () => {
+                    await loadTesseract();
+                    return Tesseract.createWorker('osd', Tesseract.OEM.TESSERACT_ONLY, {
+                        workerPath: `${TESSERACT_BASE}/tesseract.js@5.1.1/dist/worker.min.js`,
+                        corePath: `${TESSERACT_BASE}/tesseract.js-core@5.1.1/tesseract-core-simd.wasm.js`,
+                        langPath: `${TESSERACT_BASE}/@tesseract.js-data/osd@1.0.0/4.0.0`,
+                    });
+                })();
+                return osdWorkerPromise;
+            };
+
+            const fileToDataUrl = (file) => new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+
+            const rotateImageFile = (file, degreesClockwise) => new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => {
+                    const swap = degreesClockwise === 90 || degreesClockwise === 270;
+                    const canvas = document.createElement('canvas');
+                    canvas.width = swap ? img.naturalHeight : img.naturalWidth;
+                    canvas.height = swap ? img.naturalWidth : img.naturalHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.translate(canvas.width / 2, canvas.height / 2);
+                    ctx.rotate((degreesClockwise * Math.PI) / 180);
+                    ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+                    URL.revokeObjectURL(img.src);
+                    canvas.toBlob((blob) => {
+                        if (!blob) { reject(new Error('Canvas export failed')); return; }
+                        resolve(new File([blob], file.name || 'photo.jpg', { type: blob.type }));
+                    }, file.type && file.type.startsWith('image/') ? file.type : 'image/jpeg', 0.92);
+                };
+                img.onerror = reject;
+                img.src = URL.createObjectURL(file);
+            });
+
+            // Returns the file straight through if orientation is already fine (or undetectable) —
+            // callers always get something usable to scan, correction is a best-effort improvement.
+            const correctOrientation = async (file, statusEl) => {
+                try {
+                    if (statusEl) statusEl.textContent = 'Checking photo orientation…';
+                    const worker = await getOsdWorker();
+                    const dataUrl = await fileToDataUrl(file);
+                    const { data } = await worker.detect(dataUrl);
+                    const degrees = Math.round((data.orientation_degrees || 0) / 90) * 90 % 360;
+                    if (degrees && data.orientation_confidence > 0.5) {
+                        return await rotateImageFile(file, degrees);
+                    }
+                } catch (err) {
+                    console.error('Orientation detection failed, scanning photo as-is:', err);
+                }
+                return file;
+            };
+
             const renderUnassignedLines = (lines) => {
                 scanUnassignedList.innerHTML = '';
                 scanUnassignedSection.classList.toggle('hidden', lines.length === 0);
@@ -1909,8 +1973,12 @@ Thoughts: ${entry.thoughts}
                 scanStatus.textContent = 'Loading scanner…';
                 try {
                     await loadTesseract();
+                    const uprightFile = await correctOrientation(file, scanStatus);
+                    if (uprightFile !== file) {
+                        cardPhotoPreview.src = URL.createObjectURL(uprightFile);
+                    }
                     scanStatus.textContent = 'Reading card…';
-                    const { data } = await Tesseract.recognize(file, 'eng', {
+                    const { data } = await Tesseract.recognize(uprightFile, 'eng', {
                         workerPath: `${TESSERACT_BASE}/tesseract.js@5.1.1/dist/worker.min.js`,
                         corePath: `${TESSERACT_BASE}/tesseract.js-core@5.1.1/tesseract-core-simd.wasm.js`,
                         langPath: `${TESSERACT_BASE}/@tesseract.js-data/eng@1.0.0/4.0.0_best_int`,
@@ -2275,14 +2343,27 @@ Thoughts: ${entry.thoughts}
             };
 
             const addPendingAttachment = (file, kind) => {
-                pendingMeetingAttachments.push({
+                const attachment = {
                     tempId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
                     id: `att-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
                     file,
                     kind,
                     previewUrl: URL.createObjectURL(file),
                     committed: false,
-                });
+                };
+                pendingMeetingAttachments.push(attachment);
+                renderPendingMeetingAttachments();
+                scheduleMeetingAutosave();
+                return attachment;
+            };
+
+            // Swaps in a corrected (e.g. rotated) version of a not-yet-committed attachment's
+            // photo, replacing the file/preview in place rather than adding a second attachment.
+            const updatePendingAttachmentFile = (attachment, file) => {
+                if (attachment.committed) return; // already saved under the old file — leave it
+                URL.revokeObjectURL(attachment.previewUrl);
+                attachment.file = file;
+                attachment.previewUrl = URL.createObjectURL(file);
                 renderPendingMeetingAttachments();
                 scheduleMeetingAutosave();
             };
@@ -2300,13 +2381,16 @@ Thoughts: ${entry.thoughts}
                 meetingDocInput.value = '';
                 if (!file) return;
 
-                addPendingAttachment(file, 'document');
+                const attachment = addPendingAttachment(file, 'document');
 
                 meetingDocScanStatus.textContent = 'Loading scanner…';
                 try {
                     await loadTesseract();
+                    const uprightFile = await correctOrientation(file, meetingDocScanStatus);
+                    if (uprightFile !== file) updatePendingAttachmentFile(attachment, uprightFile);
+
                     meetingDocScanStatus.textContent = 'Scanning document…';
-                    const { data: { text } } = await Tesseract.recognize(file, 'eng', {
+                    const { data: { text } } = await Tesseract.recognize(uprightFile, 'eng', {
                         workerPath: `${TESSERACT_BASE}/tesseract.js@5.1.1/dist/worker.min.js`,
                         corePath: `${TESSERACT_BASE}/tesseract.js-core@5.1.1/tesseract-core-simd.wasm.js`,
                         langPath: `${TESSERACT_BASE}/@tesseract.js-data/eng@1.0.0/4.0.0_best_int`,
