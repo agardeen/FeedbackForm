@@ -731,6 +731,7 @@
                         <button type="button" id="export-meeting-csv-btn" class="px-3 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-600 rounded-lg hover:bg-blue-50">Export Meeting Notes CSV</button>
                         <button type="button" id="export-todo-csv-btn" class="px-3 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-600 rounded-lg hover:bg-blue-50">Export Todos CSV</button>
                         <button type="button" id="export-json-btn" class="px-3 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-600 rounded-lg hover:bg-blue-50">Export All (JSON)</button>
+                        <button type="button" id="export-photos-zip-btn" class="px-3 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-600 rounded-lg hover:bg-blue-50">Export Photos (ZIP)</button>
                         <button type="button" id="clear-all-logs-btn" class="px-3 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50">Clear All Logs</button>
                     </div>
                 </div>
@@ -991,6 +992,14 @@
                     tx.objectStore(ATTACHMENT_STORE).delete(id);
                     tx.oncomplete = () => resolve();
                     tx.onerror = () => reject(tx.error);
+                });
+            };
+            const getAllAttachments = async () => {
+                const db = await openAttachmentDb();
+                return new Promise((resolve, reject) => {
+                    const req = db.transaction(ATTACHMENT_STORE, 'readonly').objectStore(ATTACHMENT_STORE).getAll();
+                    req.onsuccess = () => resolve(req.result || []);
+                    req.onerror = () => reject(req.error);
                 });
             };
             const clearAttachmentStore = async () => {
@@ -1588,7 +1597,10 @@ Thoughts: ${entry.thoughts}
 
             const formatContactSummary = (entry) => [entry.title, entry.company].filter(Boolean).join(' — ');
 
+            let contactThumbUrls = [];
             const renderContactLog = () => {
+                contactThumbUrls.forEach((url) => URL.revokeObjectURL(url));
+                contactThumbUrls = [];
                 contactLog.innerHTML = '';
                 if (!contactEntries.length) {
                     const empty = document.createElement('p');
@@ -1636,6 +1648,25 @@ Thoughts: ${entry.thoughts}
 
                     const actions = document.createElement('div');
                     actions.className = 'flex flex-col items-end gap-1 shrink-0';
+
+                    if (entry.cardPhotoId) {
+                        const thumbLink = document.createElement('a');
+                        thumbLink.target = '_blank';
+                        thumbLink.rel = 'noopener';
+                        thumbLink.className = 'block w-10 h-10 rounded-md border border-gray-200 overflow-hidden bg-gray-100';
+                        actions.appendChild(thumbLink);
+                        getAttachment(entry.cardPhotoId).then((att) => {
+                            if (!att || !att.blob) return;
+                            const url = URL.createObjectURL(att.blob);
+                            contactThumbUrls.push(url);
+                            thumbLink.href = url;
+                            const img = document.createElement('img');
+                            img.src = url;
+                            img.className = 'w-full h-full object-cover';
+                            img.alt = 'Business card';
+                            thumbLink.appendChild(img);
+                        }).catch((err) => console.error('Failed to load card photo:', err));
+                    }
                     const editBtn = document.createElement('button');
                     editBtn.type = 'button';
                     editBtn.textContent = 'Edit';
@@ -1696,15 +1727,19 @@ Thoughts: ${entry.thoughts}
             };
             document.getElementById('cancel-contact-edit-btn').addEventListener('click', cancelContactEdit);
 
-            const deleteContact = (id) => {
+            const deleteContact = async (id) => {
                 if (!confirm('Delete this contact? This cannot be undone.')) return;
+                const entry = contactEntries.find((e) => e.id === id);
                 contactEntries = contactEntries.filter((e) => e.id !== id);
                 saveJSON(STORAGE_KEYS.contacts, contactEntries);
                 renderContactLog();
                 if (editingContactId === id) cancelContactEdit();
+                if (entry && entry.cardPhotoId) {
+                    try { await deleteAttachment(entry.cardPhotoId); } catch (err) { console.error('Failed to delete card photo:', err); }
+                }
             };
 
-            const saveContact = () => {
+            const saveContact = async () => {
                 const name = contactNameInput.value.trim();
                 const company = contactCompanyInput.value.trim();
                 const phoneValues = contactPhoneField.getAll();
@@ -1725,16 +1760,39 @@ Thoughts: ${entry.thoughts}
                     return false;
                 }
 
+                const fields = { name, title, company, phone, mobile, email, email2, website, address, country, tags, notes };
+
+                // The card photo (if one was just captured/scanned) is only written to
+                // IndexedDB now, at save time — not while still just being previewed/scanned.
+                if (pendingCardPhoto) {
+                    const photoId = `att-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+                    try {
+                        await saveAttachment({
+                            id: photoId,
+                            contactId: editingContactId || null,
+                            blob: pendingCardPhoto,
+                            filename: pendingCardPhoto.name || 'card.jpg',
+                            mimeType: pendingCardPhoto.type,
+                            kind: 'card',
+                            timestamp: new Date().toLocaleString(),
+                        });
+                        fields.cardPhotoId = photoId;
+                    } catch (err) {
+                        console.error('Failed to save card photo:', err);
+                        showToast('Contact saved, but the card photo failed to save on this device.');
+                    }
+                }
+
                 if (editingContactId) {
                     const idx = contactEntries.findIndex((e) => e.id === editingContactId);
                     if (idx !== -1) {
-                        contactEntries[idx] = { ...contactEntries[idx], name, title, company, phone, mobile, email, email2, website, address, country, tags, notes };
+                        contactEntries[idx] = { ...contactEntries[idx], ...fields };
                     }
                 } else {
                     contactEntries.push({
                         id: `contact-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
                         timestamp: new Date().toLocaleString(),
-                        name, title, company, phone, mobile, email, email2, website, address, country, tags, notes,
+                        ...fields,
                     });
                 }
                 saveJSON(STORAGE_KEYS.contacts, contactEntries);
@@ -1942,12 +2000,17 @@ Thoughts: ${entry.thoughts}
                 return { email, phone, website, address, name, company, remaining };
             };
 
+            // The captured card photo itself (post orientation-correction, once scanned) —
+            // only actually written to IndexedDB when the contact is saved.
+            let pendingCardPhoto = null;
+
             const resetCardScan = () => {
                 cardPhotoInput.value = '';
                 cardPhotoPreview.classList.add('hidden');
                 cardPhotoPreview.src = '';
                 scanCardBtn.disabled = true;
                 scanStatus.textContent = '';
+                pendingCardPhoto = null;
                 renderUnassignedLines([]);
             };
 
@@ -1955,6 +2018,7 @@ Thoughts: ${entry.thoughts}
                 const file = cardPhotoInput.files && cardPhotoInput.files[0];
                 scanStatus.textContent = '';
                 renderUnassignedLines([]);
+                pendingCardPhoto = file || null;
                 if (file) {
                     cardPhotoPreview.src = URL.createObjectURL(file);
                     cardPhotoPreview.classList.remove('hidden');
@@ -1976,6 +2040,7 @@ Thoughts: ${entry.thoughts}
                     const uprightFile = await correctOrientation(file, scanStatus);
                     if (uprightFile !== file) {
                         cardPhotoPreview.src = URL.createObjectURL(uprightFile);
+                        pendingCardPhoto = uprightFile;
                     }
                     scanStatus.textContent = 'Reading card…';
                     const { data } = await Tesseract.recognize(uprightFile, 'eng', {
@@ -2791,9 +2856,55 @@ Thoughts: ${entry.thoughts}
                 }, null, 2), 'application/json');
             });
 
+            let fflateLoadPromise = null;
+            const loadFflate = () => {
+                if (window.fflate) return Promise.resolve();
+                if (fflateLoadPromise) return fflateLoadPromise;
+                fflateLoadPromise = new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = `${TESSERACT_BASE}/fflate@0.8.3/umd/index.js`;
+                    script.onload = () => resolve();
+                    script.onerror = () => reject(new Error('Failed to load zip library'));
+                    document.head.appendChild(script);
+                });
+                return fflateLoadPromise;
+            };
+
+            document.getElementById('export-photos-zip-btn').addEventListener('click', async () => {
+                const btn = document.getElementById('export-photos-zip-btn');
+                try {
+                    const attachments = await getAllAttachments();
+                    if (!attachments.length) { showToast('No photos saved yet.'); return; }
+                    btn.disabled = true;
+                    showToast('Preparing photo export…');
+                    await loadFflate();
+
+                    const files = {};
+                    const usedNames = new Set();
+                    for (const att of attachments) {
+                        if (!att || !att.blob) continue;
+                        const folder = att.kind === 'card' ? 'contacts' : 'meeting-notes';
+                        const safeOriginal = (att.filename || 'photo').replace(/[^a-zA-Z0-9_.-]/g, '_');
+                        let path = `${folder}/${att.id}-${safeOriginal}`;
+                        while (usedNames.has(path)) path += '_'; // paranoia: ids are already unique
+                        usedNames.add(path);
+                        files[path] = new Uint8Array(await att.blob.arrayBuffer());
+                    }
+
+                    const zipped = fflate.zipSync(files, { level: 6 });
+                    downloadFile(`field-feedback-photos-${Date.now()}.zip`, zipped, 'application/zip');
+                    showToast('Photo export ready.');
+                } catch (err) {
+                    console.error('Photo export failed:', err);
+                    showToast('Photo export failed — needs a connection the first time it runs.');
+                } finally {
+                    btn.disabled = false;
+                }
+            });
+
             document.getElementById('clear-all-logs-btn').addEventListener('click', async () => {
                 if (!hasAnyEntries()) { showToast('Nothing to clear.'); return; }
-                if (!confirm('Clear all logged feedback, survey answers, contacts, quick captures, meeting notes (including attached photos), and todos from this device? Export first if you need a copy.')) return;
+                if (!confirm('Clear all logged feedback, survey answers, contacts, quick captures, meeting notes, and todos from this device — including all saved photos? Export first if you need a copy.')) return;
                 feedbackEntries = [];
                 qaEntries = [];
                 contactEntries = [];
