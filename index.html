@@ -317,52 +317,54 @@
                     </div>
                 </div>
 
-                <!-- Contact Email and Tags -->
+                <!-- Contact Email and Website -->
                 <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-6 sm:space-y-0">
                     <div class="w-full sm:w-1/2">
                         <label for="contact-email" class="block text-sm font-medium text-gray-700">Email</label>
                         <input type="email" id="contact-email" name="contact_email" class="mt-1 w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="you@example.com">
                     </div>
                     <div class="w-full sm:w-1/2">
-                        <label class="block text-sm font-medium text-gray-700">Tags</label>
-                        <div id="contact-tag-group" class="mt-1 flex flex-wrap gap-1.5">
-                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="PT">PT</button>
-                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="OT">OT</button>
-                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Dealer">Dealer</button>
-                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Distributor">Distributor</button>
-                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="ATP">ATP</button>
-                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="RTS">RTS</button>
-                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="EndUser">EndUser</button>
-                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Supplier">Supplier</button>
-                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Funder">Funder</button>
-                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Sales Manager">Sales Manager</button>
-                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Engineer">Engineer</button>
-                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Educator">Educator</button>
-                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Manufacturer">Manufacturer</button>
-                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Competitor">Competitor</button>
-                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Rep">Rep</button>
-                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="User">User</button>
-                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Family">Family</button>
-                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Caretaker">Caretaker</button>
-                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Logistics">Logistics</button>
-                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Supply Chain">Supply Chain</button>
-                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Insurance">Insurance</button>
-                            <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Funding">Funding</button>
-                            <span id="custom-tag-chips" class="contents"></span>
-                            <button type="button" id="add-tag-btn" class="px-2.5 py-1 text-xs font-medium rounded-full border border-dashed border-gray-400 text-gray-500 hover:bg-gray-50" aria-label="Add a new tag">+ Add</button>
-                        </div>
-                        <div id="add-tag-form" class="hidden mt-2 flex items-center gap-2">
-                            <input type="text" id="new-tag-input" placeholder="New tag name" maxlength="20" class="flex-1 px-2 py-1 text-sm text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
-                            <button type="button" id="confirm-add-tag-btn" class="px-2 py-1 text-xs font-medium text-blue-600 border border-blue-600 rounded hover:bg-blue-50">Add</button>
-                            <button type="button" id="cancel-add-tag-btn" class="px-2 py-1 text-xs text-gray-500 hover:underline">Cancel</button>
-                        </div>
+                        <label for="contact-website" class="block text-sm font-medium text-gray-700">Website</label>
+                        <input type="text" id="contact-website" name="contact_website" class="mt-1 w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="e.g., acme.com">
                     </div>
                 </div>
 
-                <!-- Contact Website -->
+                <!-- Contact Tags -->
                 <div>
-                    <label for="contact-website" class="block text-sm font-medium text-gray-700">Website</label>
-                    <input type="text" id="contact-website" name="contact_website" class="mt-1 w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="e.g., acme.com">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-sm font-medium text-gray-700">Tags</label>
+                        <button type="button" id="add-tag-btn" class="text-xs font-medium text-blue-600 hover:underline" aria-label="Add a new tag">+ Add</button>
+                    </div>
+                    <div id="contact-tag-group" class="mt-1 max-h-44 overflow-y-auto content-start flex flex-wrap gap-1.5">
+                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="PT">PT</button>
+                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="OT">OT</button>
+                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Dealer">Dealer</button>
+                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Distributor">Distributor</button>
+                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="ATP">ATP</button>
+                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="RTS">RTS</button>
+                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="EndUser">EndUser</button>
+                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Supplier">Supplier</button>
+                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Funder">Funder</button>
+                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Sales Manager">Sales Manager</button>
+                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Engineer">Engineer</button>
+                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Educator">Educator</button>
+                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Manufacturer">Manufacturer</button>
+                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Competitor">Competitor</button>
+                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Rep">Rep</button>
+                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="User">User</button>
+                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Family">Family</button>
+                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Caretaker">Caretaker</button>
+                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Logistics">Logistics</button>
+                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Supply Chain">Supply Chain</button>
+                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Insurance">Insurance</button>
+                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Funding">Funding</button>
+                        <span id="custom-tag-chips" class="contents"></span>
+                    </div>
+                    <div id="add-tag-form" class="hidden mt-2 flex items-center gap-2">
+                        <input type="text" id="new-tag-input" placeholder="New tag name" maxlength="20" class="flex-1 px-2 py-1 text-sm text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        <button type="button" id="confirm-add-tag-btn" class="px-2 py-1 text-xs font-medium text-blue-600 border border-blue-600 rounded hover:bg-blue-50">Add</button>
+                        <button type="button" id="cancel-add-tag-btn" class="px-2 py-1 text-xs text-gray-500 hover:underline">Cancel</button>
+                    </div>
                 </div>
 
                 <!-- Contact Notes -->
