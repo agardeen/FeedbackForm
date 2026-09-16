@@ -1133,6 +1133,20 @@
             let activeMicButton = null;
             let targetInput = null;
 
+            // Tracks whichever text input/textarea the user last focused, app-wide. The
+            // per-field mic buttons already have an explicit target (the field they sit next
+            // to), but a continuous "Audio" toggle has no such target — it should dictate into
+            // whatever field is actually selected right now, not one hardcoded field.
+            let lastFocusedField = null;
+            const isDictatableField = (el) => !!el && (el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && ['text', 'search', 'tel', 'email', 'url'].includes(el.type)));
+            document.addEventListener('focusin', (e) => {
+                if (isDictatableField(e.target)) lastFocusedField = e.target;
+            });
+            // Falls back to `fallback` if nothing is focused, or the last-focused field is on a
+            // hidden tab (offsetParent is null while display:none) — keeps dictation from
+            // silently landing in an off-screen field from a tab the user has since left.
+            const resolveDictationTarget = (fallback) => (lastFocusedField && lastFocusedField.offsetParent !== null) ? lastFocusedField : fallback;
+
             // --- Toast Notification Logic ---
             const toast = document.getElementById('toast-notification');
             const showToast = (message) => {
@@ -2646,7 +2660,11 @@ Thoughts: ${entry.thoughts}
                     for (let i = event.resultIndex; i < event.results.length; i++) {
                         if (event.results[i].isFinal) finalChunk += event.results[i][0].transcript + ' ';
                     }
-                    if (finalChunk) quickCaptureText.value = (quickCaptureText.value + ' ' + finalChunk).trim();
+                    if (!finalChunk) return;
+                    // Whichever field is currently selected gets this chunk — falls back to
+                    // Notes only if nothing else on this tab is focused.
+                    const target = resolveDictationTarget(quickCaptureText);
+                    target.value = (target.value + ' ' + finalChunk).trim();
                 };
 
                 quickAudioRecognition.onerror = (event) => {
