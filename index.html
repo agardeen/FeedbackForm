@@ -303,8 +303,11 @@
                 <!-- Contact Phone and Title -->
                 <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-6 sm:space-y-0">
                     <div class="w-full sm:w-1/2">
-                        <label for="contact-phone" class="block text-sm font-medium text-gray-700">Phone</label>
-                        <input type="tel" id="contact-phone" name="contact_phone" class="mt-1 w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="e.g., (555) 123-4567">
+                        <div class="flex gap-1">
+                            <button type="button" class="contact-subfield-tab phone-tab px-2 py-0.5 text-[10px] font-medium rounded-t-md border border-b-0 bg-white border-gray-300 text-gray-700" data-key="phone">Phone</button>
+                            <button type="button" class="contact-subfield-tab phone-tab px-2 py-0.5 text-[10px] font-medium rounded-t-md border border-b-0 bg-gray-100 border-transparent text-gray-400" data-key="mobile">Mobile</button>
+                        </div>
+                        <input type="tel" id="contact-phone" name="contact_phone" class="w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg rounded-tl-none focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="e.g., (555) 123-4567">
                     </div>
                     <div class="w-full sm:w-1/2">
                         <label for="contact-title" class="block text-sm font-medium text-gray-700">Title</label>
@@ -320,8 +323,11 @@
                 <!-- Contact Email and Website -->
                 <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-6 sm:space-y-0">
                     <div class="w-full sm:w-1/2">
-                        <label for="contact-email" class="block text-sm font-medium text-gray-700">Email</label>
-                        <input type="email" id="contact-email" name="contact_email" class="mt-1 w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="you@example.com">
+                        <div class="flex gap-1">
+                            <button type="button" class="contact-subfield-tab email-tab px-2 py-0.5 text-[10px] font-medium rounded-t-md border border-b-0 bg-white border-gray-300 text-gray-700" data-key="email">Email</button>
+                            <button type="button" class="contact-subfield-tab email-tab px-2 py-0.5 text-[10px] font-medium rounded-t-md border border-b-0 bg-gray-100 border-transparent text-gray-400" data-key="email2">Email 2</button>
+                        </div>
+                        <input type="email" id="contact-email" name="contact_email" class="w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg rounded-tl-none focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="you@example.com">
                     </div>
                     <div class="w-full sm:w-1/2">
                         <label for="contact-website" class="block text-sm font-medium text-gray-700">Website</label>
@@ -1448,6 +1454,58 @@ Thoughts: ${entry.thoughts}
             const contactCountryInput = document.getElementById('contact-country');
             const contactNotesInput = document.getElementById('contact-notes');
             const contactLog = document.getElementById('contact-log');
+
+            // Small "tabbed" fields: one visible input backed by two named values (e.g. Phone /
+            // Mobile), switched via tiny tab buttons above the input instead of adding a new row.
+            const makeTabbedField = (inputEl, tabButtons, defaultKey) => {
+                const values = {};
+                tabButtons.forEach((btn) => { values[btn.dataset.key] = ''; });
+                let activeKey = defaultKey;
+
+                const renderTabs = () => {
+                    tabButtons.forEach((btn) => {
+                        const active = btn.dataset.key === activeKey;
+                        btn.classList.toggle('bg-white', active);
+                        btn.classList.toggle('border-gray-300', active);
+                        btn.classList.toggle('text-gray-700', active);
+                        btn.classList.toggle('bg-gray-100', !active);
+                        btn.classList.toggle('border-transparent', !active);
+                        btn.classList.toggle('text-gray-400', !active);
+                    });
+                };
+                tabButtons.forEach((btn) => {
+                    btn.addEventListener('click', () => {
+                        values[activeKey] = inputEl.value;
+                        activeKey = btn.dataset.key;
+                        inputEl.value = values[activeKey] || '';
+                        renderTabs();
+                    });
+                });
+                inputEl.addEventListener('input', () => { values[activeKey] = inputEl.value; });
+
+                return {
+                    get: (key) => (key === activeKey ? inputEl.value : (values[key] || '')),
+                    getAll: () => { values[activeKey] = inputEl.value; return { ...values }; },
+                    set: (key, val) => {
+                        values[key] = val;
+                        if (key === activeKey) inputEl.value = val;
+                    },
+                    setAll: (obj) => {
+                        Object.keys(values).forEach((k) => { values[k] = obj[k] || ''; });
+                        activeKey = defaultKey;
+                        inputEl.value = values[activeKey] || '';
+                        renderTabs();
+                    },
+                    reset: () => {
+                        Object.keys(values).forEach((k) => { values[k] = ''; });
+                        activeKey = defaultKey;
+                        inputEl.value = '';
+                        renderTabs();
+                    },
+                };
+            };
+            const contactPhoneField = makeTabbedField(contactPhoneInput, Array.from(document.querySelectorAll('.phone-tab')), 'phone');
+            const contactEmailField = makeTabbedField(contactEmailInput, Array.from(document.querySelectorAll('.email-tab')), 'email');
             const contactEditingBanner = document.getElementById('contact-editing-banner');
             const saveContactBtn = document.getElementById('save-contact-btn');
 
@@ -1561,7 +1619,7 @@ Thoughts: ${entry.thoughts}
                         info.appendChild(summaryP);
                     }
 
-                    const contactBits = [entry.phone, entry.email].filter(Boolean).join('  •  ');
+                    const contactBits = [entry.phone || entry.mobile, entry.email || entry.email2].filter(Boolean).join('  •  ');
                     if (contactBits) {
                         const contactP = document.createElement('p');
                         contactP.className = 'text-xs text-gray-500 truncate';
@@ -1598,9 +1656,9 @@ Thoughts: ${entry.thoughts}
             const clearContactForm = () => {
                 contactNameInput.value = '';
                 contactCompanyInput.value = '';
-                contactPhoneInput.value = '';
+                contactPhoneField.reset();
                 contactTitleInput.value = '';
-                contactEmailInput.value = '';
+                contactEmailField.reset();
                 contactWebsiteInput.value = '';
                 contactAddressInput.value = '';
                 contactCountryInput.value = '';
@@ -1616,9 +1674,9 @@ Thoughts: ${entry.thoughts}
                 editingContactId = id;
                 contactNameInput.value = entry.name || '';
                 contactCompanyInput.value = entry.company || '';
-                contactPhoneInput.value = entry.phone || '';
+                contactPhoneField.setAll({ phone: entry.phone || '', mobile: entry.mobile || '' });
                 contactTitleInput.value = entry.title || '';
-                contactEmailInput.value = entry.email || '';
+                contactEmailField.setAll({ email: entry.email || '', email2: entry.email2 || '' });
                 contactWebsiteInput.value = entry.website || '';
                 contactAddressInput.value = entry.address || '';
                 contactCountryInput.value = entry.country || '';
@@ -1649,16 +1707,20 @@ Thoughts: ${entry.thoughts}
             const saveContact = () => {
                 const name = contactNameInput.value.trim();
                 const company = contactCompanyInput.value.trim();
-                const phone = contactPhoneInput.value.trim();
+                const phoneValues = contactPhoneField.getAll();
+                const phone = phoneValues.phone.trim();
+                const mobile = phoneValues.mobile.trim();
                 const title = contactTitleInput.value.trim();
-                const email = contactEmailInput.value.trim();
+                const emailValues = contactEmailField.getAll();
+                const email = emailValues.email.trim();
+                const email2 = emailValues.email2.trim();
                 const website = contactWebsiteInput.value.trim();
                 const address = contactAddressInput.value.trim();
                 const country = contactCountryInput.value.trim();
                 const notes = contactNotesInput.value.trim();
                 const tags = selectedContactTags.slice();
 
-                if (!name && !company && !phone && !email) {
+                if (!name && !company && !phone && !mobile && !email && !email2) {
                     showToast('Add at least a name, company, phone, or email before saving.');
                     return false;
                 }
@@ -1666,13 +1728,13 @@ Thoughts: ${entry.thoughts}
                 if (editingContactId) {
                     const idx = contactEntries.findIndex((e) => e.id === editingContactId);
                     if (idx !== -1) {
-                        contactEntries[idx] = { ...contactEntries[idx], name, title, company, phone, email, website, address, country, tags, notes };
+                        contactEntries[idx] = { ...contactEntries[idx], name, title, company, phone, mobile, email, email2, website, address, country, tags, notes };
                     }
                 } else {
                     contactEntries.push({
                         id: `contact-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
                         timestamp: new Date().toLocaleString(),
-                        name, title, company, phone, email, website, address, country, tags, notes,
+                        name, title, company, phone, mobile, email, email2, website, address, country, tags, notes,
                     });
                 }
                 saveJSON(STORAGE_KEYS.contacts, contactEntries);
@@ -1861,8 +1923,8 @@ Thoughts: ${entry.thoughts}
 
                     const lineDetails = (data.lines || []).map((l) => ({ text: l.text, height: l.bbox.y1 - l.bbox.y0 }));
                     const { email, phone, website, address, name, company, remaining } = parseCardText(data.text, lineDetails);
-                    if (email && !contactEmailInput.value) contactEmailInput.value = email;
-                    if (phone && !contactPhoneInput.value) contactPhoneInput.value = phone;
+                    if (email && !contactEmailField.get('email')) contactEmailField.set('email', email);
+                    if (phone && !contactPhoneField.get('phone')) contactPhoneField.set('phone', phone);
                     if (website && !contactWebsiteInput.value) contactWebsiteInput.value = website;
                     if (address && !contactAddressInput.value) contactAddressInput.value = address;
                     if (name && !contactNameInput.value) contactNameInput.value = name;
@@ -2603,8 +2665,8 @@ Thoughts: ${entry.thoughts}
 
             document.getElementById('export-contacts-csv-btn').addEventListener('click', () => {
                 if (!contactEntries.length) { showToast('No contacts saved yet.'); return; }
-                const headers = ['Timestamp', 'Name', 'Title', 'Company', 'Phone', 'Email', 'Tags', 'Website', 'Address', 'Country', 'Notes'];
-                const rows = contactEntries.map((e) => [e.timestamp, e.name, e.title, e.company, e.phone, e.email, (e.tags || []).join('; '), e.website, e.address, e.country, e.notes].map(toCSVValue).join(','));
+                const headers = ['Timestamp', 'Name', 'Title', 'Company', 'Phone', 'Mobile', 'Email', 'Email 2', 'Tags', 'Website', 'Address', 'Country', 'Notes'];
+                const rows = contactEntries.map((e) => [e.timestamp, e.name, e.title, e.company, e.phone, e.mobile, e.email, e.email2, (e.tags || []).join('; '), e.website, e.address, e.country, e.notes].map(toCSVValue).join(','));
                 downloadFile(`contacts-${Date.now()}.csv`, [headers.join(','), ...rows].join('\n'), 'text/csv');
             });
 
