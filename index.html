@@ -901,7 +901,11 @@
                 <div class="crop-handle absolute w-7 h-7 -bottom-3.5 -right-3.5 rounded-full bg-blue-500 border-2 border-white touch-none" data-handle="br"></div>
             </div>
         </div>
-        <p class="text-white text-xs mt-4 text-center">Drag the corners to crop just the card/document, or use the full photo.</p>
+        <div class="flex gap-2 mt-4">
+            <button type="button" id="crop-mode-crop-btn" class="px-3 py-1.5 text-xs font-medium rounded-full border bg-blue-600 text-white border-blue-600">Crop</button>
+            <button type="button" id="crop-mode-ignore-btn" class="px-3 py-1.5 text-xs font-medium rounded-full border bg-transparent text-white border-white">Mark Area to Ignore</button>
+        </div>
+        <p class="text-white text-xs mt-2 text-center" id="crop-instructions">Drag the blue corners to crop.</p>
         <div class="flex gap-3 mt-4">
             <button type="button" id="crop-skip-btn" class="px-4 py-2 text-sm font-medium text-white border border-white rounded-lg hover:bg-white hover:bg-opacity-10">Use Full Photo</button>
             <button type="button" id="crop-confirm-btn" class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">Crop &amp; Continue</button>
@@ -1926,12 +1930,47 @@ Thoughts: ${entry.thoughts}
             const cropRectEl = document.getElementById('crop-rect');
             const cropSkipBtn = document.getElementById('crop-skip-btn');
             const cropConfirmBtn = document.getElementById('crop-confirm-btn');
+            const cropModeCropBtn = document.getElementById('crop-mode-crop-btn');
+            const cropModeIgnoreBtn = document.getElementById('crop-mode-ignore-btn');
+            const cropInstructions = document.getElementById('crop-instructions');
 
+            // Resolves { file, ignoreRects }. `ignoreRects` are in the OUTPUT (cropped) image's
+            // natural pixel coordinates, ready to hand to maskIgnoreRegions() below. The
+            // returned `file` is always just the crop — ignore regions are never baked into
+            // the saved/preview photo, only applied to a separate copy used for OCR.
             const openCropModal = (file) => new Promise((resolve) => {
                 const objectUrl = URL.createObjectURL(file);
                 let rect = { x: 0, y: 0, w: 0, h: 0 }; // rendered-pixel coords, relative to the stage
-                let dragMode = null; // 'move' | 'tl' | 'tr' | 'bl' | 'br'
+                let ignoreBoxes = []; // { id, x, y, w, h, el } — same coordinate space as `rect`
+                let dragMode = null; // 'move' | 'tl' | 'tr' | 'bl' | 'br' | 'draw-ignore'
                 let dragStart = null;
+                let drawingBoxEl = null;
+                let mode = 'crop'; // 'crop' | 'ignore' — which tool the modal's pointer input controls right now
+
+                const setMode = (m) => {
+                    mode = m;
+                    const isCrop = m === 'crop';
+                    // pointer-events:none makes the crop rect (and its handles, which don't set
+                    // their own pointer-events) transparent to hit-testing, so drags in ignore
+                    // mode reach the stage's own draw-ignore handler instead of moving the rect.
+                    cropRectEl.style.pointerEvents = isCrop ? '' : 'none';
+                    cropModeCropBtn.classList.toggle('bg-blue-600', isCrop);
+                    cropModeCropBtn.classList.toggle('border-blue-600', isCrop);
+                    cropModeCropBtn.classList.toggle('bg-transparent', !isCrop);
+                    cropModeCropBtn.classList.toggle('border-white', !isCrop);
+                    cropModeIgnoreBtn.classList.toggle('bg-blue-600', !isCrop);
+                    cropModeIgnoreBtn.classList.toggle('border-blue-600', !isCrop);
+                    cropModeIgnoreBtn.classList.toggle('bg-transparent', isCrop);
+                    cropModeIgnoreBtn.classList.toggle('border-white', isCrop);
+                    cropInstructions.textContent = isCrop
+                        ? 'Drag the blue corners to crop.'
+                        : 'Drag on the photo to mark an area to ignore (e.g. a logo or QR code). Tap × to remove one.';
+                };
+
+                const stagePoint = (e) => {
+                    const r = cropStage.getBoundingClientRect();
+                    return { x: e.clientX - r.left, y: e.clientY - r.top };
+                };
 
                 const applyRectStyle = () => {
                     cropRectEl.style.left = `${rect.x}px`;
@@ -1950,9 +1989,42 @@ Thoughts: ${entry.thoughts}
                     rect.y = Math.max(0, Math.min(rect.y, stageH - rect.h));
                 };
 
+                const removeIgnoreBox = (id) => {
+                    const box = ignoreBoxes.find((b) => b.id === id);
+                    if (box) box.el.remove();
+                    ignoreBoxes = ignoreBoxes.filter((b) => b.id !== id);
+                };
+
+                const finalizeIgnoreBox = (el, x, y, w, h) => {
+                    if (w < 12 || h < 12) { el.remove(); return; } // too small — treat as a stray tap
+                    const id = `ig-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+                    el.className = 'absolute border-2 border-dashed border-red-500 bg-red-500/25';
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.textContent = '×';
+                    removeBtn.setAttribute('aria-label', 'Remove ignored area');
+                    removeBtn.className = 'absolute -top-2.5 -right-2.5 w-5 h-5 flex items-center justify-center bg-red-600 text-white rounded-full text-xs leading-none';
+                    removeBtn.onpointerdown = (e) => e.stopPropagation();
+                    removeBtn.onclick = (e) => { e.stopPropagation(); removeIgnoreBox(id); };
+                    el.appendChild(removeBtn);
+                    ignoreBoxes.push({ id, x, y, w, h, el });
+                };
+
                 const onPointerMove = (e) => {
                     if (!dragMode) return;
                     e.preventDefault();
+                    if (dragMode === 'draw-ignore') {
+                        const p = stagePoint(e);
+                        const x = Math.min(dragStart.p0.x, p.x);
+                        const y = Math.min(dragStart.p0.y, p.y);
+                        const w = Math.abs(p.x - dragStart.p0.x);
+                        const h = Math.abs(p.y - dragStart.p0.y);
+                        drawingBoxEl.style.left = `${x}px`;
+                        drawingBoxEl.style.top = `${y}px`;
+                        drawingBoxEl.style.width = `${w}px`;
+                        drawingBoxEl.style.height = `${h}px`;
+                        return;
+                    }
                     const dx = e.clientX - dragStart.x;
                     const dy = e.clientY - dragStart.y;
                     const start = dragStart.rect;
@@ -1968,23 +2040,47 @@ Thoughts: ${entry.thoughts}
                     clampRect();
                     applyRectStyle();
                 };
-                const onPointerUp = () => { dragMode = null; };
+                const onPointerUp = () => {
+                    if (dragMode === 'draw-ignore' && drawingBoxEl) {
+                        const style = drawingBoxEl.style;
+                        finalizeIgnoreBox(drawingBoxEl, parseFloat(style.left), parseFloat(style.top), parseFloat(style.width), parseFloat(style.height));
+                        drawingBoxEl = null;
+                    }
+                    dragMode = null;
+                };
                 const startDrag = (mode) => (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     dragMode = mode;
                     dragStart = { x: e.clientX, y: e.clientY, rect: { ...rect } };
                 };
+                const startDrawIgnore = (e) => {
+                    if (mode !== 'ignore') return;
+                    if (e.target.closest('#crop-rect')) return; // crop rect/handles handle their own drag (defense in depth)
+                    e.preventDefault();
+                    const p0 = stagePoint(e);
+                    dragMode = 'draw-ignore';
+                    dragStart = { p0 };
+                    drawingBoxEl = document.createElement('div');
+                    drawingBoxEl.className = 'absolute border-2 border-dashed border-red-400 bg-red-400/25 pointer-events-none';
+                    drawingBoxEl.style.left = `${p0.x}px`;
+                    drawingBoxEl.style.top = `${p0.y}px`;
+                    drawingBoxEl.style.width = '0px';
+                    drawingBoxEl.style.height = '0px';
+                    cropStage.appendChild(drawingBoxEl);
+                };
 
                 const cleanup = () => {
                     cropModal.classList.add('hidden');
                     URL.revokeObjectURL(objectUrl);
+                    ignoreBoxes.forEach((b) => b.el.remove());
+                    ignoreBoxes = [];
                     document.removeEventListener('pointermove', onPointerMove);
                     document.removeEventListener('pointerup', onPointerUp);
                 };
 
                 const finish = (useCrop) => {
-                    if (!useCrop) { cleanup(); resolve(file); return; }
+                    if (!useCrop) { cleanup(); resolve({ file, ignoreRects: [] }); return; }
                     try {
                         const scaleX = cropImage.naturalWidth / cropStage.clientWidth;
                         const scaleY = cropImage.naturalHeight / cropStage.clientHeight;
@@ -1992,6 +2088,17 @@ Thoughts: ${entry.thoughts}
                         const sy = Math.max(0, rect.y * scaleY);
                         const sw = Math.min(cropImage.naturalWidth - sx, rect.w * scaleX);
                         const sh = Math.min(cropImage.naturalHeight - sy, rect.h * scaleY);
+
+                        // Ignore boxes -> natural-pixel coords relative to the CROPPED output,
+                        // clipped to it. A box entirely outside the crop just contributes nothing.
+                        const ignoreRects = ignoreBoxes.map((b) => {
+                            const bx0 = Math.max(sx, b.x * scaleX);
+                            const by0 = Math.max(sy, b.y * scaleY);
+                            const bx1 = Math.min(sx + sw, (b.x + b.w) * scaleX);
+                            const by1 = Math.min(sy + sh, (b.y + b.h) * scaleY);
+                            return { x: bx0 - sx, y: by0 - sy, w: bx1 - bx0, h: by1 - by0 };
+                        }).filter((r) => r.w > 0 && r.h > 0);
+
                         const canvas = document.createElement('canvas');
                         canvas.width = Math.max(1, Math.round(sw));
                         canvas.height = Math.max(1, Math.round(sh));
@@ -1999,21 +2106,25 @@ Thoughts: ${entry.thoughts}
                         ctx.drawImage(cropImage, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
                         canvas.toBlob((blob) => {
                             cleanup();
-                            resolve(blob ? new File([blob], file.name || 'photo.jpg', { type: blob.type }) : file);
+                            const outFile = blob ? new File([blob], file.name || 'photo.jpg', { type: blob.type }) : file;
+                            resolve({ file: outFile, ignoreRects });
                         }, file.type && file.type.startsWith('image/') ? file.type : 'image/jpeg', 0.92);
                     } catch (err) {
                         console.error('Crop failed, using full photo:', err);
                         cleanup();
-                        resolve(file);
+                        resolve({ file, ignoreRects: [] });
                     }
                 };
 
                 cropRectEl.onpointerdown = startDrag('move');
                 cropRectEl.querySelectorAll('.crop-handle').forEach((h) => { h.onpointerdown = startDrag(h.dataset.handle); });
+                cropStage.onpointerdown = startDrawIgnore;
                 document.addEventListener('pointermove', onPointerMove);
                 document.addEventListener('pointerup', onPointerUp);
                 cropSkipBtn.onclick = () => finish(false);
                 cropConfirmBtn.onclick = () => finish(true);
+                cropModeCropBtn.onclick = () => setMode('crop');
+                cropModeIgnoreBtn.onclick = () => setMode('ignore');
 
                 cropImage.onload = () => {
                     // Modal must already be visible (laid out) before measuring the stage —
@@ -2025,8 +2136,32 @@ Thoughts: ${entry.thoughts}
                     rect = { x: insetX, y: insetY, w: stageW - insetX * 2, h: stageH - insetY * 2 };
                     applyRectStyle();
                 };
+                setMode('crop'); // reset from any previous invocation before showing
                 cropModal.classList.remove('hidden');
                 cropImage.src = objectUrl;
+            });
+
+            // Paints white over each ignore rect (natural-pixel coords) on a copy of `file` —
+            // used only for the OCR input, never for what's shown/saved. A no-op (returns the
+            // same file) when there's nothing to mask, so callers can always await it safely.
+            const maskIgnoreRegions = (file, rects) => new Promise((resolve) => {
+                if (!rects || !rects.length) { resolve(file); return; }
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    ctx.fillStyle = '#ffffff';
+                    rects.forEach((r) => ctx.fillRect(r.x, r.y, r.w, r.h));
+                    URL.revokeObjectURL(img.src);
+                    canvas.toBlob((blob) => {
+                        resolve(blob ? new File([blob], file.name || 'photo.jpg', { type: blob.type }) : file);
+                    }, file.type && file.type.startsWith('image/') ? file.type : 'image/jpeg', 0.92);
+                };
+                img.onerror = () => resolve(file);
+                img.src = URL.createObjectURL(file);
             });
 
             const activatePhoneTab = (key) => document.querySelector(`.phone-tab[data-key="${key}"]`).click();
@@ -2212,13 +2347,15 @@ Thoughts: ${entry.thoughts}
                 try {
                     await loadTesseract();
                     let scanFile = await correctOrientation(file, scanStatus);
-                    scanFile = await openCropModal(scanFile);
+                    const cropResult = await openCropModal(scanFile);
+                    scanFile = cropResult.file;
                     if (scanFile !== file) {
                         cardPhotoPreview.src = URL.createObjectURL(scanFile);
                         pendingCardPhoto = scanFile;
                     }
+                    const ocrFile = await maskIgnoreRegions(scanFile, cropResult.ignoreRects);
                     scanStatus.textContent = 'Reading card…';
-                    const { data } = await Tesseract.recognize(scanFile, 'eng', {
+                    const { data } = await Tesseract.recognize(ocrFile, 'eng', {
                         workerPath: `${TESSERACT_BASE}/tesseract.js@5.1.1/dist/worker.min.js`,
                         corePath: `${TESSERACT_BASE}/tesseract.js-core@5.1.1/tesseract-core-simd.wasm.js`,
                         langPath: `${TESSERACT_BASE}/@tesseract.js-data/eng@1.0.0/4.0.0_best_int`,
@@ -2297,14 +2434,16 @@ Thoughts: ${entry.thoughts}
                 scanStatus.textContent = 'Preparing photo…';
                 try {
                     let scanFile = await correctOrientation(file, scanStatus);
-                    scanFile = await openCropModal(scanFile);
+                    const cropResult = await openCropModal(scanFile);
+                    scanFile = cropResult.file;
                     if (scanFile !== file) {
                         cardPhotoPreview.src = URL.createObjectURL(scanFile);
                         pendingCardPhoto = scanFile;
                     }
+                    const uploadFile = await maskIgnoreRegions(scanFile, cropResult.ignoreRects);
 
                     scanStatus.textContent = 'Uploading to AI scanner…';
-                    const imageDataUrl = await resizeImageForUpload(scanFile, 1600, 0.85);
+                    const imageDataUrl = await resizeImageForUpload(uploadFile, 1600, 0.85);
 
                     const controller = new AbortController();
                     const timeout = setTimeout(() => controller.abort(), 30000);
@@ -2452,11 +2591,13 @@ Thoughts: ${entry.thoughts}
                 try {
                     await loadTesseract();
                     let scanFile = await correctOrientation(file, quickDocScanStatus);
-                    scanFile = await openCropModal(scanFile);
+                    const cropResult = await openCropModal(scanFile);
+                    scanFile = cropResult.file;
                     if (scanFile !== file) updatePendingQuickAttachmentFile(attachment, scanFile);
+                    const ocrFile = await maskIgnoreRegions(scanFile, cropResult.ignoreRects);
 
                     quickDocScanStatus.textContent = 'Scanning document…';
-                    const { data: { text } } = await Tesseract.recognize(scanFile, 'eng', {
+                    const { data: { text } } = await Tesseract.recognize(ocrFile, 'eng', {
                         workerPath: `${TESSERACT_BASE}/tesseract.js@5.1.1/dist/worker.min.js`,
                         corePath: `${TESSERACT_BASE}/tesseract.js-core@5.1.1/tesseract-core-simd.wasm.js`,
                         langPath: `${TESSERACT_BASE}/@tesseract.js-data/eng@1.0.0/4.0.0_best_int`,
@@ -2814,11 +2955,13 @@ Thoughts: ${entry.thoughts}
                 try {
                     await loadTesseract();
                     let scanFile = await correctOrientation(file, meetingDocScanStatus);
-                    scanFile = await openCropModal(scanFile);
+                    const cropResult = await openCropModal(scanFile);
+                    scanFile = cropResult.file;
                     if (scanFile !== file) updatePendingAttachmentFile(attachment, scanFile);
+                    const ocrFile = await maskIgnoreRegions(scanFile, cropResult.ignoreRects);
 
                     meetingDocScanStatus.textContent = 'Scanning document…';
-                    const { data: { text } } = await Tesseract.recognize(scanFile, 'eng', {
+                    const { data: { text } } = await Tesseract.recognize(ocrFile, 'eng', {
                         workerPath: `${TESSERACT_BASE}/tesseract.js@5.1.1/dist/worker.min.js`,
                         corePath: `${TESSERACT_BASE}/tesseract.js-core@5.1.1/tesseract-core-simd.wasm.js`,
                         langPath: `${TESSERACT_BASE}/@tesseract.js-data/eng@1.0.0/4.0.0_best_int`,
