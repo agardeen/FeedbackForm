@@ -95,6 +95,29 @@
             visibility: visible;
             transform: translate(-50%, -10px);
         }
+        /* Tabs tucked behind the "+" overflow menu render as a vertical list, not underlined tabs. */
+        #more-tabs-menu .tab-btn {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 0.5rem 0.75rem;
+            border-bottom-width: 0;
+        }
+        #more-tabs-menu .tab-btn:hover {
+            background-color: #f3f4f6;
+        }
+        #more-tabs-menu .tab-btn.border-blue-500 {
+            background-color: #eff6ff;
+        }
+        /* Keep the tab bar horizontally scrollable as a safety net on very narrow screens,
+           without showing a visible scrollbar for what's normally a single, non-scrolling row. */
+        .scrollbar-hide {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
     </style>
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen py-6 px-4">
@@ -108,33 +131,40 @@
         </div>
 
         <!-- Tab Buttons -->
-        <div class="border-b border-gray-200 overflow-x-auto">
-            <nav class="-mb-px flex space-x-4 w-max" aria-label="Tabs">
-                <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab6">
-                    Quick Capture
-                </button>
-                <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab7">
-                    Meeting Notes
-                </button>
-                <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600" data-tab="tab1">
+        <div class="relative">
+            <div class="border-b border-gray-200 overflow-x-auto scrollbar-hide">
+                <nav class="-mb-px flex space-x-4 w-max" aria-label="Tabs">
+                    <button class="tab-btn flex-shrink-0 flex items-center justify-center whitespace-nowrap py-2.5 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab5" aria-label="Contact" title="Contact">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0Zm4 8c0 1-1 1-1 1H1s-1 0-1-1 1-4 6-4 6 3 6 4Zm-1-.004c-.001-.246-.154-.986-.832-1.664C9.516 10.68 8.289 10 6 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10.002ZM12 5.5a.5.5 0 0 0-1 0V7h-1.5a.5.5 0 0 0 0 1H11v1.5a.5.5 0 0 0 1 0V8h1.5a.5.5 0 0 0 0-1H12V5.5Z"/></svg>
+                    </button>
+                    <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600" data-tab="tab6">
+                        Quick Capture
+                    </button>
+                    <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab7">
+                        Meeting Notes
+                    </button>
+                    <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab8">
+                        Todo
+                    </button>
+                    <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab3">
+                        Log
+                    </button>
+                    <button type="button" id="more-tabs-btn" class="flex-shrink-0 flex items-center justify-center whitespace-nowrap py-2.5 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" aria-haspopup="true" aria-expanded="false" aria-label="More tabs">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
+                    </button>
+                </nav>
+            </div>
+            <div id="more-tabs-menu" class="hidden absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-40">
+                <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab1">
                     Feedback
                 </button>
                 <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab2">
                     Survey
                 </button>
-                <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab8">
-                    Todo
-                </button>
-                <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab3">
-                    Log
-                </button>
-                 <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab4">
+                <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab4">
                     User
                 </button>
-                <button class="tab-btn flex-shrink-0 flex items-center justify-center whitespace-nowrap py-2.5 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab5" aria-label="Contact" title="Contact">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0Zm4 8c0 1-1 1-1 1H1s-1 0-1-1 1-4 6-4 6 3 6 4Zm-1-.004c-.001-.246-.154-.986-.832-1.664C9.516 10.68 8.289 10 6 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10.002ZM12 5.5a.5.5 0 0 0-1 0V7h-1.5a.5.5 0 0 0 0 1H11v1.5a.5.5 0 0 0 1 0V8h1.5a.5.5 0 0 0 0-1H12V5.5Z"/></svg>
-                </button>
-            </nav>
+            </div>
         </div>
 
         <!-- 
@@ -144,7 +174,7 @@
         <form id="feedback-form" class="space-y-6">
             
             <!-- Tab 1 Content: Feedback -->
-            <div id="tab1" class="tab-content active space-y-6">
+            <div id="tab1" class="tab-content space-y-6">
                  <!-- Quick Thoughts Field -->
                 <div>
                     <label for="message" class="block text-sm font-medium text-gray-700">Quick Thoughts</label>
@@ -342,7 +372,7 @@
             </div>
 
             <!-- Tab 6 Content: Quick Capture -->
-            <div id="tab6" class="tab-content space-y-6">
+            <div id="tab6" class="tab-content active space-y-6">
                 <div>
                     <p class="text-xs text-gray-500">The fastest way to jot something down — no other fields needed.</p>
                     <div class="mt-2 flex flex-nowrap items-center gap-1.5">
@@ -920,7 +950,28 @@
             // --- Tab Switching Logic ---
             const tabButtons = document.querySelectorAll('.tab-btn');
             const tabContents = document.querySelectorAll('.tab-content');
-            
+
+            // --- "+" overflow menu (Feedback / Survey / User, tucked away as less-used tabs) ---
+            const moreTabsBtn = document.getElementById('more-tabs-btn');
+            const moreTabsMenu = document.getElementById('more-tabs-menu');
+            const OVERFLOW_TAB_IDS = ['tab1', 'tab2', 'tab4'];
+
+            const closeMoreTabsMenu = () => {
+                moreTabsMenu.classList.add('hidden');
+                moreTabsBtn.setAttribute('aria-expanded', 'false');
+            };
+            moreTabsBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const willOpen = moreTabsMenu.classList.contains('hidden');
+                moreTabsMenu.classList.toggle('hidden', !willOpen);
+                moreTabsBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+            });
+            document.addEventListener('click', (e) => {
+                if (!moreTabsMenu.classList.contains('hidden') && !moreTabsMenu.contains(e.target) && e.target !== moreTabsBtn) {
+                    closeMoreTabsMenu();
+                }
+            });
+
             tabButtons.forEach(button => {
                 button.addEventListener('click', () => {
                     const tabId = button.getAttribute('data-tab');
@@ -938,6 +989,14 @@
                     tabContents.forEach(content => {
                         content.classList.toggle('active', content.id === tabId);
                     });
+
+                    // Reflect whether the active tab is one tucked behind "+" on the "+" button itself.
+                    const isOverflowTab = OVERFLOW_TAB_IDS.includes(tabId);
+                    moreTabsBtn.classList.toggle('border-blue-500', isOverflowTab);
+                    moreTabsBtn.classList.toggle('text-blue-600', isOverflowTab);
+                    moreTabsBtn.classList.toggle('border-transparent', !isOverflowTab);
+                    moreTabsBtn.classList.toggle('text-gray-500', !isOverflowTab);
+                    closeMoreTabsMenu();
 
                     // Leaving Meeting Notes finalizes whatever draft is in progress (auto-save,
                     // no button needed) so the form is fresh next time this tab is opened.
