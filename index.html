@@ -716,10 +716,9 @@
             <!-- Tab 3 Content: Log -->
             <div id="tab3" class="tab-content space-y-6">
                 <div>
-                    <label for="activity-log" class="block text-sm font-medium text-gray-700">Activity Log</label>
-                    <div class="mt-2">
-                        <textarea id="activity-log" name="activity_log" rows="12" readonly class="w-full p-4 bg-gray-50 border rounded-lg text-gray-600 text-sm overflow-y-auto"></textarea>
-                    </div>
+                    <label class="block text-sm font-medium text-gray-700">Activity Log</label>
+                    <p class="mt-1 text-xs text-gray-500">Everything logged across the app, oldest to newest.</p>
+                    <div id="activity-log" class="mt-2 h-64 overflow-y-auto border border-gray-200 rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-600 leading-6"></div>
                 </div>
                 <div>
                     <p class="text-xs text-gray-500 mb-2">Entries are saved on this device automatically. Export regularly to back them up or share them.</p>
@@ -1408,6 +1407,7 @@
                 }
 
                 qaEntries.push({
+                    ts: Date.now(),
                     timestamp: new Date().toLocaleTimeString(),
                     question: questionText,
                     answer: answerText,
@@ -1418,6 +1418,7 @@
                 });
                 saveJSON(STORAGE_KEYS.qa, qaEntries);
                 renderQuestionLog();
+                renderActivityLog();
 
                 // Reset fields for next entry
                 questionInput.value = '';
@@ -1432,17 +1433,52 @@
             const activityLog = document.getElementById('activity-log');
 
             const formatFeedbackEntry = (entry) =>
-`[${entry.timestamp}] - Feedback Logged
----------------------------------
-User: ${entry.user} (${entry.email})
-Date: ${entry.date}
-Contact: ${entry.person} at ${entry.company}
-Subject: ${entry.subject}${entry.event ? `\nEvent: ${entry.event}` : ''}${entry.location ? `   Location: ${entry.location}` : ''}
-Thoughts: ${entry.thoughts}
----------------------------------\n\n`;
+                `Feedback — ${entry.person} @ ${entry.company}: ${entry.subject} — "${entry.thoughts}"`;
+            const formatQaActivityEntry = (entry) =>
+                `Survey — ${entry.person ? `${entry.person}${entry.company ? ' @ ' + entry.company : ''}: ` : ''}Q: ${entry.question} / A: ${entry.answer}`;
+            const formatContactActivityEntry = (entry) =>
+                `Contact — ${entry.name || '(no name)'}${entry.title ? ', ' + entry.title : ''}${entry.company ? ' @ ' + entry.company : ''}`;
+            const formatQuickActivityEntry = (entry) =>
+                `Quick Capture — ${entry.text}${entry.tags && entry.tags.length ? ` (Tags: ${entry.tags.join(', ')})` : ''}`;
+            const formatMeetingActivityEntry = (entry) =>
+                `Meeting Notes — ${entry.subject || '(no subject)'}${entry.person ? ' with ' + entry.person : ''}${entry.company ? ' @ ' + entry.company : ''}`;
+            const formatTodoActivityEntry = (entry) =>
+                `Follow-up — ${entry.task}${entry.person || entry.company ? ` (${[entry.person, entry.company].filter(Boolean).join(' — ')})` : ''}${entry.due ? ` — due ${entry.due}` : ''}`;
+
+            // A unified, chronological feed across every tab's log — each source array is
+            // mapped to {ts, timestamp, text} so they can be merged and sorted together.
+            // Legacy entries saved before the `ts` field existed fall back to parsing the
+            // display timestamp so they still land in roughly the right place.
+            const activityTs = (entry) => entry.ts || Date.parse(entry.timestamp) || 0;
 
             const renderActivityLog = () => {
-                activityLog.value = feedbackEntries.map(formatFeedbackEntry).join('');
+                activityLog.innerHTML = '';
+
+                const items = [
+                    ...feedbackEntries.map((e) => ({ ts: activityTs(e), timestamp: e.timestamp, text: formatFeedbackEntry(e) })),
+                    ...qaEntries.map((e) => ({ ts: activityTs(e), timestamp: e.timestamp, text: formatQaActivityEntry(e) })),
+                    ...contactEntries.map((e) => ({ ts: activityTs(e), timestamp: e.timestamp, text: formatContactActivityEntry(e) })),
+                    ...quickCaptureEntries.map((e) => ({ ts: activityTs(e), timestamp: e.timestamp, text: formatQuickActivityEntry(e) })),
+                    ...meetingNoteEntries.map((e) => ({ ts: activityTs(e), timestamp: e.timestamp, text: formatMeetingActivityEntry(e) })),
+                    ...todoEntries.map((e) => ({ ts: activityTs(e), timestamp: e.timestamp, text: formatTodoActivityEntry(e) })),
+                ];
+                items.sort((a, b) => a.ts - b.ts);
+
+                // Full detail matters here (unlike the compact per-tab feeds), so lines wrap
+                // instead of truncating.
+                if (!items.length) {
+                    const empty = document.createElement('div');
+                    empty.textContent = 'No activity logged yet.';
+                    activityLog.appendChild(empty);
+                } else {
+                    items.forEach((item) => {
+                        const line = document.createElement('div');
+                        line.className = 'whitespace-pre-wrap break-words py-0.5';
+                        line.textContent = `[${item.timestamp}] ${item.text}`;
+                        activityLog.appendChild(line);
+                    });
+                }
+
                 activityLog.scrollTop = activityLog.scrollHeight;
             };
 
@@ -1462,6 +1498,7 @@ Thoughts: ${entry.thoughts}
                 }
 
                 feedbackEntries.push({
+                    ts: Date.now(),
                     timestamp: new Date().toLocaleString(),
                     user, email, date, person, company, subject,
                     product: document.getElementById('product-feedback').value.trim(),
@@ -1769,6 +1806,7 @@ Thoughts: ${entry.thoughts}
                 contactEntries = contactEntries.filter((e) => e.id !== id);
                 saveJSON(STORAGE_KEYS.contacts, contactEntries);
                 renderContactLog();
+                renderActivityLog();
                 if (editingContactId === id) cancelContactEdit();
                 if (entry && entry.cardPhotoId) {
                     try { await deleteAttachment(entry.cardPhotoId); } catch (err) { console.error('Failed to delete card photo:', err); }
@@ -1796,7 +1834,7 @@ Thoughts: ${entry.thoughts}
                     return false;
                 }
 
-                const fields = { name, title, company, phone, mobile, email, email2, website, address, country, tags, notes };
+                const fields = { ts: Date.now(), name, title, company, phone, mobile, email, email2, website, address, country, tags, notes };
 
                 // The card photo (if one was just captured/scanned) is only written to
                 // IndexedDB now, at save time — not while still just being previewed/scanned.
@@ -1833,6 +1871,7 @@ Thoughts: ${entry.thoughts}
                 }
                 saveJSON(STORAGE_KEYS.contacts, contactEntries);
                 renderContactLog();
+                renderActivityLog();
 
                 const wasEditing = !!editingContactId;
                 editingContactId = null;
@@ -2839,6 +2878,7 @@ Thoughts: ${entry.thoughts}
 
                 quickCaptureEntries.push({
                     id: entryId,
+                    ts: Date.now(),
                     timestamp: new Date().toLocaleString(),
                     text,
                     tags,
@@ -2846,6 +2886,7 @@ Thoughts: ${entry.thoughts}
                 });
                 saveJSON(STORAGE_KEYS.quickCaptures, quickCaptureEntries);
                 renderQuickCaptureLog();
+                renderActivityLog();
 
                 quickCaptureText.value = '';
                 resetQuickTags();
@@ -3102,6 +3143,7 @@ Thoughts: ${entry.thoughts}
                         saveJSON(STORAGE_KEYS.meetingNotes, meetingNoteEntries);
                         meetingDraftId = null;
                         renderMeetingNotesLog();
+                        renderActivityLog();
                     }
                     meetingSaveIndicator.textContent = '';
                     return;
@@ -3136,6 +3178,7 @@ Thoughts: ${entry.thoughts}
 
                 const entry = {
                     id: entryId,
+                    ts: Date.now(),
                     timestamp: dateTime.toLocaleString(),
                     subject: meetingSubjectInput.value.trim(),
                     person: meetingPersonInput.value.trim(),
@@ -3154,6 +3197,7 @@ Thoughts: ${entry.thoughts}
                 }
                 saveJSON(STORAGE_KEYS.meetingNotes, meetingNoteEntries);
                 renderMeetingNotesLog();
+                renderActivityLog();
                 meetingSaveIndicator.textContent = `Saved ${dateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
             };
 
@@ -3200,6 +3244,7 @@ Thoughts: ${entry.thoughts}
                     meetingNoteEntries = meetingNoteEntries.filter((e) => e.id !== meetingDraftId);
                     saveJSON(STORAGE_KEYS.meetingNotes, meetingNoteEntries);
                     renderMeetingNotesLog();
+                    renderActivityLog();
                 }
                 meetingDraftId = null;
                 resetMeetingAttachments();
@@ -3267,6 +3312,7 @@ Thoughts: ${entry.thoughts}
                         todoEntries = todoEntries.filter((t) => t.id !== todo.id);
                         saveJSON(STORAGE_KEYS.todos, todoEntries);
                         renderTodoList();
+                        renderActivityLog();
                     });
 
                     row.append(checkbox, textWrap, deleteBtn);
@@ -3282,6 +3328,7 @@ Thoughts: ${entry.thoughts}
                 }
                 todoEntries.push({
                     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                    ts: Date.now(),
                     timestamp: new Date().toLocaleString(),
                     task,
                     person: todoPersonInput.value.trim(),
@@ -3291,6 +3338,7 @@ Thoughts: ${entry.thoughts}
                 });
                 saveJSON(STORAGE_KEYS.todos, todoEntries);
                 renderTodoList();
+                renderActivityLog();
                 todoPersonInput.value = '';
                 todoCompanyInput.value = '';
                 todoTaskInput.value = '';
