@@ -2083,11 +2083,24 @@ Thoughts: ${entry.thoughts}
                 const phoneRe = /(?:\+?\d{1,3}[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/;
                 const websiteRe = /\b(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9-]+\.(?:com|net|org|io|co|us|biz|info)\b\S*/i;
 
+                // Below this, OCR output on real (non-synthetic) photos is unreliable enough
+                // that showing it as a usable option does more harm than good — verified against
+                // real Tesseract runs on a deliberately degraded test card, where every line
+                // scoring under ~50 confidence was visibly garbled ("Bust or dependence" for
+                // "Built for independence", etc.) and every line at 68+ was correct.
+                const MIN_LINE_CONFIDENCE = 50;
+                const confidenceOf = (text) => {
+                    if (!lineDetails) return 100;
+                    const found = lineDetails.find((ld) => ld.text.trim() === text);
+                    return found && typeof found.confidence === 'number' ? found.confidence : 100;
+                };
+
                 let email = '', phone = '', website = '';
                 const addressLines = [];
                 const candidates = [];
 
                 for (const line of lines) {
+                    if (confidenceOf(line) < MIN_LINE_CONFIDENCE) continue; // likely OCR noise — drop, don't guess
                     const emailMatch = !email && line.match(emailRe);
                     if (emailMatch) { email = emailMatch[0]; continue; }
                     const phoneMatch = !phone && line.match(phoneRe);
@@ -2183,7 +2196,7 @@ Thoughts: ${entry.thoughts}
                         },
                     });
 
-                    const lineDetails = (data.lines || []).map((l) => ({ text: l.text, height: l.bbox.y1 - l.bbox.y0 }));
+                    const lineDetails = (data.lines || []).map((l) => ({ text: l.text, height: l.bbox.y1 - l.bbox.y0, confidence: l.confidence }));
                     const { email, phone, website, address, name, company, remaining } = parseCardText(data.text, lineDetails);
                     if (email && !contactEmailField.get('email')) contactEmailField.set('email', email);
                     if (phone && !contactPhoneField.get('phone')) contactPhoneField.set('phone', phone);
