@@ -1,5 +1,5 @@
 // Bump this on every deploy that changes cached files so clients pick up the update.
-const CACHE_NAME = 'field-feedback-v2';
+const CACHE_NAME = 'field-feedback-v3';
 
 const APP_SHELL = [
     './',
