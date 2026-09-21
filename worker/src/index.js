@@ -1,25 +1,31 @@
 /**
- * Business card scan proxy.
+ * Field Feedback Worker.
  *
- * Holds the OpenAI API key server-side (Cloudflare Worker secret) and forwards
- * a business-card photo to a vision-capable OpenAI model with a strict JSON
- * schema, so the frontend never sees the key and never has to parse free-form
- * text. The frontend does image capture, orientation-correction, cropping,
- * and resizing before it ever reaches here (see the "Frontend integration"
- * note in the README) — this Worker's job is just: validate, proxy, validate
- * the response, and get out of the way.
+ * Two unrelated jobs share this Worker (and its wrangler deploy flow):
  *
- * Provider swap: everything OpenAI-specific lives in `callOpenAI()` and
- * `CARD_SCHEMA`. To move to a different vision-capable provider later,
- * replace `callOpenAI()` with an equivalent call and keep returning the same
- * shape (`{ ok, data }` or `{ ok: false, error }`) — nothing else needs to
- * change.
+ * 1. Business card scan proxy (`POST /`) — holds the OpenAI API key
+ *    server-side and forwards a business-card photo to a vision-capable
+ *    OpenAI model with a strict JSON schema. See the "Frontend integration"
+ *    note in the README for how the frontend uses this.
+ *
+ * 2. Optional server sync (`/sync/*`) — lets the app back up its locally
+ *    stored records (feedback, survey answers, contacts, quick captures,
+ *    meeting notes, todos) and media (photos/audio/scans) to a D1 database
+ *    and R2 bucket, so a device wipe or reinstall isn't a full data loss.
+ *    Sync is opt-in from the app; nothing here runs unless the frontend
+ *    calls it. Every /sync/* route requires the APP_SHARED_KEY secret.
+ *
+ * Provider swap (card scan): everything OpenAI-specific lives in
+ * `callOpenAI()` and `CARD_SCHEMA`. Replace `callOpenAI()` with an
+ * equivalent call and keep returning the same shape — nothing else needs
+ * to change.
  */
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // ~8MB base64 payload cap (defense in depth —
 // the frontend resizes well below this before sending; this just stops an
 // abusive direct call to the endpoint from sending something huge).
 const OPENAI_TIMEOUT_MS = 25000;
+const MAX_MEDIA_BYTES = 25 * 1024 * 1024; // photos/audio uploaded for sync
 
 const CARD_SCHEMA = {
 	name: 'business_card_contact',
@@ -80,12 +86,17 @@ Rules:
 - If the image does not show a business card (or a badge with equivalent contact info), set is_business_card to false and leave every other field null.
 - Set is_business_card to true only when you are actually looking at a card — not merely because you found some text.`;
 
+// Record types the sync endpoints will accept. Kept in sync with the app's
+// STORAGE_KEYS in index.html — the Worker treats `data` as an opaque JSON
+// blob either way, this is just an allowlist against typos/abuse.
+const RECORD_TYPES = new Set(['feedback', 'qa', 'contacts', 'quickCaptures', 'meetingNotes', 'todos']);
+
 function corsHeaders(origin, allowedOrigins) {
 	const allowOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
 	return {
 		'Access-Control-Allow-Origin': allowOrigin,
-		'Access-Control-Allow-Methods': 'POST, OPTIONS',
-		'Access-Control-Allow-Headers': 'Content-Type, X-App-Key',
+		'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+		'Access-Control-Allow-Headers': 'Content-Type, X-App-Key, X-Media-Kind',
 		'Vary': 'Origin',
 	};
 }
@@ -166,66 +177,258 @@ function validateShape(data) {
 	return true;
 }
 
+async function handleCardScan(request, env, headers) {
+	if (request.method !== 'POST') {
+		return jsonResponse({ error: 'method_not_allowed' }, 405, headers);
+	}
+
+	if (!env.OPENAI_API_KEY) {
+		// eslint-disable-next-line no-console
+		console.error('OPENAI_API_KEY is not configured');
+		return jsonResponse({ error: 'server_not_configured' }, 500, headers);
+	}
+
+	let body;
+	try {
+		body = await request.json();
+	} catch (err) {
+		return jsonResponse({ error: 'invalid_request_body' }, 400, headers);
+	}
+
+	const image = body && body.image;
+	if (!image || typeof image !== 'string' || !image.startsWith('data:image/')) {
+		return jsonResponse({ error: 'missing_or_invalid_image' }, 400, headers);
+	}
+	if (image.length > MAX_IMAGE_BYTES) {
+		return jsonResponse({ error: 'image_too_large' }, 413, headers);
+	}
+
+	const result = await callOpenAI(env, image);
+	if (!result.ok) {
+		return jsonResponse({ error: result.error }, result.status || 502, headers);
+	}
+	if (!validateShape(result.data)) {
+		// eslint-disable-next-line no-console
+		console.error('Model response failed shape validation');
+		return jsonResponse({ error: 'invalid_model_response' }, 502, headers);
+	}
+	if (!result.data.is_business_card) {
+		return jsonResponse({ error: 'not_a_business_card' }, 422, headers);
+	}
+
+	return jsonResponse({ contact: result.data }, 200, headers);
+}
+
+// --- Sync: records (feedback/survey/contacts/quick captures/meeting notes/todos) ---
+
+async function handleRecordsUpsert(request, env, headers, type) {
+	if (!RECORD_TYPES.has(type)) return jsonResponse({ error: 'unknown_record_type' }, 404, headers);
+
+	let body;
+	try {
+		body = await request.json();
+	} catch (err) {
+		return jsonResponse({ error: 'invalid_request_body' }, 400, headers);
+	}
+
+	const records = body && Array.isArray(body.records) ? body.records : null;
+	if (!records || !records.length) return jsonResponse({ error: 'missing_records' }, 400, headers);
+	if (records.length > 500) return jsonResponse({ error: 'too_many_records' }, 413, headers);
+
+	const now = Date.now();
+	const statements = [];
+	for (const record of records) {
+		if (!record || typeof record.id !== 'string' || !record.id) continue;
+		const updatedAt = Number.isFinite(record.updatedAt) ? record.updatedAt : now;
+		const data = JSON.stringify(record.data ?? {});
+		// Last-write-wins, but only if the incoming version is at least as new —
+		// protects against an out-of-order sync from an offline-queued device.
+		statements.push(
+			env.SYNC_DB.prepare(
+				`INSERT INTO records (type, id, data, updated_at, deleted_at)
+				 VALUES (?1, ?2, ?3, ?4, NULL)
+				 ON CONFLICT(type, id) DO UPDATE SET
+				   data = excluded.data,
+				   updated_at = excluded.updated_at,
+				   deleted_at = NULL
+				 WHERE excluded.updated_at >= records.updated_at`
+			).bind(type, record.id, data, updatedAt)
+		);
+	}
+	if (!statements.length) return jsonResponse({ error: 'no_valid_records' }, 400, headers);
+
+	await env.SYNC_DB.batch(statements);
+	return jsonResponse({ ok: true, upserted: statements.length }, 200, headers);
+}
+
+async function handleRecordDelete(env, headers, type, id) {
+	if (!RECORD_TYPES.has(type)) return jsonResponse({ error: 'unknown_record_type' }, 404, headers);
+	if (!id) return jsonResponse({ error: 'missing_id' }, 400, headers);
+
+	await env.SYNC_DB.prepare(
+		`UPDATE records SET deleted_at = ?1, updated_at = ?1 WHERE type = ?2 AND id = ?3`
+	).bind(Date.now(), type, id).run();
+
+	return jsonResponse({ ok: true }, 200, headers);
+}
+
+async function handleRecordsPull(request, env, headers, type) {
+	if (!RECORD_TYPES.has(type)) return jsonResponse({ error: 'unknown_record_type' }, 404, headers);
+
+	const url = new URL(request.url);
+	const since = Number(url.searchParams.get('since')) || 0;
+
+	const { results } = await env.SYNC_DB.prepare(
+		`SELECT id, data, updated_at, deleted_at FROM records WHERE type = ?1 AND updated_at > ?2 ORDER BY updated_at ASC LIMIT 1000`
+	).bind(type, since).all();
+
+	const records = (results || []).map((row) => ({
+		id: row.id,
+		updatedAt: row.updated_at,
+		deleted: !!row.deleted_at,
+		data: row.deleted_at ? null : JSON.parse(row.data),
+	}));
+
+	return jsonResponse({ records, serverTime: Date.now() }, 200, headers);
+}
+
+// --- Sync: media (photos/audio/scans) ---
+
+async function handleMediaUpload(request, env, headers, id) {
+	if (!id) return jsonResponse({ error: 'missing_id' }, 400, headers);
+
+	const contentType = request.headers.get('Content-Type') || 'application/octet-stream';
+	const kind = request.headers.get('X-Media-Kind') || 'unknown';
+	const body = await request.arrayBuffer();
+	if (!body.byteLength) return jsonResponse({ error: 'empty_body' }, 400, headers);
+	if (body.byteLength > MAX_MEDIA_BYTES) return jsonResponse({ error: 'media_too_large' }, 413, headers);
+
+	await env.SYNC_MEDIA.put(id, body, { httpMetadata: { contentType } });
+
+	const now = Date.now();
+	await env.SYNC_DB.prepare(
+		`INSERT INTO media (id, kind, content_type, updated_at, deleted_at)
+		 VALUES (?1, ?2, ?3, ?4, NULL)
+		 ON CONFLICT(id) DO UPDATE SET kind = excluded.kind, content_type = excluded.content_type, updated_at = excluded.updated_at, deleted_at = NULL`
+	).bind(id, kind, contentType, now).run();
+
+	return jsonResponse({ ok: true }, 200, headers);
+}
+
+async function handleMediaDownload(env, headers, id) {
+	if (!id) return jsonResponse({ error: 'missing_id' }, 400, headers);
+	const object = await env.SYNC_MEDIA.get(id);
+	if (!object) return jsonResponse({ error: 'not_found' }, 404, headers);
+	return new Response(object.body, {
+		status: 200,
+		headers: { ...headers, 'Content-Type': object.httpMetadata?.contentType || 'application/octet-stream' },
+	});
+}
+
+async function handleMediaDelete(env, headers, id) {
+	if (!id) return jsonResponse({ error: 'missing_id' }, 400, headers);
+	await env.SYNC_MEDIA.delete(id);
+	await env.SYNC_DB.prepare(
+		`UPDATE media SET deleted_at = ?1, updated_at = ?1 WHERE id = ?2`
+	).bind(Date.now(), id).run();
+	return jsonResponse({ ok: true }, 200, headers);
+}
+
+async function handleMediaList(request, env, headers) {
+	const url = new URL(request.url);
+	const since = Number(url.searchParams.get('since')) || 0;
+
+	const { results } = await env.SYNC_DB.prepare(
+		`SELECT id, kind, content_type, updated_at, deleted_at FROM media WHERE updated_at > ?1 ORDER BY updated_at ASC LIMIT 1000`
+	).bind(since).all();
+
+	const media = (results || []).map((row) => ({
+		id: row.id,
+		kind: row.kind,
+		contentType: row.content_type,
+		updatedAt: row.updated_at,
+		deleted: !!row.deleted_at,
+	}));
+
+	return jsonResponse({ media, serverTime: Date.now() }, 200, headers);
+}
+
 export default {
 	async fetch(request, env) {
 		const origin = request.headers.get('Origin') || '';
 		const allowedOrigins = (env.ALLOWED_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean);
 		const headers = corsHeaders(origin, allowedOrigins);
+		const url = new URL(request.url);
 
 		if (request.method === 'OPTIONS') {
 			return new Response(null, { status: 204, headers });
-		}
-
-		if (request.method !== 'POST') {
-			return jsonResponse({ error: 'method_not_allowed' }, 405, headers);
 		}
 
 		if (!allowedOrigins.includes(origin)) {
 			return jsonResponse({ error: 'origin_not_allowed' }, 403, headers);
 		}
 
-		// Optional lightweight deterrent against casual direct-hit abuse (not real
-		// security — client-side secrets are always extractable — just raises the
-		// bar above "found the URL and curled it". Skipped entirely if the secret
-		// isn't configured, so this feature works with zero extra setup too.
-		if (env.APP_SHARED_KEY && request.headers.get('X-App-Key') !== env.APP_SHARED_KEY) {
-			return jsonResponse({ error: 'unauthorized' }, 401, headers);
+		// --- Card scan: unchanged behavior at the root path ---
+		if (url.pathname === '/') {
+			// Optional lightweight deterrent against casual direct-hit abuse (not real
+			// security — client-side secrets are always extractable — just raises the
+			// bar above "found the URL and curled it". Skipped entirely if the secret
+			// isn't configured, so this feature works with zero extra setup too.
+			if (env.APP_SHARED_KEY && request.headers.get('X-App-Key') !== env.APP_SHARED_KEY) {
+				return jsonResponse({ error: 'unauthorized' }, 401, headers);
+			}
+			return handleCardScan(request, env, headers);
 		}
 
-		if (!env.OPENAI_API_KEY) {
-			// eslint-disable-next-line no-console
-			console.error('OPENAI_API_KEY is not configured');
-			return jsonResponse({ error: 'server_not_configured' }, 500, headers);
+		// --- Sync routes: always require the shared key, since these read/write
+		// persistent storage (unlike the scan route, where the key is optional) ---
+		if (url.pathname.startsWith('/sync/')) {
+			if (!env.APP_SHARED_KEY) {
+				// eslint-disable-next-line no-console
+				console.error('APP_SHARED_KEY is not configured; /sync/* is disabled');
+				return jsonResponse({ error: 'server_not_configured' }, 500, headers);
+			}
+			if (request.headers.get('X-App-Key') !== env.APP_SHARED_KEY) {
+				return jsonResponse({ error: 'unauthorized' }, 401, headers);
+			}
+
+			const parts = url.pathname.split('/').filter(Boolean); // ['sync', ...]
+
+			// /sync/records/:type            POST (upsert), GET (pull, ?since=)
+			// /sync/records/:type/:id        DELETE (tombstone)
+			if (parts[1] === 'records' && parts[2]) {
+				const type = parts[2];
+				if (parts[3] && request.method === 'DELETE') {
+					return handleRecordDelete(env, headers, type, decodeURIComponent(parts[3]));
+				}
+				if (request.method === 'POST') {
+					return handleRecordsUpsert(request, env, headers, type);
+				}
+				if (request.method === 'GET') {
+					return handleRecordsPull(request, env, headers, type);
+				}
+			}
+
+			// /sync/media                    GET (list, ?since=)
+			// /sync/media/:id                POST (upload), GET (download), DELETE
+			if (parts[1] === 'media') {
+				if (!parts[2] && request.method === 'GET') {
+					return handleMediaList(request, env, headers);
+				}
+				if (parts[2] && request.method === 'POST') {
+					return handleMediaUpload(request, env, headers, decodeURIComponent(parts[2]));
+				}
+				if (parts[2] && request.method === 'GET') {
+					return handleMediaDownload(env, headers, decodeURIComponent(parts[2]));
+				}
+				if (parts[2] && request.method === 'DELETE') {
+					return handleMediaDelete(env, headers, decodeURIComponent(parts[2]));
+				}
+			}
+
+			return jsonResponse({ error: 'not_found' }, 404, headers);
 		}
 
-		let body;
-		try {
-			body = await request.json();
-		} catch (err) {
-			return jsonResponse({ error: 'invalid_request_body' }, 400, headers);
-		}
-
-		const image = body && body.image;
-		if (!image || typeof image !== 'string' || !image.startsWith('data:image/')) {
-			return jsonResponse({ error: 'missing_or_invalid_image' }, 400, headers);
-		}
-		if (image.length > MAX_IMAGE_BYTES) {
-			return jsonResponse({ error: 'image_too_large' }, 413, headers);
-		}
-
-		const result = await callOpenAI(env, image);
-		if (!result.ok) {
-			return jsonResponse({ error: result.error }, result.status || 502, headers);
-		}
-		if (!validateShape(result.data)) {
-			// eslint-disable-next-line no-console
-			console.error('Model response failed shape validation');
-			return jsonResponse({ error: 'invalid_model_response' }, 502, headers);
-		}
-		if (!result.data.is_business_card) {
-			return jsonResponse({ error: 'not_a_business_card' }, 422, headers);
-		}
-
-		return jsonResponse({ contact: result.data }, 200, headers);
+		return jsonResponse({ error: 'not_found' }, 404, headers);
 	},
 };

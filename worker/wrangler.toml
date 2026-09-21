@@ -12,6 +12,18 @@ enabled = true
 OPENAI_MODEL = "gpt-4o-mini"
 ALLOWED_ORIGINS = "https://ff.altimate.app,http://localhost:8791"
 
+# D1 database for synced records (feedback, survey, contacts, quick captures,
+# meeting notes, todos) — see schema.sql. Bound as env.SYNC_DB.
+[[d1_databases]]
+binding = "SYNC_DB"
+database_name = "field-feedback-sync"
+database_id = "3335e28b-ca20-49c4-aedc-79bffc43882f"
+
+# R2 bucket for synced binary media (photos, audio, scans). Bound as env.SYNC_MEDIA.
+[[r2_buckets]]
+binding = "SYNC_MEDIA"
+bucket_name = "field-feedback-media"
+
 # Secrets (never put these here) — set once via:
 #   wrangler secret put OPENAI_API_KEY
-#   wrangler secret put APP_SHARED_KEY   (optional, see README)
+#   wrangler secret put APP_SHARED_KEY   (required for /sync/* routes; see README)

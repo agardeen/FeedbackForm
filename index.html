@@ -468,11 +468,19 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Tags <span class="text-gray-400 font-normal">(optional)</span></label>
-                    <p class="mt-1 text-xs text-gray-500">Pick a brand to reveal its products.</p>
+                    <div class="flex items-center justify-between">
+                        <label class="block text-sm font-medium text-gray-700">Tags <span class="text-gray-400 font-normal">(optional)</span></label>
+                        <button type="button" id="quick-add-tag-btn" class="text-xs font-medium text-blue-600 hover:underline" aria-label="Add a new tag">+ Add</button>
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">Pick a brand to reveal its products. Tags you add go under "Other".</p>
                     <div id="quick-tag-brands" class="mt-1 flex flex-wrap gap-1.5"></div>
                     <div id="quick-tag-products-wrap" class="hidden mt-2 pt-2 border-t border-gray-100">
                         <div id="quick-tag-products" class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto content-start"></div>
+                    </div>
+                    <div id="quick-add-tag-form" class="hidden mt-2 flex items-center gap-2">
+                        <input type="text" id="quick-new-tag-input" placeholder="New tag name" maxlength="20" class="flex-1 px-2 py-1 text-sm text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        <button type="button" id="quick-confirm-add-tag-btn" class="px-2 py-1 text-xs font-medium text-blue-600 border border-blue-600 rounded hover:bg-blue-50">Add</button>
+                        <button type="button" id="quick-cancel-add-tag-btn" class="px-2 py-1 text-xs text-gray-500 hover:underline">Cancel</button>
                     </div>
                 </div>
 
@@ -490,11 +498,17 @@
             <!-- Tab 7 Content: Meeting Notes -->
             <div id="tab7" class="tab-content space-y-6">
                 <div>
-                    <label for="meeting-notes-text" class="flex items-center gap-2 text-sm font-medium text-gray-700">Notes <span id="meeting-save-indicator" class="text-xs text-gray-400 font-normal"></span></label>
-                    <div id="meeting-notes-wrap" class="mt-1 relative">
-                        <textarea id="meeting-notes-text" name="meeting_notes_text" rows="6" class="w-full h-full px-4 py-2 pr-16 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="...type notes here"></textarea>
+                    <div class="flex items-center justify-between">
+                        <div class="flex gap-1">
+                            <button type="button" class="contact-subfield-tab meeting-notes-tab px-2 py-0.5 text-[10px] font-medium rounded-t-md border border-b-0 bg-white border-gray-300 text-gray-700" data-key="notes">Notes</button>
+                            <button type="button" class="contact-subfield-tab meeting-notes-tab px-2 py-0.5 text-[10px] font-medium rounded-t-md border border-b-0 bg-gray-100 border-transparent text-gray-400" data-key="meetingPrep">Meeting Prep</button>
+                        </div>
+                        <span id="meeting-save-indicator" class="text-xs text-gray-400 font-normal"></span>
+                    </div>
+                    <div id="meeting-notes-wrap" class="relative">
+                        <textarea id="meeting-notes-text" name="meeting_notes_text" rows="6" class="w-full h-full px-4 py-2 pr-16 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg rounded-tl-none focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="...type notes here"></textarea>
                         <div class="absolute top-0 right-0 mt-3 mr-3 flex items-center gap-2">
-                            <button type="button" class="mic-btn text-gray-400 hover:text-gray-600" data-target="meeting-notes-text" aria-label="Use microphone for Notes">
+                            <button type="button" class="mic-btn text-gray-400 hover:text-gray-600" data-target="meeting-notes-text" aria-label="Use microphone for Notes or Meeting Prep">
                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
                             </button>
                         </div>
@@ -720,6 +734,23 @@
                     <label class="block text-sm font-medium text-gray-700">Activity Log</label>
                     <p class="mt-1 text-xs text-gray-500">Everything logged across the app, oldest to newest.</p>
                     <div id="activity-log" class="mt-2 h-64 overflow-y-auto border border-gray-200 rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-600 leading-6"></div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Server Sync (optional)</label>
+                    <p class="mt-1 text-xs text-gray-500">Back up the checked categories to the server. Nothing leaves this device until you press Sync Now.</p>
+                    <div class="mt-2 grid grid-cols-2 gap-y-1 gap-x-2 text-sm text-gray-700">
+                        <label class="flex items-center gap-1.5"><input type="checkbox" class="sync-category-cb" data-sync-type="feedback" checked> Feedback</label>
+                        <label class="flex items-center gap-1.5"><input type="checkbox" class="sync-category-cb" data-sync-type="qa" checked> Survey</label>
+                        <label class="flex items-center gap-1.5"><input type="checkbox" class="sync-category-cb" data-sync-type="contacts" checked> Contacts</label>
+                        <label class="flex items-center gap-1.5"><input type="checkbox" class="sync-category-cb" data-sync-type="quickCaptures" checked> Quick Captures</label>
+                        <label class="flex items-center gap-1.5"><input type="checkbox" class="sync-category-cb" data-sync-type="meetingNotes" checked> Meeting Notes</label>
+                        <label class="flex items-center gap-1.5"><input type="checkbox" class="sync-category-cb" data-sync-type="todos" checked> Todos</label>
+                        <label class="flex items-center gap-1.5 col-span-2"><input type="checkbox" class="sync-category-cb" data-sync-type="media" checked> Photos &amp; Audio</label>
+                    </div>
+                    <div class="mt-2 flex items-center gap-2">
+                        <button type="button" id="sync-now-btn" class="px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">Sync Now</button>
+                        <p id="sync-status" class="text-xs text-gray-500"></p>
+                    </div>
                 </div>
                 <div>
                     <p class="text-xs text-gray-500 mb-2">Entries are saved on this device automatically. Export regularly to back them up or share them.</p>
@@ -974,6 +1005,8 @@
                 meetingNotes: 'ff_meeting_notes',
                 todos: 'ff_todos',
                 profile: 'ff_user_profile',
+                syncSettings: 'ff_sync_settings',
+                quickCustomTags: 'ff_quick_custom_tags',
             };
             const loadJSON = (key, fallback) => {
                 try {
@@ -1004,6 +1037,23 @@
                 }
             });
             if (contactsNeededMigration) saveJSON(STORAGE_KEYS.contacts, contactEntries);
+            // Backfill ids for feedback/survey entries saved before server sync existed.
+            let feedbackNeededMigration = false;
+            feedbackEntries.forEach((entry) => {
+                if (!entry.id) {
+                    entry.id = `fb-${entry.ts || Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+                    feedbackNeededMigration = true;
+                }
+            });
+            if (feedbackNeededMigration) saveJSON(STORAGE_KEYS.feedback, feedbackEntries);
+            let qaNeededMigration = false;
+            qaEntries.forEach((entry) => {
+                if (!entry.id) {
+                    entry.id = `qa-${entry.ts || Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+                    qaNeededMigration = true;
+                }
+            });
+            if (qaNeededMigration) saveJSON(STORAGE_KEYS.qa, qaEntries);
             let quickCaptureEntries = loadJSON(STORAGE_KEYS.quickCaptures, []);
             let meetingNoteEntries = loadJSON(STORAGE_KEYS.meetingNotes, []);
             let todoEntries = loadJSON(STORAGE_KEYS.todos, []);
@@ -1074,6 +1124,121 @@
                     tx.onerror = () => reject(tx.error);
                 });
             };
+
+            // --- Server Sync (optional; the Worker also backs the AI card scan feature) ---
+            // Shared secret the Worker requires on every request. Not a real secret — it lives
+            // in public client-side code — it just raises the bar above "found the URL and
+            // curled it" for casual abuse. See worker/README.md.
+            const CARD_SCAN_API_URL = 'https://field-feedback-card-scan.andrew-ea2.workers.dev';
+            const APP_SHARED_KEY = 'vjr6NmTQvsGj1R7i1LLMbp_4sZwjOUVz';
+
+            const SYNC_RECORD_TYPES = {
+                feedback: () => feedbackEntries,
+                qa: () => qaEntries,
+                contacts: () => contactEntries,
+                quickCaptures: () => quickCaptureEntries,
+                meetingNotes: () => meetingNoteEntries,
+                todos: () => todoEntries,
+            };
+
+            const defaultSyncSettings = () => ({
+                categories: { feedback: true, qa: true, contacts: true, quickCaptures: true, meetingNotes: true, todos: true, media: true },
+                lastSyncAt: null,
+                syncedMediaIds: [],
+            });
+            let syncSettings = { ...defaultSyncSettings(), ...loadJSON(STORAGE_KEYS.syncSettings, {}) };
+            syncSettings.categories = { ...defaultSyncSettings().categories, ...(syncSettings.categories || {}) };
+            const saveSyncSettings = () => saveJSON(STORAGE_KEYS.syncSettings, syncSettings);
+
+            const syncFetch = (path, options = {}) => fetch(`${CARD_SCAN_API_URL}${path}`, {
+                ...options,
+                headers: { 'X-App-Key': APP_SHARED_KEY, ...(options.headers || {}) },
+            });
+
+            const hasSyncedBefore = () => !!syncSettings.lastSyncAt;
+
+            // Removes one record from the server. Safe to call even if it was never synced —
+            // the Worker just tombstones an id that may not exist.
+            const deleteSyncedRecord = async (type, id) => {
+                try {
+                    await syncFetch(`/sync/records/${type}/${encodeURIComponent(id)}`, { method: 'DELETE' });
+                } catch (err) {
+                    console.error(`Failed to delete synced ${type} record ${id}:`, err);
+                    showToast('Could not reach the server to delete it there. It was removed on this device.');
+                }
+            };
+            const deleteSyncedMedia = async (id) => {
+                syncSettings.syncedMediaIds = syncSettings.syncedMediaIds.filter((mid) => mid !== id);
+                saveSyncSettings();
+                try {
+                    await syncFetch(`/sync/media/${encodeURIComponent(id)}`, { method: 'DELETE' });
+                } catch (err) {
+                    console.error(`Failed to delete synced media ${id}:`, err);
+                    showToast('Could not reach the server to delete it there. It was removed on this device.');
+                }
+            };
+
+            const syncNowBtn = document.getElementById('sync-now-btn');
+            const syncStatus = document.getElementById('sync-status');
+            document.querySelectorAll('.sync-category-cb').forEach((cb) => {
+                const type = cb.dataset.syncType;
+                cb.checked = syncSettings.categories[type] !== false;
+                cb.addEventListener('change', () => {
+                    syncSettings.categories[type] = cb.checked;
+                    saveSyncSettings();
+                });
+            });
+
+            syncNowBtn.addEventListener('click', async () => {
+                syncNowBtn.disabled = true;
+                let recordCount = 0;
+                let mediaCount = 0;
+                try {
+                    for (const [type, getEntries] of Object.entries(SYNC_RECORD_TYPES)) {
+                        if (!syncSettings.categories[type]) continue;
+                        const entries = getEntries();
+                        if (!entries.length) continue;
+                        const now = Date.now();
+                        const records = entries.map((entry) => ({ id: entry.id, updatedAt: now, data: entry }));
+                        syncStatus.textContent = `Syncing ${type}…`;
+                        const res = await syncFetch(`/sync/records/${type}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ records }),
+                        });
+                        if (!res.ok) throw new Error(`${type} sync failed: HTTP ${res.status}`);
+                        recordCount += records.length;
+                    }
+
+                    if (syncSettings.categories.media) {
+                        const attachments = await getAllAttachments();
+                        const unsynced = attachments.filter((att) => att && att.blob && !syncSettings.syncedMediaIds.includes(att.id));
+                        for (const att of unsynced) {
+                            syncStatus.textContent = `Uploading photo/audio ${mediaCount + 1} of ${unsynced.length}…`;
+                            const res = await syncFetch(`/sync/media/${encodeURIComponent(att.id)}`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': att.mimeType || 'application/octet-stream', 'X-Media-Kind': att.kind || 'unknown' },
+                                body: att.blob,
+                            });
+                            if (!res.ok) throw new Error(`media sync failed: HTTP ${res.status}`);
+                            syncSettings.syncedMediaIds.push(att.id);
+                            mediaCount += 1;
+                        }
+                    }
+
+                    syncSettings.lastSyncAt = Date.now();
+                    saveSyncSettings();
+                    syncStatus.textContent = `Synced ${new Date(syncSettings.lastSyncAt).toLocaleString()} — ${recordCount} record${recordCount === 1 ? '' : 's'}, ${mediaCount} photo/audio file${mediaCount === 1 ? '' : 's'}.`;
+                    showToast('Sync complete.');
+                } catch (err) {
+                    console.error('Sync failed:', err);
+                    saveSyncSettings();
+                    syncStatus.textContent = 'Sync failed — check your connection and try again.';
+                    showToast('Sync failed — check your connection and try again.');
+                } finally {
+                    syncNowBtn.disabled = false;
+                }
+            });
 
             // --- Install hint (shown only when not already running as an installed app) ---
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
@@ -1460,6 +1625,7 @@
                 }
 
                 qaEntries.push({
+                    id: `qa-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
                     ts: Date.now(),
                     timestamp: new Date().toLocaleTimeString(),
                     question: questionText,
@@ -1551,6 +1717,7 @@
                 }
 
                 feedbackEntries.push({
+                    id: `fb-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
                     ts: Date.now(),
                     timestamp: new Date().toLocaleString(),
                     user, email, date, person, company, subject,
@@ -1863,6 +2030,10 @@
                 if (editingContactId === id) cancelContactEdit();
                 if (entry && entry.cardPhotoId) {
                     try { await deleteAttachment(entry.cardPhotoId); } catch (err) { console.error('Failed to delete card photo:', err); }
+                }
+                if (hasSyncedBefore() && confirm('Also remove this contact from the server?')) {
+                    await deleteSyncedRecord('contacts', id);
+                    if (entry && entry.cardPhotoId) await deleteSyncedMedia(entry.cardPhotoId);
                 }
             };
 
@@ -2493,7 +2664,8 @@
             // --- AI-powered card scan (OpenAI vision, via a Cloudflare Worker that holds the
             // API key — see worker/README.md). Optional/paid/needs-network alternative to the
             // on-device Tesseract scan above; never runs unless the user explicitly asks for it.
-            const CARD_SCAN_API_URL = 'https://field-feedback-card-scan.andrew-ea2.workers.dev';
+            // CARD_SCAN_API_URL and APP_SHARED_KEY are declared earlier (near the sync helpers),
+            // since both this and the server sync feature share the same Worker + key.
 
             // Downscale + re-encode before upload: keeps the request small/fast and controls
             // per-scan token cost. A business card's actual detail rarely benefits from more
@@ -2557,7 +2729,7 @@
                     try {
                         res = await fetch(CARD_SCAN_API_URL, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 'Content-Type': 'application/json', 'X-App-Key': APP_SHARED_KEY },
                             body: JSON.stringify({ image: imageDataUrl }),
                             signal: controller.signal,
                         });
@@ -2798,12 +2970,19 @@
             // appear once that brand is selected; multi-select at both levels. Deselecting a
             // brand also clears any of its already-selected products (no orphaned selections
             // under a hidden parent).
+            let quickCustomTags = loadJSON(STORAGE_KEYS.quickCustomTags, []);
             const QUICK_TAG_TREE = {
                 'EasyStand': ['Evolv', 'Bantam', 'StrapStand', 'Glider'],
                 'Zing': ['Zing MPS', 'Zing Supine', 'Zing Prone'],
                 'ActiveAid': ['Shower Chairs', 'Commodes', 'Bathing', 'Toileting', 'Accessories'],
                 'Therafin': ['Assistive Tech', 'Device Mounts', 'Mount Brackets', 'Joystick Mounts', 'Sip-N-Puff', 'Dressing Aids', 'Eating Aids', 'Mobility Aids', 'Self-Care Aids', 'Patient Movers', 'Transfer Boards', 'Econoglide', 'Offset Boards', 'Superslide', 'Theraslide', 'Wheelhold', 'Abductors', 'Adductors', 'Anterior Supports', 'Footboxes', 'Shoeholders', 'Toe Straps', 'FlexSure Feet', 'FootSure', 'Shoe Sandals', 'Head Supports', 'Hip Belts', 'Hip Guides', 'Lateral Supports', 'Calf Panels', 'Amputee Supports', 'Leg Supports', 'Thigh Supports', 'Knee Supports', 'Stretch Harness', 'Static Harness', 'Arm Therapy', 'Hand/Wrist Therapy', 'Stander Therapy', 'Sensory Cuffs', 'Snug Hug', 'Squeeze Machine', 'Sensory Vests', 'Adapt-A-Tray', 'Full Trays', 'Half Trays', 'Tray Overlays', 'Tray Hardware', 'Tray Pads', 'Arm Troughs', 'Lateral Pads', 'Elbow Pads', 'Center Mounts', 'Wheelchair Seats', 'Wheelchair Backs', 'Easy Clip Backs', 'SunMate FIPS', 'Back Hardware', 'Seat Hardware', 'Seat-Back Hardware', 'Custom Seating', 'Parts', 'Straps', 'Buckles', 'Clips & Clamps', 'Hardware Kits'],
                 'Leggero': ['Enzo', 'Reach', 'Trak', 'Dyno'],
+                // Flat top-level tags — no products underneath, just a standalone toggle.
+                'Product Idea': [],
+                'Competition': [],
+                // User-added tags (via "+ Add" below) live here — same array object as
+                // quickCustomTags, so pushing a new tag updates both at once.
+                'Other': quickCustomTags,
             };
 
             let selectedQuickTags = [];
@@ -2828,8 +3007,12 @@
                     quickTagProductsWrap.classList.add('hidden');
                     return;
                 }
-                quickTagProductsWrap.classList.remove('hidden');
                 const products = [...new Set(selectedBrands.flatMap((b) => QUICK_TAG_TREE[b]))];
+                if (!products.length) {
+                    quickTagProductsWrap.classList.add('hidden');
+                    return;
+                }
+                quickTagProductsWrap.classList.remove('hidden');
                 products.forEach((product) => {
                     const btn = document.createElement('button');
                     btn.type = 'button';
@@ -2873,6 +3056,40 @@
                 Array.from(quickTagBrandsEl.children).forEach(renderQuickTagChipState);
                 renderQuickTagProducts();
             };
+
+            // --- Add a custom tag; it always lands as a "product" under the "Other" brand ---
+            const quickAddTagBtn = document.getElementById('quick-add-tag-btn');
+            const quickAddTagForm = document.getElementById('quick-add-tag-form');
+            const quickNewTagInput = document.getElementById('quick-new-tag-input');
+            quickAddTagBtn.addEventListener('click', () => {
+                quickAddTagForm.classList.remove('hidden');
+                quickNewTagInput.focus();
+            });
+            const cancelQuickAddTag = () => {
+                quickAddTagForm.classList.add('hidden');
+                quickNewTagInput.value = '';
+            };
+            document.getElementById('quick-cancel-add-tag-btn').addEventListener('click', cancelQuickAddTag);
+            const confirmQuickAddTag = () => {
+                const tagName = quickNewTagInput.value.trim();
+                if (!tagName) { cancelQuickAddTag(); return; }
+                const exists = Object.values(QUICK_TAG_TREE).flat().some((t) => t.toLowerCase() === tagName.toLowerCase());
+                if (exists) {
+                    showToast('That tag already exists.');
+                    return;
+                }
+                quickCustomTags.push(tagName);
+                saveJSON(STORAGE_KEYS.quickCustomTags, quickCustomTags);
+                if (!selectedQuickTags.includes('Other')) selectedQuickTags = [...selectedQuickTags, 'Other'];
+                if (!selectedQuickTags.includes(tagName)) selectedQuickTags = [...selectedQuickTags, tagName];
+                Array.from(quickTagBrandsEl.children).forEach(renderQuickTagChipState);
+                renderQuickTagProducts();
+                cancelQuickAddTag();
+            };
+            document.getElementById('quick-confirm-add-tag-btn').addEventListener('click', confirmQuickAddTag);
+            quickNewTagInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); confirmQuickAddTag(); }
+            });
 
             let quickThumbUrls = [];
             const renderQuickCaptureLog = () => {
@@ -2958,6 +3175,17 @@
 
             // --- Meeting Notes Logic ---
             const meetingNotesText = document.getElementById('meeting-notes-text');
+            // Notes and Meeting Prep are tabbed behind the same textarea (like Phone/Mobile
+            // and Email/Email 2 on the Contact tab) — see makeTabbedField above.
+            const MEETING_NOTES_PLACEHOLDERS = { notes: '...type notes here', meetingPrep: 'What do you want to cover or ask before this meeting?' };
+            const meetingNotesTabButtons = Array.from(document.querySelectorAll('.meeting-notes-tab'));
+            const meetingNotesField = makeTabbedField(meetingNotesText, meetingNotesTabButtons, 'notes');
+            meetingNotesText.placeholder = MEETING_NOTES_PLACEHOLDERS.notes;
+            meetingNotesTabButtons.forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    meetingNotesText.placeholder = MEETING_NOTES_PLACEHOLDERS[btn.dataset.key];
+                });
+            });
             const meetingSubjectInput = document.getElementById('meeting-subject');
             const meetingPersonInput = document.getElementById('meeting-person');
             const meetingCompanyInput = document.getElementById('meeting-company');
@@ -3085,9 +3313,10 @@
                     });
                     const cleaned = text.trim();
                     if (cleaned) {
-                        meetingNotesText.value = meetingNotesText.value
-                            ? `${meetingNotesText.value}\n\n--- Scanned document ---\n${cleaned}`
-                            : `--- Scanned document ---\n${cleaned}`;
+                        const existingNotes = meetingNotesField.get('notes');
+                        meetingNotesField.set('notes', existingNotes
+                            ? `${existingNotes}\n\n--- Scanned document ---\n${cleaned}`
+                            : `--- Scanned document ---\n${cleaned}`);
                         meetingDocScanStatus.textContent = 'Document text added to Notes — check it for scan errors.';
                         scheduleMeetingAutosave();
                     } else {
@@ -3141,6 +3370,7 @@
                         if (entry.subject) addLogLine(meetingNotesLog, `Meeting Subject: ${entry.subject}`);
                         if (entry.person) addLogLine(meetingNotesLog, `People: ${entry.person}`);
                         if (entry.company) addLogLine(meetingNotesLog, `Company: ${entry.company}`);
+                        if (entry.meetingPrep) addLogLine(meetingNotesLog, `Meeting Prep: ${entry.meetingPrep}`);
                         if (entry.notes) addLogLine(meetingNotesLog, `Notes: ${entry.notes}`);
 
                         if (entry.audioSegments && entry.audioSegments.length) {
@@ -3182,7 +3412,8 @@
             let meetingAutosaveTimer = null;
 
             const meetingDraftHasContent = () =>
-                meetingNotesText.value.trim() || meetingSubjectInput.value.trim()
+                meetingNotesField.get('notes').trim() || meetingNotesField.get('meetingPrep').trim()
+                || meetingSubjectInput.value.trim()
                 || meetingPersonInput.value.trim() || meetingCompanyInput.value.trim()
                 || audioTranscript.trim() || pendingMeetingAttachments.length > 0;
 
@@ -3236,7 +3467,8 @@
                     subject: meetingSubjectInput.value.trim(),
                     person: meetingPersonInput.value.trim(),
                     company: meetingCompanyInput.value.trim(),
-                    notes: meetingNotesText.value.trim(),
+                    notes: meetingNotesField.get('notes').trim(),
+                    meetingPrep: meetingNotesField.get('meetingPrep').trim(),
                     audioTranscript: audioTranscript.trim(),
                     audioSegments: audioSegments.slice(),
                     attachmentIds: pendingMeetingAttachments.map((att) => att.id),
@@ -3278,7 +3510,8 @@
                 meetingSubjectInput.value = '';
                 meetingPersonInput.value = '';
                 meetingCompanyInput.value = '';
-                meetingNotesText.value = '';
+                meetingNotesField.reset();
+                meetingNotesText.placeholder = MEETING_NOTES_PLACEHOLDERS.notes;
                 setNotesExpanded(false);
                 setMeetingDateTimeToNow();
                 clearComposeAttachmentState();
@@ -3300,6 +3533,8 @@
                     renderActivityLog();
                 }
                 meetingDraftId = null;
+                meetingNotesField.reset();
+                meetingNotesText.placeholder = MEETING_NOTES_PLACEHOLDERS.notes;
                 resetMeetingAttachments();
                 setNotesExpanded(false);
                 if (audioCaptureOn) document.getElementById('audio-capture-toggle').click();
@@ -3459,9 +3694,9 @@
 
             document.getElementById('export-meeting-csv-btn').addEventListener('click', () => {
                 if (!meetingNoteEntries.length) { showToast('No meeting notes yet.'); return; }
-                const headers = ['Timestamp', 'Subject', 'Person', 'Company', 'Notes', 'Audio Transcript', 'Audio Segments', 'Attachments'];
+                const headers = ['Timestamp', 'Subject', 'Person', 'Company', 'Meeting Prep', 'Notes', 'Audio Transcript', 'Audio Segments', 'Attachments'];
                 const formatSegments = (segs) => (segs || []).map((s) => `[${s.start}–${s.end}] ${s.text}`).join(' | ');
-                const rows = meetingNoteEntries.map((e) => [e.timestamp, e.subject, e.person, e.company, e.notes, e.audioTranscript, formatSegments(e.audioSegments), (e.attachmentIds || []).length].map(toCSVValue).join(','));
+                const rows = meetingNoteEntries.map((e) => [e.timestamp, e.subject, e.person, e.company, e.meetingPrep, e.notes, e.audioTranscript, formatSegments(e.audioSegments), (e.attachmentIds || []).length].map(toCSVValue).join(','));
                 downloadFile(`meeting-notes-${Date.now()}.csv`, [headers.join(','), ...rows].join('\n'), 'text/csv');
             });
 
@@ -3536,6 +3771,14 @@
             document.getElementById('clear-all-logs-btn').addEventListener('click', async () => {
                 if (!hasAnyEntries()) { showToast('Nothing to clear.'); return; }
                 if (!confirm('Clear all logged feedback, survey answers, contacts, quick captures, meeting notes, and todos from this device — including all saved photos? Export first if you need a copy.')) return;
+
+                const alsoDeleteFromServer = hasSyncedBefore()
+                    && confirm('Also remove all synced data from the server? This deletes it for every device that syncs. Choose Cancel to keep the server backup.');
+                const recordsToDelete = alsoDeleteFromServer
+                    ? Object.entries(SYNC_RECORD_TYPES).map(([type, getEntries]) => ({ type, ids: getEntries().map((e) => e.id) }))
+                    : [];
+                const mediaIdsToDelete = alsoDeleteFromServer ? (await getAllAttachments()).map((a) => a.id) : [];
+
                 feedbackEntries = [];
                 qaEntries = [];
                 contactEntries = [];
@@ -3561,6 +3804,14 @@
                 renderMeetingNotesLog();
                 renderTodoList();
                 showToast('Logs cleared.');
+
+                if (alsoDeleteFromServer) {
+                    for (const { type, ids } of recordsToDelete) {
+                        for (const id of ids) await deleteSyncedRecord(type, id);
+                    }
+                    for (const id of mediaIdsToDelete) await deleteSyncedMedia(id);
+                    showToast('Server copies removed.');
+                }
             });
             
             // --- Question Filtering Logic ---
