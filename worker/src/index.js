@@ -9,11 +9,15 @@
  *    note in the README for how the frontend uses this.
  *
  * 2. Login (`/auth/*`) — every synced record belongs to one account. There
- *    is no public sign-up: accounts are created by an admin via
+ *    is no public sign-up. The very first account is created via
  *    `POST /auth/admin/create-user` (guarded by the ADMIN_KEY secret, which
- *    never ships in client code). `POST /auth/login` exchanges a
- *    username/password for a signed, expiring token (see auth.js).
- *    `GET /auth/me` and `POST /auth/change-password` need that token.
+ *    never ships in client code — terminal/curl only, see
+ *    migrations/README.md). After that, any account with is_admin can add
+ *    more via `POST /auth/users` (checked from their own session token) or
+ *    list existing ones via `GET /auth/users` — that's what the app's
+ *    Account tab uses. `POST /auth/login` exchanges a username/password for
+ *    a signed, expiring token (see auth.js). `GET /auth/me` and
+ *    `POST /auth/change-password` also need that token.
  *
  * 3. Optional server sync (`/sync/*`) — lets the app back up its locally
  *    stored records (feedback, survey answers, contacts, quick captures,
@@ -140,6 +144,36 @@ function normalizeUsername(username) {
 
 // --- Auth routes ---
 
+// Shared by both account-creation entry points below. Returns
+// { status, body: { error } } on validation/DB failure, or { user } on success.
+async function createUserFromRequestBody(env, body) {
+	const username = normalizeUsername(body && body.username);
+	const email = (body && body.email || '').trim();
+	const password = body && body.password;
+	if (!username || !email || !password || password.length < 8) {
+		return { status: 400, body: { error: 'invalid_input', detail: 'username, email, and a password of at least 8 characters are required' } };
+	}
+
+	const id = crypto.randomUUID();
+	const passwordHash = await hashPassword(password);
+	const isAdmin = body.isAdmin ? 1 : 0;
+
+	try {
+		await env.SYNC_DB.prepare(
+			`INSERT INTO users (id, username, email, password_hash, is_admin, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6)`
+		).bind(id, username, email, passwordHash, isAdmin, Date.now()).run();
+	} catch (err) {
+		// D1 surfaces a UNIQUE constraint violation as a generic error; treat any
+		// insert failure here as "username taken" since that's the only constraint.
+		return { status: 409, body: { error: 'username_taken' } };
+	}
+
+	return { user: { id, username, email, isAdmin: !!isAdmin } };
+}
+
+// Bootstrap-only: creates the very first account(s) before any admin exists to
+// log in with. Guarded by the ADMIN_KEY secret (terminal/curl only — never
+// ships in client code). See migrations/README.md.
 async function handleAdminCreateUser(request, env, headers) {
 	if (!env.ADMIN_KEY) {
 		// eslint-disable-next-line no-console
@@ -157,28 +191,35 @@ async function handleAdminCreateUser(request, env, headers) {
 		return jsonResponse({ error: 'invalid_request_body' }, 400, headers);
 	}
 
-	const username = normalizeUsername(body && body.username);
-	const email = (body && body.email || '').trim();
-	const password = body && body.password;
-	if (!username || !email || !password || password.length < 8) {
-		return jsonResponse({ error: 'invalid_input', detail: 'username, email, and a password of at least 8 characters are required' }, 400, headers);
-	}
+	const result = await createUserFromRequestBody(env, body);
+	if (result.status) return jsonResponse(result.body, result.status, headers);
+	return jsonResponse(result.user, 200, headers);
+}
 
-	const id = crypto.randomUUID();
-	const passwordHash = await hashPassword(password);
-	const isAdmin = body.isAdmin ? 1 : 0;
+// In-app account creation: any account with is_admin can add more accounts,
+// verified from their own session token — no shared secret involved.
+async function handleAdminCreateUserInApp(request, env, headers, auth) {
+	if (!auth.isAdmin) return jsonResponse({ error: 'forbidden' }, 403, headers);
 
+	let body;
 	try {
-		await env.SYNC_DB.prepare(
-			`INSERT INTO users (id, username, email, password_hash, is_admin, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6)`
-		).bind(id, username, email, passwordHash, isAdmin, Date.now()).run();
+		body = await request.json();
 	} catch (err) {
-		// D1 surfaces a UNIQUE constraint violation as a generic error; treat any
-		// insert failure here as "username taken" since that's the only constraint.
-		return jsonResponse({ error: 'username_taken' }, 409, headers);
+		return jsonResponse({ error: 'invalid_request_body' }, 400, headers);
 	}
 
-	return jsonResponse({ id, username, email, isAdmin: !!isAdmin }, 200, headers);
+	const result = await createUserFromRequestBody(env, body);
+	if (result.status) return jsonResponse(result.body, result.status, headers);
+	return jsonResponse(result.user, 200, headers);
+}
+
+async function handleAdminListUsers(env, headers, auth) {
+	if (!auth.isAdmin) return jsonResponse({ error: 'forbidden' }, 403, headers);
+	const { results } = await env.SYNC_DB.prepare(
+		`SELECT id, username, email, is_admin, created_at FROM users ORDER BY created_at ASC`
+	).all();
+	const users = (results || []).map((u) => ({ id: u.id, username: u.username, email: u.email, isAdmin: !!u.is_admin, createdAt: u.created_at }));
+	return jsonResponse({ users }, 200, headers);
 }
 
 async function handleLogin(request, env, headers) {
@@ -567,6 +608,16 @@ export default {
 			const auth = await requireAuth(request, env);
 			if (!auth) return jsonResponse({ error: 'unauthorized' }, 401, headers);
 			return handleChangePassword(request, env, headers, auth);
+		}
+		if (url.pathname === '/auth/users' && request.method === 'POST') {
+			const auth = await requireAuth(request, env);
+			if (!auth) return jsonResponse({ error: 'unauthorized' }, 401, headers);
+			return handleAdminCreateUserInApp(request, env, headers, auth);
+		}
+		if (url.pathname === '/auth/users' && request.method === 'GET') {
+			const auth = await requireAuth(request, env);
+			if (!auth) return jsonResponse({ error: 'unauthorized' }, 401, headers);
+			return handleAdminListUsers(env, headers, auth);
 		}
 
 		// --- Sync routes: require a logged-in account. Every row is scoped to
