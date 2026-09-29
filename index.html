@@ -770,8 +770,8 @@
                         <label class="flex items-center gap-1.5 col-span-2"><input type="checkbox" class="sync-category-cb" data-sync-type="media" checked> Photos &amp; Audio (push only, either button)</label>
                     </div>
                     <div class="mt-2 flex items-center gap-2 flex-wrap">
-                        <button type="button" id="push-btn" class="px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">Push</button>
-                        <button type="button" id="sync-btn" class="px-3 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed">Sync</button>
+                        <button type="button" id="push-btn" title="Save data to server" class="px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">Push</button>
+                        <button type="button" id="sync-btn" title="Save data to server including changes or deletions" class="px-3 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed">Sync</button>
                         <p id="sync-status" class="text-xs text-gray-500"></p>
                     </div>
                 </div>
@@ -3309,6 +3309,12 @@
                 renderQuickTagProducts();
             };
 
+            const setQuickTagsSelection = (tags) => {
+                selectedQuickTags = [...(tags || [])];
+                Array.from(quickTagBrandsEl.children).forEach(renderQuickTagChipState);
+                renderQuickTagProducts();
+            };
+
             // --- Add a custom tag; it always lands as a "product" under the "Other" brand ---
             const quickAddTagBtn = document.getElementById('quick-add-tag-btn');
             const quickAddTagForm = document.getElementById('quick-add-tag-form');
@@ -3344,6 +3350,9 @@
             });
 
             let quickThumbUrls = [];
+            let editingQuickCaptureId = null;
+            const quickCaptureBtn = document.getElementById('quick-capture-btn');
+
             const renderQuickCaptureLog = () => {
                 quickThumbUrls.forEach((url) => URL.revokeObjectURL(url));
                 quickThumbUrls = [];
@@ -3353,11 +3362,18 @@
                     addLogLine(quickCaptureLog, 'No quick captures yet.');
                 } else {
                     quickCaptureEntries.forEach((entry) => {
-                        addLogLine(quickCaptureLog, `[${entry.timestamp}] ${entry.text}`);
-                        if (entry.tags && entry.tags.length) addLogLine(quickCaptureLog, `Tags: ${entry.tags.join(', ')}`);
+                        const row = document.createElement('div');
+                        row.className = entry.id === editingQuickCaptureId
+                            ? 'mb-2 pb-2 border-b border-blue-200 bg-blue-50 -mx-1 px-1 rounded'
+                            : 'mb-2 pb-2 border-b border-gray-200';
+
+                        const textLines = document.createElement('div');
+                        row.appendChild(textLines);
+                        addLogLine(textLines, `[${entry.timestamp}] ${entry.text}`);
+                        if (entry.tags && entry.tags.length) addLogLine(textLines, `Tags: ${entry.tags.join(', ')}`);
 
                         const attachmentLines = document.createElement('div');
-                        quickCaptureLog.appendChild(attachmentLines);
+                        row.appendChild(attachmentLines);
                         if (entry.attachmentIds && entry.attachmentIds.length) {
                             Promise.all(entry.attachmentIds.map((id) => getAttachment(id).catch(() => null))).then((atts) => {
                                 atts.filter((att) => att && att.blob).forEach((att) => {
@@ -3365,24 +3381,87 @@
                                     quickThumbUrls.push(url);
                                     addLogLine(attachmentLines, `Picture: ${att.filename || 'photo'}`, url);
                                 });
-                                quickCaptureLog.scrollTop = quickCaptureLog.scrollHeight;
                             }).catch((err) => console.error('Failed to load attachment:', err));
                         }
+
+                        const actions = document.createElement('div');
+                        actions.className = 'mt-1 flex gap-3';
+                        const editBtn = document.createElement('button');
+                        editBtn.type = 'button';
+                        editBtn.textContent = 'Edit';
+                        editBtn.className = 'text-xs text-blue-600 hover:text-blue-800';
+                        editBtn.addEventListener('click', () => startEditQuickCapture(entry.id));
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.type = 'button';
+                        deleteBtn.textContent = 'Delete';
+                        deleteBtn.className = 'text-xs text-red-600 hover:text-red-800';
+                        deleteBtn.addEventListener('click', () => deleteQuickCapture(entry.id));
+                        actions.append(editBtn, deleteBtn);
+                        row.appendChild(actions);
+
+                        quickCaptureLog.appendChild(row);
                     });
                 }
 
                 quickCaptureLog.scrollTop = quickCaptureLog.scrollHeight;
             };
 
+            const cancelEditQuickCapture = () => {
+                editingQuickCaptureId = null;
+                quickCaptureText.value = '';
+                resetQuickTags();
+                pendingQuickAttachments.forEach((att) => URL.revokeObjectURL(att.previewUrl));
+                pendingQuickAttachments = [];
+                renderPendingQuickAttachments();
+                quickCaptureBtn.textContent = 'Capture';
+                renderQuickCaptureLog();
+            };
+
+            const startEditQuickCapture = (id) => {
+                const entry = quickCaptureEntries.find((e) => e.id === id);
+                if (!entry) return;
+                editingQuickCaptureId = id;
+                quickCaptureText.value = entry.text || '';
+                setQuickTagsSelection(entry.tags || []);
+                quickCaptureBtn.textContent = 'Update Capture';
+                quickCaptureText.focus();
+                renderQuickCaptureLog();
+                showToast('Editing capture — attaching a new photo adds to it; existing photos stay as-is.');
+            };
+
+            const deleteQuickCapture = async (id) => {
+                const entry = quickCaptureEntries.find((e) => e.id === id);
+                quickCaptureEntries = quickCaptureEntries.filter((e) => e.id !== id);
+                saveJSON(STORAGE_KEYS.quickCaptures, quickCaptureEntries);
+                markLocallyDeleted('quickCaptures', id);
+                if (editingQuickCaptureId === id) cancelEditQuickCapture();
+                renderQuickCaptureLog();
+                renderActivityLog();
+                if (entry && entry.attachmentIds) {
+                    for (const attId of entry.attachmentIds) {
+                        try { await deleteAttachment(attId); } catch (err) { console.error('Failed to delete attachment:', err); }
+                    }
+                }
+                if (hasSyncedBefore() && confirm('Also remove this quick capture from the server?')) {
+                    const success = await deleteSyncedRecord('quickCaptures', id);
+                    if (success) clearLocallyDeleted('quickCaptures', id);
+                    if (entry && entry.attachmentIds) {
+                        for (const attId of entry.attachmentIds) await deleteSyncedMedia(attId);
+                    }
+                }
+            };
+
             const captureQuick = async () => {
                 const text = quickCaptureText.value.trim();
                 const tags = selectedQuickTags.slice();
-                if (!text && !tags.length && !pendingQuickAttachments.length) {
+                const hasExistingAttachments = editingQuickCaptureId
+                    && (quickCaptureEntries.find((e) => e.id === editingQuickCaptureId)?.attachmentIds || []).length > 0;
+                if (!text && !tags.length && !pendingQuickAttachments.length && !hasExistingAttachments) {
                     showToast('Type or speak something, add a tag, or attach a photo to capture.');
                     return false;
                 }
 
-                const entryId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+                const entryId = editingQuickCaptureId || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
                 try {
                     await Promise.all(pendingQuickAttachments.map((att, i) => saveAttachment({
                         id: att.id,
@@ -3398,15 +3477,32 @@
                     showToast('A photo failed to save on this device.');
                 }
 
-                quickCaptureEntries.push({
-                    id: entryId,
-                    ts: Date.now(),
-                    timestamp: new Date().toLocaleString(),
-                    text,
-                    tags,
-                    attachmentIds: pendingQuickAttachments.map((att) => att.id),
-                });
-                saveJSON(STORAGE_KEYS.quickCaptures, quickCaptureEntries);
+                if (editingQuickCaptureId) {
+                    const idx = quickCaptureEntries.findIndex((e) => e.id === editingQuickCaptureId);
+                    if (idx !== -1) {
+                        quickCaptureEntries[idx] = {
+                            ...quickCaptureEntries[idx],
+                            text,
+                            tags,
+                            attachmentIds: [...(quickCaptureEntries[idx].attachmentIds || []), ...pendingQuickAttachments.map((att) => att.id)],
+                        };
+                    }
+                    saveJSON(STORAGE_KEYS.quickCaptures, quickCaptureEntries);
+                    editingQuickCaptureId = null;
+                    quickCaptureBtn.textContent = 'Capture';
+                    showToast('Quick capture updated.');
+                } else {
+                    quickCaptureEntries.push({
+                        id: entryId,
+                        ts: Date.now(),
+                        timestamp: new Date().toLocaleString(),
+                        text,
+                        tags,
+                        attachmentIds: pendingQuickAttachments.map((att) => att.id),
+                    });
+                    saveJSON(STORAGE_KEYS.quickCaptures, quickCaptureEntries);
+                    showToast('Captured.');
+                }
                 renderQuickCaptureLog();
                 renderActivityLog();
 
@@ -3419,11 +3515,10 @@
                 quickDocScanStatus.textContent = '';
                 renderPendingQuickAttachments();
 
-                showToast('Captured.');
                 return true;
             };
 
-            document.getElementById('quick-capture-btn').addEventListener('click', captureQuick);
+            quickCaptureBtn.addEventListener('click', captureQuick);
 
             // --- Meeting Notes Logic ---
             const meetingNotesText = document.getElementById('meeting-notes-text');
@@ -3619,25 +3714,33 @@
                     addLogLine(meetingNotesLog, 'No meeting notes yet.');
                 } else {
                     meetingNoteEntries.forEach((entry) => {
-                        if (entry.subject) addLogLine(meetingNotesLog, `Meeting Subject: ${entry.subject}`);
-                        if (entry.person) addLogLine(meetingNotesLog, `People: ${entry.person}`);
-                        if (entry.company) addLogLine(meetingNotesLog, `Company: ${entry.company}`);
-                        if (entry.meetingPrep) addLogLine(meetingNotesLog, `Meeting Prep: ${entry.meetingPrep}`);
-                        if (entry.notes) addLogLine(meetingNotesLog, `Notes: ${entry.notes}`);
+                        const row = document.createElement('div');
+                        const isBeingEdited = isEditingExistingMeetingNote && entry.id === meetingDraftId;
+                        row.className = isBeingEdited
+                            ? 'mb-2 pb-2 border-b border-blue-200 bg-blue-50 -mx-1 px-1 rounded'
+                            : 'mb-2 pb-2 border-b border-gray-200';
+
+                        const textLines = document.createElement('div');
+                        row.appendChild(textLines);
+                        if (entry.subject) addLogLine(textLines, `Meeting Subject: ${entry.subject}`);
+                        if (entry.person) addLogLine(textLines, `People: ${entry.person}`);
+                        if (entry.company) addLogLine(textLines, `Company: ${entry.company}`);
+                        if (entry.meetingPrep) addLogLine(textLines, `Meeting Prep: ${entry.meetingPrep}`);
+                        if (entry.notes) addLogLine(textLines, `Notes: ${entry.notes}`);
 
                         if (entry.audioSegments && entry.audioSegments.length) {
                             // Each on/off period of audio capture logs its own capture line and transcription line.
                             entry.audioSegments.forEach((seg) => {
-                                addLogLine(meetingNotesLog, `Audio Capture: ${seg.start}–${seg.end}`);
-                                addLogLine(meetingNotesLog, `Transcription: ${seg.text}`);
+                                addLogLine(textLines, `Audio Capture: ${seg.start}–${seg.end}`);
+                                addLogLine(textLines, `Transcription: ${seg.text}`);
                             });
                         } else if (entry.audioTranscript) {
-                            addLogLine(meetingNotesLog, `Transcription: ${entry.audioTranscript}`);
+                            addLogLine(textLines, `Transcription: ${entry.audioTranscript}`);
                         }
 
                         // Placeholder holds this entry's spot in the feed while attachments load async.
                         const attachmentLines = document.createElement('div');
-                        meetingNotesLog.appendChild(attachmentLines);
+                        row.appendChild(attachmentLines);
                         if (entry.attachmentIds && entry.attachmentIds.length) {
                             Promise.all(entry.attachmentIds.map((id) => getAttachment(id).catch(() => null))).then((atts) => {
                                 atts.filter((att) => att && att.blob).forEach((att) => {
@@ -3648,9 +3751,25 @@
                                         addLogLine(attachmentLines, `OCR: ${att.filename || 'photo'}`, url);
                                     }
                                 });
-                                meetingNotesLog.scrollTop = meetingNotesLog.scrollHeight;
                             }).catch((err) => console.error('Failed to load attachment:', err));
                         }
+
+                        const actions = document.createElement('div');
+                        actions.className = 'mt-1 flex gap-3';
+                        const editBtn = document.createElement('button');
+                        editBtn.type = 'button';
+                        editBtn.textContent = 'Edit';
+                        editBtn.className = 'text-xs text-blue-600 hover:text-blue-800';
+                        editBtn.addEventListener('click', () => startEditMeetingNote(entry.id));
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.type = 'button';
+                        deleteBtn.textContent = 'Delete';
+                        deleteBtn.className = 'text-xs text-red-600 hover:text-red-800';
+                        deleteBtn.addEventListener('click', () => deleteMeetingNoteEntry(entry.id));
+                        actions.append(editBtn, deleteBtn);
+                        row.appendChild(actions);
+
+                        meetingNotesLog.appendChild(row);
                     });
                 }
 
@@ -3662,6 +3781,10 @@
             const meetingSaveIndicator = document.getElementById('meeting-save-indicator');
             let meetingDraftId = null;
             let meetingAutosaveTimer = null;
+            // True only while meetingDraftId points at a previously-finalized note reopened
+            // via Edit — distinguishes "delete a real saved note" (needs confirmation) from
+            // "abandon an in-progress draft that was never really saved" (doesn't).
+            let isEditingExistingMeetingNote = false;
 
             const meetingDraftHasContent = () =>
                 meetingNotesField.get('notes').trim() || meetingNotesField.get('meetingPrep').trim()
@@ -3759,6 +3882,7 @@
                 await saveMeetingDraftNow();
                 const hadDraft = !!meetingDraftId;
                 meetingDraftId = null;
+                isEditingExistingMeetingNote = false;
                 meetingSubjectInput.value = '';
                 meetingPersonInput.value = '';
                 meetingCompanyInput.value = '';
@@ -3774,17 +3898,110 @@
                 return hadDraft;
             };
 
-            // Discards the current draft entirely — unlike finalize, this deletes the entry
-            // (and any attachments already committed to IndexedDB) rather than keeping it.
+            // Deletes one meeting note outright (from the list's Delete button, or via the
+            // Clear button when the note open in the compose form is a reopened existing
+            // one — see discardMeetingDraft). Always confirms and cleans up attachments,
+            // and offers to remove it from the server too, mirroring Contacts/Todos.
+            const deleteMeetingNoteEntry = async (id) => {
+                if (!confirm('Delete this meeting note? This cannot be undone.')) return;
+                const entry = meetingNoteEntries.find((e) => e.id === id);
+                meetingNoteEntries = meetingNoteEntries.filter((e) => e.id !== id);
+                saveJSON(STORAGE_KEYS.meetingNotes, meetingNoteEntries);
+                markLocallyDeleted('meetingNotes', id);
+
+                if (meetingDraftId === id) {
+                    // It was open in the compose form — reset the form (attachments are
+                    // cleaned up below, so use the non-deleting reset here).
+                    clearTimeout(meetingAutosaveTimer);
+                    meetingDraftId = null;
+                    isEditingExistingMeetingNote = false;
+                    meetingNotesField.reset();
+                    meetingNotesText.placeholder = MEETING_NOTES_PLACEHOLDERS.notes;
+                    clearComposeAttachmentState();
+                    setNotesExpanded(false);
+                    if (audioCaptureOn) document.getElementById('audio-capture-toggle').click();
+                    audioTranscript = '';
+                    audioSegments = [];
+                    document.getElementById('audio-transcript-box').value = '';
+                    meetingSaveIndicator.textContent = '';
+                }
+
+                renderMeetingNotesLog();
+                renderActivityLog();
+
+                if (entry && entry.attachmentIds) {
+                    for (const attId of entry.attachmentIds) {
+                        try { await deleteAttachment(attId); } catch (err) { console.error('Failed to delete attachment:', err); }
+                    }
+                }
+                if (hasSyncedBefore() && confirm('Also remove this meeting note from the server?')) {
+                    const success = await deleteSyncedRecord('meetingNotes', id);
+                    if (success) clearLocallyDeleted('meetingNotes', id);
+                    if (entry && entry.attachmentIds) {
+                        for (const attId of entry.attachmentIds) await deleteSyncedMedia(attId);
+                    }
+                }
+            };
+
+            // Loads a previously-finalized note back into the compose form for editing.
+            // Autosave then upserts it in place (same mechanism as composing a new note) —
+            // see saveMeetingDraftNow's isNew/idx branch.
+            const startEditMeetingNote = async (id) => {
+                await finalizeMeetingDraft(); // safely save/reset whatever was already being composed
+                const entry = meetingNoteEntries.find((e) => e.id === id);
+                if (!entry) return;
+
+                meetingDraftId = entry.id;
+                isEditingExistingMeetingNote = true;
+                meetingSubjectInput.value = entry.subject || '';
+                meetingPersonInput.value = entry.person || '';
+                meetingCompanyInput.value = entry.company || '';
+                meetingNotesField.setAll({ notes: entry.notes || '', meetingPrep: entry.meetingPrep || '' });
+                audioTranscript = entry.audioTranscript || '';
+                audioSegments = (entry.audioSegments || []).slice();
+                document.getElementById('audio-transcript-box').value = audioTranscript;
+
+                pendingMeetingAttachments = [];
+                if (entry.attachmentIds && entry.attachmentIds.length) {
+                    const atts = await Promise.all(entry.attachmentIds.map((attId) => getAttachment(attId).catch(() => null)));
+                    atts.forEach((att) => {
+                        if (!att || !att.blob) return;
+                        pendingMeetingAttachments.push({
+                            tempId: `existing-${att.id}`,
+                            id: att.id,
+                            file: att.blob,
+                            kind: att.kind,
+                            previewUrl: URL.createObjectURL(att.blob),
+                            committed: true, // already saved — removing it deletes it immediately, doesn't just unstage it
+                        });
+                    });
+                }
+                renderPendingMeetingAttachments();
+                renderMeetingNotesLog();
+                meetingSaveIndicator.textContent = 'Editing — changes save automatically.';
+                meetingSubjectInput.focus();
+                showToast('Editing meeting note.');
+            };
+
+            // Discards the current compose-form draft. For a genuinely new, never-finalized
+            // draft this is low-friction (no confirm — nothing "real" has been lost yet from
+            // the user's perspective). For a reopened existing note, delegate to
+            // deleteMeetingNoteEntry instead so it gets a real confirmation.
             const discardMeetingDraft = async () => {
+                if (meetingDraftId && isEditingExistingMeetingNote) {
+                    await deleteMeetingNoteEntry(meetingDraftId);
+                    return;
+                }
                 clearTimeout(meetingAutosaveTimer);
                 if (meetingDraftId) {
+                    markLocallyDeleted('meetingNotes', meetingDraftId);
                     meetingNoteEntries = meetingNoteEntries.filter((e) => e.id !== meetingDraftId);
                     saveJSON(STORAGE_KEYS.meetingNotes, meetingNoteEntries);
                     renderMeetingNotesLog();
                     renderActivityLog();
                 }
                 meetingDraftId = null;
+                isEditingExistingMeetingNote = false;
                 meetingNotesField.reset();
                 meetingNotesText.placeholder = MEETING_NOTES_PLACEHOLDERS.notes;
                 resetMeetingAttachments();
@@ -3803,6 +4020,44 @@
             const todoTaskInput = document.getElementById('todo-task');
             const todoDueInput = document.getElementById('todo-due');
             const todoListEl = document.getElementById('todo-list');
+            const addTodoBtn = document.getElementById('add-todo-btn');
+            let editingTodoId = null;
+
+            const cancelTodoEdit = () => {
+                editingTodoId = null;
+                todoPersonInput.value = '';
+                todoCompanyInput.value = '';
+                todoTaskInput.value = '';
+                todoDueInput.value = '';
+                addTodoBtn.textContent = 'Add Follow-up';
+                renderTodoList();
+            };
+
+            const startEditTodo = (id) => {
+                const todo = todoEntries.find((t) => t.id === id);
+                if (!todo) return;
+                editingTodoId = id;
+                todoTaskInput.value = todo.task || '';
+                todoPersonInput.value = todo.person || '';
+                todoCompanyInput.value = todo.company || '';
+                todoDueInput.value = todo.due || '';
+                addTodoBtn.textContent = 'Update Follow-up';
+                todoTaskInput.focus();
+                renderTodoList();
+            };
+
+            const deleteTodo = async (id) => {
+                todoEntries = todoEntries.filter((t) => t.id !== id);
+                saveJSON(STORAGE_KEYS.todos, todoEntries);
+                markLocallyDeleted('todos', id);
+                if (editingTodoId === id) cancelTodoEdit();
+                renderTodoList();
+                renderActivityLog();
+                if (hasSyncedBefore() && confirm('Also remove this follow-up from the server?')) {
+                    const success = await deleteSyncedRecord('todos', id);
+                    if (success) clearLocallyDeleted('todos', id);
+                }
+            };
 
             const renderTodoList = () => {
                 todoListEl.innerHTML = '';
@@ -3815,7 +4070,9 @@
                 }
                 todoEntries.forEach((todo) => {
                     const row = document.createElement('div');
-                    row.className = 'flex items-start gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg';
+                    row.className = todo.id === editingTodoId
+                        ? 'flex items-start gap-2 px-3 py-2 bg-blue-50 border border-blue-300 rounded-lg'
+                        : 'flex items-start gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg';
 
                     const checkbox = document.createElement('input');
                     checkbox.type = 'checkbox';
@@ -3843,20 +4100,21 @@
                         textWrap.appendChild(subLine);
                     }
 
+                    const editBtn = document.createElement('button');
+                    editBtn.type = 'button';
+                    editBtn.textContent = 'Edit';
+                    editBtn.setAttribute('aria-label', 'Edit follow-up');
+                    editBtn.className = 'text-xs text-blue-600 hover:text-blue-800 px-1';
+                    editBtn.addEventListener('click', () => startEditTodo(todo.id));
+
                     const deleteBtn = document.createElement('button');
                     deleteBtn.type = 'button';
                     deleteBtn.textContent = '✕';
                     deleteBtn.setAttribute('aria-label', 'Delete follow-up');
                     deleteBtn.className = 'text-gray-400 hover:text-red-600 px-1';
-                    deleteBtn.addEventListener('click', () => {
-                        todoEntries = todoEntries.filter((t) => t.id !== todo.id);
-                        saveJSON(STORAGE_KEYS.todos, todoEntries);
-                        markLocallyDeleted('todos', todo.id);
-                        renderTodoList();
-                        renderActivityLog();
-                    });
+                    deleteBtn.addEventListener('click', () => deleteTodo(todo.id));
 
-                    row.append(checkbox, textWrap, deleteBtn);
+                    row.append(checkbox, textWrap, editBtn, deleteBtn);
                     todoListEl.appendChild(row);
                 });
             };
@@ -3866,6 +4124,23 @@
                 if (!task) {
                     showToast('Add a follow-up task first.');
                     return false;
+                }
+                if (editingTodoId) {
+                    const idx = todoEntries.findIndex((t) => t.id === editingTodoId);
+                    if (idx !== -1) {
+                        todoEntries[idx] = {
+                            ...todoEntries[idx],
+                            task,
+                            person: todoPersonInput.value.trim(),
+                            company: todoCompanyInput.value.trim(),
+                            due: todoDueInput.value,
+                        };
+                    }
+                    saveJSON(STORAGE_KEYS.todos, todoEntries);
+                    showToast('Follow-up updated.');
+                    cancelTodoEdit();
+                    renderActivityLog();
+                    return true;
                 }
                 todoEntries.push({
                     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -3888,7 +4163,7 @@
                 return true;
             };
 
-            document.getElementById('add-todo-btn').addEventListener('click', addTodo);
+            addTodoBtn.addEventListener('click', addTodo);
 
             renderActivityLog();
             renderQuestionLog();
@@ -4037,8 +4312,30 @@
                 contactEntries = [];
                 if (editingContactId) cancelContactEdit();
                 quickCaptureEntries = [];
+                if (editingQuickCaptureId) cancelEditQuickCapture();
                 meetingNoteEntries = [];
+                if (meetingDraftId) {
+                    // Reset the compose form directly (not via finalize/discard — those would
+                    // either re-save into the array we just wiped, or pop an unwanted second
+                    // confirm on top of the one just given for this whole-device clear).
+                    meetingDraftId = null;
+                    isEditingExistingMeetingNote = false;
+                    clearTimeout(meetingAutosaveTimer);
+                    meetingSubjectInput.value = '';
+                    meetingPersonInput.value = '';
+                    meetingCompanyInput.value = '';
+                    meetingNotesField.reset();
+                    meetingNotesText.placeholder = MEETING_NOTES_PLACEHOLDERS.notes;
+                    setNotesExpanded(false);
+                    setMeetingDateTimeToNow();
+                    clearComposeAttachmentState();
+                    audioTranscript = '';
+                    audioSegments = [];
+                    document.getElementById('audio-transcript-box').value = '';
+                    meetingSaveIndicator.textContent = '';
+                }
                 todoEntries = [];
+                if (editingTodoId) cancelTodoEdit();
                 saveJSON(STORAGE_KEYS.feedback, feedbackEntries);
                 saveJSON(STORAGE_KEYS.qa, qaEntries);
                 saveJSON(STORAGE_KEYS.contacts, contactEntries);
@@ -4155,8 +4452,12 @@
                         document.getElementById('document-upload').value = '';
                     } else if (activeTab.id === 'tab5') {
                         resetCardScan();
+                    } else if (activeTab.id === 'tab6' && editingQuickCaptureId) {
+                        cancelEditQuickCapture();
                     } else if (activeTab.id === 'tab7') {
                         discardMeetingDraft();
+                    } else if (activeTab.id === 'tab8' && editingTodoId) {
+                        cancelTodoEdit();
                     }
                 }
             });
