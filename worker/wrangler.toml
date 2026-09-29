@@ -11,6 +11,9 @@ enabled = true
 [vars]
 OPENAI_MODEL = "gpt-4o-mini"
 ALLOWED_ORIGINS = "https://ff.altimate.app,http://localhost:8791"
+# "From" address for emailed entries — must be on a domain verified with
+# Resend (see README) once you're past their sandbox sender.
+EMAIL_FROM = "Field Feedback <onboarding@resend.dev>"
 
 # D1 database for synced records (feedback, survey, contacts, quick captures,
 # meeting notes, todos) — see schema.sql. Bound as env.SYNC_DB.
@@ -29,3 +32,4 @@ bucket_name = "field-feedback-media"
 #   wrangler secret put APP_SHARED_KEY     (optional abuse deterrent for the card-scan route only; see README)
 #   wrangler secret put ADMIN_KEY          (required to create accounts; never ships in client code; see migrations/README.md)
 #   wrangler secret put AUTH_JWT_SECRET    (required for login/session tokens; see migrations/README.md)
+#   wrangler secret put RESEND_API_KEY     (required for "email a copy"; see README)

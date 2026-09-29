@@ -16,6 +16,9 @@ This Worker backs three things for the static app (`index.html`):
    scoped to the account that created it. Accounts flagged admin can
    additionally *read* (never write or delete) every account's data by
    adding `?all=1` — that's what `sync-viewer.html` uses.
+4. **Sharing** (`POST /sync/share`, `POST /email/send`) — lets someone copy an
+   entry into another account, or email a copy to any address via
+   [Resend](https://resend.com). See "Setting up email sharing" below.
 
 **Status:** already deployed at `https://field-feedback-card-scan.andrew-ea2.workers.dev`
 (code only — see "Finish setup" below, it won't actually work until the
@@ -72,6 +75,31 @@ person can still extract it from view-source — it only stops casual/
 opportunistic misuse, not a targeted one. For real rate limiting, add a
 Cloudflare **Rate Limiting Rule** on this Worker's route from the Cloudflare
 dashboard (Security → WAF → Rate limiting rules) — no code change needed.
+
+## Setting up email sharing
+
+The app's "Email a copy" share option sends through
+[Resend](https://resend.com), a transactional email API. One-time setup:
+
+1. **Create a free Resend account** at resend.com.
+2. **Get an API key**: Dashboard → API Keys → Create API Key.
+3. **Set it as a Worker secret** (from `worker/`):
+   ```
+   npx wrangler secret put RESEND_API_KEY
+   ```
+4. **Try it** — sharing to email should work immediately, but only to *your
+   own* Resend account email while using the default sandbox sender
+   (`onboarding@resend.dev`, set in `wrangler.toml`'s `EMAIL_FROM`). That's a
+   Resend restriction, not something in this code.
+5. **For real use (sending to anyone)**: verify a domain you control with
+   Resend (Dashboard → Domains → Add Domain, then add the DNS records it
+   gives you — this needs access to your domain's DNS, e.g. at whoever hosts
+   `altimatemedical.com` or `ff.altimate.app`). Once verified, change
+   `EMAIL_FROM` in `wrangler.toml` to an address on that domain (e.g.
+   `Field Feedback <noreply@ff.altimate.app>`) and redeploy.
+
+Resend's free tier (3,000 emails/month, 100/day at the time of writing) is
+enough for normal use of this feature.
 
 ## Redeploying after code changes
 

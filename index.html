@@ -973,6 +973,32 @@
         </div>
     </div>
 
+    <!-- Share Modal (shared by every tab's per-entry Share button) -->
+    <div id="share-modal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div class="w-full max-w-sm bg-white rounded-xl shadow-lg p-4 space-y-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-base font-bold text-gray-800">Share Entry</h2>
+                <button type="button" id="share-modal-close-btn" class="text-gray-400 hover:text-gray-600 text-xl leading-none" aria-label="Close">&times;</button>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Share with a user</label>
+                <p class="mt-1 text-xs text-gray-500">Sends an independent copy — editing one copy doesn't change the other. It shows up for them next time they hit Sync.</p>
+                <div id="share-user-list" class="mt-2 space-y-1 max-h-40 overflow-y-auto"></div>
+            </div>
+
+            <div class="pt-3 border-t border-gray-200">
+                <label for="share-email-input" class="block text-sm font-medium text-gray-700">Or email a copy</label>
+                <div class="mt-1 flex gap-2">
+                    <input type="email" id="share-email-input" placeholder="name@example.com" class="flex-1 px-3 py-2 text-sm text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    <button type="button" id="share-email-btn" class="px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">Send</button>
+                </div>
+            </div>
+
+            <p id="share-status" class="text-xs text-gray-500 min-h-[1em]"></p>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
     <div id="toast-notification"></div>
 
@@ -1504,6 +1530,138 @@
                     syncBtn.disabled = false;
                 }
             });
+
+            // --- Sharing: copy an entry to another account, or email a copy out ---
+            const shareModal = document.getElementById('share-modal');
+            const shareUserList = document.getElementById('share-user-list');
+            const shareEmailInput = document.getElementById('share-email-input');
+            const shareEmailBtn = document.getElementById('share-email-btn');
+            const shareStatus = document.getElementById('share-status');
+            let shareContext = null; // { type, id }
+
+            const ENTRY_LABELS = {
+                feedback: 'Feedback',
+                qa: 'Survey Answer',
+                contacts: 'Contact',
+                quickCaptures: 'Quick Capture',
+                meetingNotes: 'Meeting Note',
+                todos: 'Follow-up',
+            };
+            const SHARE_FIELD_SKIP = new Set(['id', 'ts', 'attachmentIds', 'cardPhotoId', 'sharedFrom']);
+            const prettifyFieldKey = (key) => key.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase());
+
+            // Generic across every entry type — no per-type formatting code needed since it
+            // just walks the entry's own fields. The Worker's /email/send route only ever
+            // sees the finished subject/text; it has no idea what a "Quick Capture" is.
+            const formatEntryForShare = (type, entry) => {
+                const label = ENTRY_LABELS[type] || 'Entry';
+                const lines = [];
+                Object.entries(entry).forEach(([key, value]) => {
+                    if (SHARE_FIELD_SKIP.has(key)) return;
+                    if (value === undefined || value === null || value === '') return;
+                    if (Array.isArray(value)) {
+                        if (!value.length) return;
+                        if (key === 'audioSegments') {
+                            value.forEach((seg) => lines.push(`Audio [${seg.start}–${seg.end}]: ${seg.text}`));
+                            return;
+                        }
+                        lines.push(`${prettifyFieldKey(key)}: ${value.join(', ')}`);
+                        return;
+                    }
+                    lines.push(`${prettifyFieldKey(key)}: ${value}`);
+                });
+                const titleBit = entry.subject || entry.task || entry.name || (entry.text ? entry.text.slice(0, 40) : '') || '';
+                return { subject: `${label}${titleBit ? ': ' + titleBit : ''}`, text: lines.join('\n') || '(no details)' };
+            };
+
+            const findEntry = (type, id) => {
+                const getEntries = SYNC_RECORD_TYPES[type];
+                return getEntries ? getEntries().find((e) => e.id === id) : null;
+            };
+
+            const closeShareModal = () => {
+                shareModal.classList.add('hidden');
+                shareContext = null;
+                shareEmailInput.value = '';
+                shareStatus.textContent = '';
+            };
+
+            const openShareModal = async (type, id) => {
+                shareContext = { type, id };
+                shareStatus.textContent = '';
+                shareEmailInput.value = '';
+                shareUserList.innerHTML = '<p class="text-xs text-gray-400">Loading users…</p>';
+                shareModal.classList.remove('hidden');
+                try {
+                    const res = await apiFetch('/auth/users');
+                    if (!res.ok) throw new Error('failed to list users');
+                    const body = await res.json();
+                    const myUsername = currentAuth && currentAuth.user && currentAuth.user.username;
+                    const others = (body.users || []).filter((u) => u.username !== myUsername);
+                    shareUserList.innerHTML = '';
+                    if (!others.length) {
+                        shareUserList.innerHTML = '<p class="text-xs text-gray-400">No other accounts yet.</p>';
+                        return;
+                    }
+                    others.forEach((u) => {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'w-full text-left px-3 py-2 text-sm bg-gray-50 hover:bg-blue-50 border border-gray-200 rounded-lg';
+                        btn.textContent = `${u.username} (${u.email})`;
+                        btn.addEventListener('click', () => shareWithUser(u.id, u.username));
+                        shareUserList.appendChild(btn);
+                    });
+                } catch (err) {
+                    shareUserList.innerHTML = '<p class="text-xs text-red-500">Could not load the user list.</p>';
+                }
+            };
+
+            const shareWithUser = async (targetUserId, targetUsername) => {
+                if (!shareContext) return;
+                const entry = findEntry(shareContext.type, shareContext.id);
+                if (!entry) { shareStatus.textContent = 'That entry no longer exists.'; return; }
+                shareStatus.textContent = `Sharing with ${targetUsername}…`;
+                try {
+                    const res = await apiFetch('/sync/share', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ type: shareContext.type, targetUserId, data: entry }),
+                    });
+                    if (!res.ok) throw new Error('share failed');
+                    showToast(`Shared with ${targetUsername}.`);
+                    closeShareModal();
+                } catch (err) {
+                    shareStatus.textContent = `Could not share with ${targetUsername} — check your connection and try again.`;
+                }
+            };
+
+            shareEmailBtn.addEventListener('click', async () => {
+                if (!shareContext) return;
+                const to = shareEmailInput.value.trim();
+                if (!to) { shareStatus.textContent = 'Enter an email address first.'; return; }
+                const entry = findEntry(shareContext.type, shareContext.id);
+                if (!entry) { shareStatus.textContent = 'That entry no longer exists.'; return; }
+                const { subject, text } = formatEntryForShare(shareContext.type, entry);
+                shareEmailBtn.disabled = true;
+                shareStatus.textContent = 'Sending…';
+                try {
+                    const res = await apiFetch('/email/send', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ to, subject, text }),
+                    });
+                    if (!res.ok) throw new Error('send failed');
+                    showToast(`Emailed to ${to}.`);
+                    closeShareModal();
+                } catch (err) {
+                    shareStatus.textContent = 'Could not send that email — check the address and try again.';
+                } finally {
+                    shareEmailBtn.disabled = false;
+                }
+            });
+
+            document.getElementById('share-modal-close-btn').addEventListener('click', closeShareModal);
+            shareModal.addEventListener('click', (e) => { if (e.target === shareModal) closeShareModal(); });
 
             // --- Install hint (shown only when not already running as an installed app) ---
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
@@ -2220,7 +2378,12 @@
                     deleteBtn.textContent = 'Delete';
                     deleteBtn.className = 'text-xs text-red-600 hover:underline';
                     deleteBtn.addEventListener('click', () => deleteContact(entry.id));
-                    actions.append(editBtn, deleteBtn);
+                    const shareBtn = document.createElement('button');
+                    shareBtn.type = 'button';
+                    shareBtn.textContent = 'Share';
+                    shareBtn.className = 'text-xs text-gray-600 hover:underline';
+                    shareBtn.addEventListener('click', () => openShareModal('contacts', entry.id));
+                    actions.append(editBtn, shareBtn, deleteBtn);
 
                     row.append(info, actions);
                     contactLog.appendChild(row);
@@ -3396,7 +3559,12 @@
                         deleteBtn.textContent = 'Delete';
                         deleteBtn.className = 'text-xs text-red-600 hover:text-red-800';
                         deleteBtn.addEventListener('click', () => deleteQuickCapture(entry.id));
-                        actions.append(editBtn, deleteBtn);
+                        const shareBtn = document.createElement('button');
+                        shareBtn.type = 'button';
+                        shareBtn.textContent = 'Share';
+                        shareBtn.className = 'text-xs text-gray-600 hover:text-gray-800';
+                        shareBtn.addEventListener('click', () => openShareModal('quickCaptures', entry.id));
+                        actions.append(editBtn, shareBtn, deleteBtn);
                         row.appendChild(actions);
 
                         quickCaptureLog.appendChild(row);
@@ -3766,7 +3934,12 @@
                         deleteBtn.textContent = 'Delete';
                         deleteBtn.className = 'text-xs text-red-600 hover:text-red-800';
                         deleteBtn.addEventListener('click', () => deleteMeetingNoteEntry(entry.id));
-                        actions.append(editBtn, deleteBtn);
+                        const shareBtn = document.createElement('button');
+                        shareBtn.type = 'button';
+                        shareBtn.textContent = 'Share';
+                        shareBtn.className = 'text-xs text-gray-600 hover:text-gray-800';
+                        shareBtn.addEventListener('click', () => openShareModal('meetingNotes', entry.id));
+                        actions.append(editBtn, shareBtn, deleteBtn);
                         row.appendChild(actions);
 
                         meetingNotesLog.appendChild(row);
@@ -4107,6 +4280,13 @@
                     editBtn.className = 'text-xs text-blue-600 hover:text-blue-800 px-1';
                     editBtn.addEventListener('click', () => startEditTodo(todo.id));
 
+                    const shareBtn = document.createElement('button');
+                    shareBtn.type = 'button';
+                    shareBtn.textContent = 'Share';
+                    shareBtn.setAttribute('aria-label', 'Share follow-up');
+                    shareBtn.className = 'text-xs text-gray-500 hover:text-gray-700 px-1';
+                    shareBtn.addEventListener('click', () => openShareModal('todos', todo.id));
+
                     const deleteBtn = document.createElement('button');
                     deleteBtn.type = 'button';
                     deleteBtn.textContent = '✕';
@@ -4114,7 +4294,7 @@
                     deleteBtn.className = 'text-gray-400 hover:text-red-600 px-1';
                     deleteBtn.addEventListener('click', () => deleteTodo(todo.id));
 
-                    row.append(checkbox, textWrap, editBtn, deleteBtn);
+                    row.append(checkbox, textWrap, editBtn, shareBtn, deleteBtn);
                     todoListEl.appendChild(row);
                 });
             };

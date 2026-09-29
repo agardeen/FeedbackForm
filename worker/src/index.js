@@ -1,7 +1,7 @@
 /**
  * Field Feedback Worker.
  *
- * Three unrelated jobs share this Worker (and its wrangler deploy flow):
+ * Four unrelated jobs share this Worker (and its wrangler deploy flow):
  *
  * 1. Business card scan proxy (`POST /`) — holds the OpenAI API key
  *    server-side and forwards a business-card photo to a vision-capable
@@ -13,10 +13,12 @@
  *    `POST /auth/admin/create-user` (guarded by the ADMIN_KEY secret, which
  *    never ships in client code — terminal/curl only, see
  *    migrations/README.md). After that, any account with is_admin can add
- *    more via `POST /auth/users` (checked from their own session token) or
- *    list existing ones via `GET /auth/users` — that's what the app's
- *    Account tab uses. `POST /auth/login` exchanges a username/password for
- *    a signed, expiring token (see auth.js). `GET /auth/me` and
+ *    more via `POST /auth/users` (checked from their own session token).
+ *    `GET /auth/users` lists every account (username/email/admin-flag only,
+ *    nothing sensitive) — any logged-in account can call it, both for the
+ *    Account tab's admin view and for the share picker (job 4 below).
+ *    `POST /auth/login` exchanges a username/password for a signed,
+ *    expiring token (see auth.js). `GET /auth/me` and
  *    `POST /auth/change-password` also need that token.
  *
  * 3. Optional server sync (`/sync/*`) — lets the app back up its locally
@@ -28,6 +30,16 @@
  *    <token>` from /auth/login, and every record/media row is scoped to the
  *    account that owns it — an admin account can additionally read (not
  *    write or delete) every account's data via `?all=1`, for oversight.
+ *
+ * 4. Sharing (`POST /sync/share`, `POST /email/send`) — both authenticated
+ *    the same way as /sync/*. `/sync/share` copies one entry's data into
+ *    another account (a new independent row under a new id — not a live
+ *    link; editing one copy never affects the other). `/email/send` relays
+ *    a pre-formatted subject/body through Resend so a copy can be emailed to
+ *    anyone, account or not — the frontend does all the per-entry-type
+ *    formatting; this route is a dumb relay. Requires the RESEND_API_KEY
+ *    secret; see README for setup (a verified sending domain is needed for
+ *    production use, not just the sandbox address).
  *
  * Provider swap (card scan): everything OpenAI-specific lives in
  * `callOpenAI()` and `CARD_SCHEMA`. Replace `callOpenAI()` with an
@@ -213,8 +225,10 @@ async function handleAdminCreateUserInApp(request, env, headers, auth) {
 	return jsonResponse(result.user, 200, headers);
 }
 
-async function handleAdminListUsers(env, headers, auth) {
-	if (!auth.isAdmin) return jsonResponse({ error: 'forbidden' }, 403, headers);
+// Any logged-in account can list accounts — not admin-only. Needed so the
+// share picker can show who else to share an entry with; nothing sensitive
+// is returned (no password data), just username/email/admin-flag.
+async function handleListUsers(env, headers) {
 	const { results } = await env.SYNC_DB.prepare(
 		`SELECT id, username, email, is_admin, created_at FROM users ORDER BY created_at ASC`
 	).all();
@@ -486,6 +500,99 @@ async function handleRecordsPull(request, env, headers, type, auth) {
 	return jsonResponse({ records, serverTime: Date.now() }, 200, headers);
 }
 
+// --- Sharing: copy one entry into another account, or email it out ---
+
+// Copies `data` (the full local entry, exactly as the app already stores and
+// syncs it) into another account as a brand-new row with a fresh id. This is
+// a one-time copy, not a live link — editing either side afterward never
+// affects the other. Media referenced by the copied entry (attachmentIds,
+// cardPhotoId) is NOT duplicated — it still belongs to the original account,
+// so any photos won't show up for the recipient. Text-only sharing works
+// fully; that's a known limitation, not a bug.
+async function handleShareRecord(request, env, headers, auth) {
+	let body;
+	try {
+		body = await request.json();
+	} catch (err) {
+		return jsonResponse({ error: 'invalid_request_body' }, 400, headers);
+	}
+
+	const type = body && body.type;
+	const targetUserId = body && body.targetUserId;
+	const data = body && body.data;
+	if (!RECORD_TYPES.has(type)) return jsonResponse({ error: 'unknown_record_type' }, 404, headers);
+	if (!targetUserId || typeof targetUserId !== 'string') return jsonResponse({ error: 'invalid_input' }, 400, headers);
+	if (!data || typeof data !== 'object') return jsonResponse({ error: 'invalid_input' }, 400, headers);
+
+	const targetUser = await env.SYNC_DB.prepare(`SELECT id, username FROM users WHERE id = ?1`).bind(targetUserId).first();
+	if (!targetUser) return jsonResponse({ error: 'user_not_found' }, 404, headers);
+
+	const newId = crypto.randomUUID();
+	const now = Date.now();
+	const sharedData = { ...data, id: newId, sharedFrom: { username: auth.username, sharedAt: now } };
+
+	await env.SYNC_DB.prepare(
+		`INSERT INTO records (user_id, type, id, data, updated_at, deleted_at) VALUES (?1, ?2, ?3, ?4, ?5, NULL)`
+	).bind(targetUserId, type, newId, JSON.stringify(sharedData), now).run();
+
+	return jsonResponse({ ok: true, id: newId, sharedWith: targetUser.username }, 200, headers);
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Dumb relay to Resend — the frontend already knows how to format each entry
+// type into readable text (it has the same rendering logic used on-screen),
+// so this route just takes a ready-made subject/body and sends it. Any
+// logged-in account can use it; it's not scoped to synced data at all.
+async function handleSendEmail(request, env, headers, auth) {
+	if (!env.RESEND_API_KEY) {
+		// eslint-disable-next-line no-console
+		console.error('RESEND_API_KEY is not configured; email sending is disabled');
+		return jsonResponse({ error: 'server_not_configured' }, 500, headers);
+	}
+
+	let body;
+	try {
+		body = await request.json();
+	} catch (err) {
+		return jsonResponse({ error: 'invalid_request_body' }, 400, headers);
+	}
+
+	const to = ((body && body.to) || '').trim();
+	const subject = ((body && body.subject) || 'Shared entry').toString().slice(0, 200);
+	const text = ((body && body.text) || '').toString().slice(0, 10000);
+	if (!EMAIL_RE.test(to)) return jsonResponse({ error: 'invalid_email' }, 400, headers);
+	if (!text) return jsonResponse({ error: 'missing_body' }, 400, headers);
+
+	try {
+		const res = await fetch('https://api.resend.com/emails', {
+			method: 'POST',
+			headers: {
+				'Authorization': `Bearer ${env.RESEND_API_KEY}`,
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				from: env.EMAIL_FROM || 'Field Feedback <onboarding@resend.dev>',
+				to: [to],
+				subject,
+				text: `${text}\n\n— sent from Field Feedback by ${auth.username}`,
+			}),
+		});
+		if (!res.ok) {
+			const detail = await res.text().catch(() => '');
+			// eslint-disable-next-line no-console
+			console.error(`Resend request failed: HTTP ${res.status} ${detail}`);
+			return jsonResponse({ error: 'email_send_failed' }, 502, headers);
+		}
+	} catch (err) {
+		// eslint-disable-next-line no-console
+		console.error('Resend request threw:', err);
+		return jsonResponse({ error: 'network_error' }, 502, headers);
+	}
+
+	return jsonResponse({ ok: true }, 200, headers);
+}
+
 // --- Sync: media (photos/audio/scans) ---
 
 async function handleMediaUpload(request, env, headers, id, auth) {
@@ -617,7 +724,14 @@ export default {
 		if (url.pathname === '/auth/users' && request.method === 'GET') {
 			const auth = await requireAuth(request, env);
 			if (!auth) return jsonResponse({ error: 'unauthorized' }, 401, headers);
-			return handleAdminListUsers(env, headers, auth);
+			return handleListUsers(env, headers);
+		}
+
+		// --- Sharing routes: any logged-in account (not admin-only) ---
+		if (url.pathname === '/email/send' && request.method === 'POST') {
+			const auth = await requireAuth(request, env);
+			if (!auth) return jsonResponse({ error: 'unauthorized' }, 401, headers);
+			return handleSendEmail(request, env, headers, auth);
 		}
 
 		// --- Sync routes: require a logged-in account. Every row is scoped to
@@ -633,6 +747,11 @@ export default {
 			if (!auth) return jsonResponse({ error: 'unauthorized' }, 401, headers);
 
 			const parts = url.pathname.split('/').filter(Boolean); // ['sync', ...]
+
+			// /sync/share                     POST (copy one entry into another account)
+			if (parts[1] === 'share' && request.method === 'POST') {
+				return handleShareRecord(request, env, headers, auth);
+			}
 
 			// /sync/records/:type            POST (upsert), GET (pull, ?since=&all=)
 			// /sync/records/:type/:id        DELETE (tombstone)
