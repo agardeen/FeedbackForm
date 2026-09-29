@@ -26,4 +26,6 @@ bucket_name = "field-feedback-media"
 
 # Secrets (never put these here) — set once via:
 #   wrangler secret put OPENAI_API_KEY
-#   wrangler secret put APP_SHARED_KEY   (required for /sync/* routes; see README)
+#   wrangler secret put APP_SHARED_KEY     (optional abuse deterrent for the card-scan route only; see README)
+#   wrangler secret put ADMIN_KEY          (required to create accounts; never ships in client code; see migrations/README.md)
+#   wrangler secret put AUTH_JWT_SECRET    (required for login/session tokens; see migrations/README.md)

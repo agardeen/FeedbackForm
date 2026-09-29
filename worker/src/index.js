@@ -1,19 +1,29 @@
 /**
  * Field Feedback Worker.
  *
- * Two unrelated jobs share this Worker (and its wrangler deploy flow):
+ * Three unrelated jobs share this Worker (and its wrangler deploy flow):
  *
  * 1. Business card scan proxy (`POST /`) — holds the OpenAI API key
  *    server-side and forwards a business-card photo to a vision-capable
  *    OpenAI model with a strict JSON schema. See the "Frontend integration"
  *    note in the README for how the frontend uses this.
  *
- * 2. Optional server sync (`/sync/*`) — lets the app back up its locally
+ * 2. Login (`/auth/*`) — every synced record belongs to one account. There
+ *    is no public sign-up: accounts are created by an admin via
+ *    `POST /auth/admin/create-user` (guarded by the ADMIN_KEY secret, which
+ *    never ships in client code). `POST /auth/login` exchanges a
+ *    username/password for a signed, expiring token (see auth.js).
+ *    `GET /auth/me` and `POST /auth/change-password` need that token.
+ *
+ * 3. Optional server sync (`/sync/*`) — lets the app back up its locally
  *    stored records (feedback, survey answers, contacts, quick captures,
  *    meeting notes, todos) and media (photos/audio/scans) to a D1 database
  *    and R2 bucket, so a device wipe or reinstall isn't a full data loss.
  *    Sync is opt-in from the app; nothing here runs unless the frontend
- *    calls it. Every /sync/* route requires the APP_SHARED_KEY secret.
+ *    calls it. Every /sync/* route requires a valid `Authorization: Bearer
+ *    <token>` from /auth/login, and every record/media row is scoped to the
+ *    account that owns it — an admin account can additionally read (not
+ *    write or delete) every account's data via `?all=1`, for oversight.
  *
  * Provider swap (card scan): everything OpenAI-specific lives in
  * `callOpenAI()` and `CARD_SCHEMA`. Replace `callOpenAI()` with an
@@ -21,11 +31,14 @@
  * to change.
  */
 
+import { hashPassword, verifyPassword, signJwt, verifyJwt } from './auth.js';
+
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // ~8MB base64 payload cap (defense in depth —
 // the frontend resizes well below this before sending; this just stops an
 // abusive direct call to the endpoint from sending something huge).
 const OPENAI_TIMEOUT_MS = 25000;
 const MAX_MEDIA_BYTES = 25 * 1024 * 1024; // photos/audio uploaded for sync
+const AUTH_TOKEN_TTL_SECONDS = 14 * 24 * 60 * 60; // sessions expire after 14 days
 
 const CARD_SCHEMA = {
 	name: 'business_card_contact',
@@ -96,7 +109,7 @@ function corsHeaders(origin, allowedOrigins) {
 	return {
 		'Access-Control-Allow-Origin': allowOrigin,
 		'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
-		'Access-Control-Allow-Headers': 'Content-Type, X-App-Key, X-Media-Kind',
+		'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-App-Key, X-Admin-Key, X-Media-Kind',
 		'Vary': 'Origin',
 	};
 }
@@ -106,6 +119,138 @@ function jsonResponse(body, status, extraHeaders) {
 		status,
 		headers: { 'Content-Type': 'application/json', ...extraHeaders },
 	});
+}
+
+// Verifies the `Authorization: Bearer <token>` header on a /sync/* or
+// /auth/me request. Returns { userId, username, isAdmin } or null — the
+// token alone is trusted (no per-request DB lookup) since sessions are
+// stateless; revoking an account takes effect within AUTH_TOKEN_TTL_SECONDS.
+async function requireAuth(request, env) {
+	const header = request.headers.get('Authorization') || '';
+	const match = /^Bearer (.+)$/.exec(header);
+	if (!match) return null;
+	const payload = await verifyJwt(match[1], env.AUTH_JWT_SECRET);
+	if (!payload || !payload.sub) return null;
+	return { userId: payload.sub, username: payload.username, isAdmin: !!payload.isAdmin };
+}
+
+function normalizeUsername(username) {
+	return (username || '').trim().toLowerCase();
+}
+
+// --- Auth routes ---
+
+async function handleAdminCreateUser(request, env, headers) {
+	if (!env.ADMIN_KEY) {
+		// eslint-disable-next-line no-console
+		console.error('ADMIN_KEY is not configured; account creation is disabled');
+		return jsonResponse({ error: 'server_not_configured' }, 500, headers);
+	}
+	if (request.headers.get('X-Admin-Key') !== env.ADMIN_KEY) {
+		return jsonResponse({ error: 'unauthorized' }, 401, headers);
+	}
+
+	let body;
+	try {
+		body = await request.json();
+	} catch (err) {
+		return jsonResponse({ error: 'invalid_request_body' }, 400, headers);
+	}
+
+	const username = normalizeUsername(body && body.username);
+	const email = (body && body.email || '').trim();
+	const password = body && body.password;
+	if (!username || !email || !password || password.length < 8) {
+		return jsonResponse({ error: 'invalid_input', detail: 'username, email, and a password of at least 8 characters are required' }, 400, headers);
+	}
+
+	const id = crypto.randomUUID();
+	const passwordHash = await hashPassword(password);
+	const isAdmin = body.isAdmin ? 1 : 0;
+
+	try {
+		await env.SYNC_DB.prepare(
+			`INSERT INTO users (id, username, email, password_hash, is_admin, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6)`
+		).bind(id, username, email, passwordHash, isAdmin, Date.now()).run();
+	} catch (err) {
+		// D1 surfaces a UNIQUE constraint violation as a generic error; treat any
+		// insert failure here as "username taken" since that's the only constraint.
+		return jsonResponse({ error: 'username_taken' }, 409, headers);
+	}
+
+	return jsonResponse({ id, username, email, isAdmin: !!isAdmin }, 200, headers);
+}
+
+async function handleLogin(request, env, headers) {
+	if (!env.AUTH_JWT_SECRET) {
+		// eslint-disable-next-line no-console
+		console.error('AUTH_JWT_SECRET is not configured; login is disabled');
+		return jsonResponse({ error: 'server_not_configured' }, 500, headers);
+	}
+
+	let body;
+	try {
+		body = await request.json();
+	} catch (err) {
+		return jsonResponse({ error: 'invalid_request_body' }, 400, headers);
+	}
+
+	const username = normalizeUsername(body && body.username);
+	const password = body && body.password;
+	if (!username || !password) return jsonResponse({ error: 'invalid_input' }, 400, headers);
+
+	const user = await env.SYNC_DB.prepare(
+		`SELECT id, username, email, password_hash, is_admin FROM users WHERE username = ?1`
+	).bind(username).first();
+
+	// Same error for "no such user" and "wrong password" — don't leak which one it was.
+	if (!user || !(await verifyPassword(password, user.password_hash))) {
+		return jsonResponse({ error: 'invalid_credentials' }, 401, headers);
+	}
+
+	const token = await signJwt(
+		{ sub: user.id, username: user.username, isAdmin: !!user.is_admin },
+		env.AUTH_JWT_SECRET,
+		AUTH_TOKEN_TTL_SECONDS
+	);
+
+	return jsonResponse({
+		token,
+		user: { id: user.id, username: user.username, email: user.email, isAdmin: !!user.is_admin },
+	}, 200, headers);
+}
+
+async function handleMe(request, env, headers, auth) {
+	const user = await env.SYNC_DB.prepare(
+		`SELECT id, username, email, is_admin FROM users WHERE id = ?1`
+	).bind(auth.userId).first();
+	if (!user) return jsonResponse({ error: 'not_found' }, 404, headers);
+	return jsonResponse({ id: user.id, username: user.username, email: user.email, isAdmin: !!user.is_admin }, 200, headers);
+}
+
+async function handleChangePassword(request, env, headers, auth) {
+	let body;
+	try {
+		body = await request.json();
+	} catch (err) {
+		return jsonResponse({ error: 'invalid_request_body' }, 400, headers);
+	}
+
+	const currentPassword = body && body.currentPassword;
+	const newPassword = body && body.newPassword;
+	if (!currentPassword || !newPassword || newPassword.length < 8) {
+		return jsonResponse({ error: 'invalid_input' }, 400, headers);
+	}
+
+	const user = await env.SYNC_DB.prepare(`SELECT password_hash FROM users WHERE id = ?1`).bind(auth.userId).first();
+	if (!user || !(await verifyPassword(currentPassword, user.password_hash))) {
+		return jsonResponse({ error: 'invalid_credentials' }, 401, headers);
+	}
+
+	const newHash = await hashPassword(newPassword);
+	await env.SYNC_DB.prepare(`UPDATE users SET password_hash = ?1 WHERE id = ?2`).bind(newHash, auth.userId).run();
+
+	return jsonResponse({ ok: true }, 200, headers);
 }
 
 async function callOpenAI(env, imageDataUrl) {
@@ -221,7 +366,7 @@ async function handleCardScan(request, env, headers) {
 
 // --- Sync: records (feedback/survey/contacts/quick captures/meeting notes/todos) ---
 
-async function handleRecordsUpsert(request, env, headers, type) {
+async function handleRecordsUpsert(request, env, headers, type, auth) {
 	if (!RECORD_TYPES.has(type)) return jsonResponse({ error: 'unknown_record_type' }, 404, headers);
 
 	let body;
@@ -245,14 +390,14 @@ async function handleRecordsUpsert(request, env, headers, type) {
 		// protects against an out-of-order sync from an offline-queued device.
 		statements.push(
 			env.SYNC_DB.prepare(
-				`INSERT INTO records (type, id, data, updated_at, deleted_at)
-				 VALUES (?1, ?2, ?3, ?4, NULL)
-				 ON CONFLICT(type, id) DO UPDATE SET
+				`INSERT INTO records (user_id, type, id, data, updated_at, deleted_at)
+				 VALUES (?1, ?2, ?3, ?4, ?5, NULL)
+				 ON CONFLICT(user_id, type, id) DO UPDATE SET
 				   data = excluded.data,
 				   updated_at = excluded.updated_at,
 				   deleted_at = NULL
 				 WHERE excluded.updated_at >= records.updated_at`
-			).bind(type, record.id, data, updatedAt)
+			).bind(auth.userId, type, record.id, data, updatedAt)
 		);
 	}
 	if (!statements.length) return jsonResponse({ error: 'no_valid_records' }, 400, headers);
@@ -261,29 +406,37 @@ async function handleRecordsUpsert(request, env, headers, type) {
 	return jsonResponse({ ok: true, upserted: statements.length }, 200, headers);
 }
 
-async function handleRecordDelete(env, headers, type, id) {
+async function handleRecordDelete(env, headers, type, id, auth) {
 	if (!RECORD_TYPES.has(type)) return jsonResponse({ error: 'unknown_record_type' }, 404, headers);
 	if (!id) return jsonResponse({ error: 'missing_id' }, 400, headers);
 
+	// Scoped to the caller's own data even for admins — "view everyone's data"
+	// does not imply "can delete everyone's data".
 	await env.SYNC_DB.prepare(
-		`UPDATE records SET deleted_at = ?1, updated_at = ?1 WHERE type = ?2 AND id = ?3`
-	).bind(Date.now(), type, id).run();
+		`UPDATE records SET deleted_at = ?1, updated_at = ?1 WHERE type = ?2 AND id = ?3 AND user_id = ?4`
+	).bind(Date.now(), type, id, auth.userId).run();
 
 	return jsonResponse({ ok: true }, 200, headers);
 }
 
-async function handleRecordsPull(request, env, headers, type) {
+async function handleRecordsPull(request, env, headers, type, auth) {
 	if (!RECORD_TYPES.has(type)) return jsonResponse({ error: 'unknown_record_type' }, 404, headers);
 
 	const url = new URL(request.url);
 	const since = Number(url.searchParams.get('since')) || 0;
+	const wantsAll = auth.isAdmin && url.searchParams.get('all') === '1';
 
-	const { results } = await env.SYNC_DB.prepare(
-		`SELECT id, data, updated_at, deleted_at FROM records WHERE type = ?1 AND updated_at > ?2 ORDER BY updated_at ASC LIMIT 1000`
-	).bind(type, since).all();
+	const { results } = wantsAll
+		? await env.SYNC_DB.prepare(
+			`SELECT id, user_id, data, updated_at, deleted_at FROM records WHERE type = ?1 AND updated_at > ?2 ORDER BY updated_at ASC LIMIT 1000`
+		  ).bind(type, since).all()
+		: await env.SYNC_DB.prepare(
+			`SELECT id, user_id, data, updated_at, deleted_at FROM records WHERE type = ?1 AND user_id = ?2 AND updated_at > ?3 ORDER BY updated_at ASC LIMIT 1000`
+		  ).bind(type, auth.userId, since).all();
 
 	const records = (results || []).map((row) => ({
 		id: row.id,
+		userId: row.user_id,
 		updatedAt: row.updated_at,
 		deleted: !!row.deleted_at,
 		data: row.deleted_at ? null : JSON.parse(row.data),
@@ -294,8 +447,12 @@ async function handleRecordsPull(request, env, headers, type) {
 
 // --- Sync: media (photos/audio/scans) ---
 
-async function handleMediaUpload(request, env, headers, id) {
+async function handleMediaUpload(request, env, headers, id, auth) {
 	if (!id) return jsonResponse({ error: 'missing_id' }, 400, headers);
+
+	// An id already owned by a different account can't be silently taken over.
+	const existing = await env.SYNC_DB.prepare(`SELECT user_id FROM media WHERE id = ?1`).bind(id).first();
+	if (existing && existing.user_id !== auth.userId) return jsonResponse({ error: 'forbidden' }, 403, headers);
 
 	const contentType = request.headers.get('Content-Type') || 'application/octet-stream';
 	const kind = request.headers.get('X-Media-Kind') || 'unknown';
@@ -307,16 +464,19 @@ async function handleMediaUpload(request, env, headers, id) {
 
 	const now = Date.now();
 	await env.SYNC_DB.prepare(
-		`INSERT INTO media (id, kind, content_type, updated_at, deleted_at)
-		 VALUES (?1, ?2, ?3, ?4, NULL)
+		`INSERT INTO media (id, user_id, kind, content_type, updated_at, deleted_at)
+		 VALUES (?1, ?2, ?3, ?4, ?5, NULL)
 		 ON CONFLICT(id) DO UPDATE SET kind = excluded.kind, content_type = excluded.content_type, updated_at = excluded.updated_at, deleted_at = NULL`
-	).bind(id, kind, contentType, now).run();
+	).bind(id, auth.userId, kind, contentType, now).run();
 
 	return jsonResponse({ ok: true }, 200, headers);
 }
 
-async function handleMediaDownload(env, headers, id) {
+async function handleMediaDownload(env, headers, id, auth) {
 	if (!id) return jsonResponse({ error: 'missing_id' }, 400, headers);
+	const row = await env.SYNC_DB.prepare(`SELECT user_id FROM media WHERE id = ?1`).bind(id).first();
+	if (!row) return jsonResponse({ error: 'not_found' }, 404, headers);
+	if (row.user_id !== auth.userId && !auth.isAdmin) return jsonResponse({ error: 'forbidden' }, 403, headers);
 	const object = await env.SYNC_MEDIA.get(id);
 	if (!object) return jsonResponse({ error: 'not_found' }, 404, headers);
 	return new Response(object.body, {
@@ -325,25 +485,32 @@ async function handleMediaDownload(env, headers, id) {
 	});
 }
 
-async function handleMediaDelete(env, headers, id) {
+async function handleMediaDelete(env, headers, id, auth) {
 	if (!id) return jsonResponse({ error: 'missing_id' }, 400, headers);
-	await env.SYNC_MEDIA.delete(id);
-	await env.SYNC_DB.prepare(
-		`UPDATE media SET deleted_at = ?1, updated_at = ?1 WHERE id = ?2`
-	).bind(Date.now(), id).run();
+	// Scoped to the caller's own media even for admins, same rationale as record deletes.
+	const result = await env.SYNC_DB.prepare(
+		`UPDATE media SET deleted_at = ?1, updated_at = ?1 WHERE id = ?2 AND user_id = ?3`
+	).bind(Date.now(), id, auth.userId).run();
+	if (result.meta && result.meta.changes) await env.SYNC_MEDIA.delete(id);
 	return jsonResponse({ ok: true }, 200, headers);
 }
 
-async function handleMediaList(request, env, headers) {
+async function handleMediaList(request, env, headers, auth) {
 	const url = new URL(request.url);
 	const since = Number(url.searchParams.get('since')) || 0;
+	const wantsAll = auth.isAdmin && url.searchParams.get('all') === '1';
 
-	const { results } = await env.SYNC_DB.prepare(
-		`SELECT id, kind, content_type, updated_at, deleted_at FROM media WHERE updated_at > ?1 ORDER BY updated_at ASC LIMIT 1000`
-	).bind(since).all();
+	const { results } = wantsAll
+		? await env.SYNC_DB.prepare(
+			`SELECT id, user_id, kind, content_type, updated_at, deleted_at FROM media WHERE updated_at > ?1 ORDER BY updated_at ASC LIMIT 1000`
+		  ).bind(since).all()
+		: await env.SYNC_DB.prepare(
+			`SELECT id, user_id, kind, content_type, updated_at, deleted_at FROM media WHERE user_id = ?1 AND updated_at > ?2 ORDER BY updated_at ASC LIMIT 1000`
+		  ).bind(auth.userId, since).all();
 
 	const media = (results || []).map((row) => ({
 		id: row.id,
+		userId: row.user_id,
 		kind: row.kind,
 		contentType: row.content_type,
 		updatedAt: row.updated_at,
@@ -364,6 +531,13 @@ export default {
 			return new Response(null, { status: 204, headers });
 		}
 
+		// Admin account creation is a terminal-only route (curl/CLI, guarded by
+		// ADMIN_KEY, never called from the browser app) — it must come before the
+		// browser CORS-origin gate below, since curl sends no Origin header at all.
+		if (url.pathname === '/auth/admin/create-user' && request.method === 'POST') {
+			return handleAdminCreateUser(request, env, headers);
+		}
+
 		if (!allowedOrigins.includes(origin)) {
 			return jsonResponse({ error: 'origin_not_allowed' }, 403, headers);
 		}
@@ -380,49 +554,64 @@ export default {
 			return handleCardScan(request, env, headers);
 		}
 
-		// --- Sync routes: always require the shared key, since these read/write
-		// persistent storage (unlike the scan route, where the key is optional) ---
+		// --- Auth routes ---
+		if (url.pathname === '/auth/login' && request.method === 'POST') {
+			return handleLogin(request, env, headers);
+		}
+		if (url.pathname === '/auth/me' && request.method === 'GET') {
+			const auth = await requireAuth(request, env);
+			if (!auth) return jsonResponse({ error: 'unauthorized' }, 401, headers);
+			return handleMe(request, env, headers, auth);
+		}
+		if (url.pathname === '/auth/change-password' && request.method === 'POST') {
+			const auth = await requireAuth(request, env);
+			if (!auth) return jsonResponse({ error: 'unauthorized' }, 401, headers);
+			return handleChangePassword(request, env, headers, auth);
+		}
+
+		// --- Sync routes: require a logged-in account. Every row is scoped to
+		// the account that owns it; an admin account can pass ?all=1 on a GET
+		// to read (never write/delete) everyone's data. ---
 		if (url.pathname.startsWith('/sync/')) {
-			if (!env.APP_SHARED_KEY) {
+			if (!env.AUTH_JWT_SECRET) {
 				// eslint-disable-next-line no-console
-				console.error('APP_SHARED_KEY is not configured; /sync/* is disabled');
+				console.error('AUTH_JWT_SECRET is not configured; /sync/* is disabled');
 				return jsonResponse({ error: 'server_not_configured' }, 500, headers);
 			}
-			if (request.headers.get('X-App-Key') !== env.APP_SHARED_KEY) {
-				return jsonResponse({ error: 'unauthorized' }, 401, headers);
-			}
+			const auth = await requireAuth(request, env);
+			if (!auth) return jsonResponse({ error: 'unauthorized' }, 401, headers);
 
 			const parts = url.pathname.split('/').filter(Boolean); // ['sync', ...]
 
-			// /sync/records/:type            POST (upsert), GET (pull, ?since=)
+			// /sync/records/:type            POST (upsert), GET (pull, ?since=&all=)
 			// /sync/records/:type/:id        DELETE (tombstone)
 			if (parts[1] === 'records' && parts[2]) {
 				const type = parts[2];
 				if (parts[3] && request.method === 'DELETE') {
-					return handleRecordDelete(env, headers, type, decodeURIComponent(parts[3]));
+					return handleRecordDelete(env, headers, type, decodeURIComponent(parts[3]), auth);
 				}
 				if (request.method === 'POST') {
-					return handleRecordsUpsert(request, env, headers, type);
+					return handleRecordsUpsert(request, env, headers, type, auth);
 				}
 				if (request.method === 'GET') {
-					return handleRecordsPull(request, env, headers, type);
+					return handleRecordsPull(request, env, headers, type, auth);
 				}
 			}
 
-			// /sync/media                    GET (list, ?since=)
+			// /sync/media                    GET (list, ?since=&all=)
 			// /sync/media/:id                POST (upload), GET (download), DELETE
 			if (parts[1] === 'media') {
 				if (!parts[2] && request.method === 'GET') {
-					return handleMediaList(request, env, headers);
+					return handleMediaList(request, env, headers, auth);
 				}
 				if (parts[2] && request.method === 'POST') {
-					return handleMediaUpload(request, env, headers, decodeURIComponent(parts[2]));
+					return handleMediaUpload(request, env, headers, decodeURIComponent(parts[2]), auth);
 				}
 				if (parts[2] && request.method === 'GET') {
-					return handleMediaDownload(env, headers, decodeURIComponent(parts[2]));
+					return handleMediaDownload(env, headers, decodeURIComponent(parts[2]), auth);
 				}
 				if (parts[2] && request.method === 'DELETE') {
-					return handleMediaDelete(env, headers, decodeURIComponent(parts[2]));
+					return handleMediaDelete(env, headers, decodeURIComponent(parts[2]), auth);
 				}
 			}
 

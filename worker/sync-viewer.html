@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Field Feedback — Sync Viewer</title>
+<style>
+  :root { color-scheme: light; }
+  body { font-family: -apple-system, Segoe UI, Arial, sans-serif; margin: 0; padding: 24px; background: #f5f6f8; color: #1a1a1a; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: #666; font-size: 13px; margin-bottom: 20px; }
+  .config { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+  .config label { display: block; font-size: 12px; color: #444; margin-bottom: 3px; }
+  .config input { padding: 6px 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; min-width: 220px; }
+  .config input#key { min-width: 260px; font-family: monospace; }
+  button { padding: 7px 14px; border: none; border-radius: 6px; background: #2563eb; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; }
+  button:hover { background: #1d4ed8; }
+  button.secondary { background: #e5e7eb; color: #1a1a1a; }
+  button.secondary:hover { background: #d1d5db; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  #status { font-size: 13px; color: #666; margin-bottom: 16px; min-height: 18px; }
+  #status.error { color: #b91c1c; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .tab { padding: 6px 12px; border-radius: 999px; background: #fff; border: 1px solid #ddd; font-size: 13px; cursor: pointer; }
+  .tab.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .tab .count { opacity: .65; margin-left: 4px; }
+  .panel { display: none; background: #fff; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
+  .panel.active { display: block; }
+  .panel-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid #eee; }
+  .panel-header h2 { font-size: 14px; margin: 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+  th, td { border-bottom: 1px solid #eee; padding: 6px 10px; text-align: left; vertical-align: top; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  th { background: #fafafa; position: sticky; top: 0; cursor: pointer; user-select: none; }
+  th:hover { background: #f0f0f0; }
+  tr:hover td { background: #f9fafb; white-space: normal; word-break: break-word; }
+  tr.deleted td { color: #999; text-decoration: line-through; }
+  .empty { padding: 24px; text-align: center; color: #888; font-size: 13px; }
+  .cell-json { font-family: monospace; font-size: 11.5px; }
+  .table-wrap { overflow: auto; max-height: 70vh; }
+  a.dl { color: #2563eb; text-decoration: none; }
+  a.dl:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<h1>Field Feedback — Sync Viewer</h1>
+<p class="sub">Reads directly from the Cloudflare Worker's <code>/sync/*</code> endpoints. Nothing here writes or deletes anything.</p>
+
+<div class="config">
+  <div>
+    <label for="apiUrl">Worker URL</label>
+    <input id="apiUrl" value="https://field-feedback-card-scan.andrew-ea2.workers.dev">
+  </div>
+  <div>
+    <label for="loginUsername">Username</label>
+    <input id="loginUsername" style="min-width:140px;" autocomplete="username">
+  </div>
+  <div>
+    <label for="loginPassword">Password</label>
+    <input id="loginPassword" type="password" style="min-width:140px;" autocomplete="current-password">
+  </div>
+  <button id="loginBtn">Log in</button>
+  <span id="whoami" style="font-size:13px;color:#444;"></span>
+</div>
+
+<div class="config">
+  <div>
+    <label for="since">Since (optional, ms epoch)</label>
+    <input id="since" value="0" style="min-width:120px;">
+  </div>
+  <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#444;">
+    <input type="checkbox" id="allUsers" disabled> View all users (admin only)
+  </label>
+  <button id="loadBtn" disabled>Load data</button>
+  <button id="exportBtn" class="secondary">Export current tab as CSV</button>
+</div>
+
+<div id="status"></div>
+<div class="tabs" id="tabs"></div>
+<div id="panels"></div>
+
+<script>
+const RECORD_TYPES = [
+  { key: 'feedback', label: 'Feedback' },
+  { key: 'qa', label: 'Survey' },
+  { key: 'contacts', label: 'Contacts' },
+  { key: 'quickCaptures', label: 'Quick Captures' },
+  { key: 'meetingNotes', label: 'Meeting Notes' },
+  { key: 'todos', label: 'Todos' },
+  { key: 'media', label: 'Media' },
+];
+
+let dataByType = {}; // key -> array of row objects (flattened)
+let activeTab = null;
+let sortState = {}; // key -> { col, dir }
+let session = null; // { token, user: { id, username, email, isAdmin } }
+
+const $ = (id) => document.getElementById(id);
+const statusEl = $('status');
+const tabsEl = $('tabs');
+const panelsEl = $('panels');
+
+function setStatus(msg, isError) {
+  statusEl.textContent = msg;
+  statusEl.className = isError ? 'error' : '';
+}
+
+async function login() {
+  const base = $('apiUrl').value.trim().replace(/\/+$/, '');
+  setStatus('Logging in…');
+  try {
+    const res = await fetch(`${base}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: $('loginUsername').value.trim(), password: $('loginPassword').value }),
+    });
+    if (!res.ok) throw new Error(res.status === 401 ? 'Incorrect username or password.' : `HTTP ${res.status}`);
+    const body = await res.json();
+    session = { token: body.token, user: body.user };
+    $('whoami').textContent = `Logged in as ${body.user.username}${body.user.isAdmin ? ' (admin)' : ''}`;
+    $('loadBtn').disabled = false;
+    $('allUsers').disabled = !body.user.isAdmin;
+    setStatus('Logged in. Click "Load data".');
+  } catch (err) {
+    session = null;
+    $('loadBtn').disabled = true;
+    setStatus(`Login failed: ${err.message}`, true);
+  }
+}
+
+async function apiGet(path) {
+  if (!session) throw new Error('Not logged in');
+  const base = $('apiUrl').value.trim().replace(/\/+$/, '');
+  const res = await fetch(base + path, { headers: { 'Authorization': `Bearer ${session.token}` } });
+  if (!res.ok) {
+    let detail = '';
+    try { detail = (await res.json()).error || ''; } catch (_) {}
+    throw new Error(`HTTP ${res.status} on ${path}${detail ? ` (${detail})` : ''}`);
+  }
+  return res.json();
+}
+
+function flattenRecord(row) {
+  // row = { id, userId, updatedAt, deleted, data }
+  const flat = { id: row.id, owner: row.userId, updatedAt: row.updatedAt, deleted: row.deleted };
+  if (row.data && typeof row.data === 'object') {
+    for (const [k, v] of Object.entries(row.data)) {
+      if (k === 'id' || k === 'updatedAt') continue;
+      flat[k] = (v && typeof v === 'object') ? JSON.stringify(v) : v;
+    }
+  }
+  return flat;
+}
+
+async function loadAll() {
+  $('loadBtn').disabled = true;
+  dataByType = {};
+  const since = Number($('since').value) || 0;
+  const all = $('allUsers').checked && session && session.user.isAdmin ? '&all=1' : '';
+  try {
+    for (const t of RECORD_TYPES) {
+      setStatus(`Loading ${t.label}…`);
+      if (t.key === 'media') {
+        const res = await apiGet(`/sync/media?since=${since}${all}`);
+        dataByType.media = (res.media || []).map((m) => ({
+          id: m.id, owner: m.userId, kind: m.kind, contentType: m.contentType, updatedAt: m.updatedAt, deleted: m.deleted,
+        }));
+      } else {
+        const res = await apiGet(`/sync/records/${t.key}?since=${since}${all}`);
+        dataByType[t.key] = (res.records || []).map(flattenRecord);
+      }
+    }
+    setStatus(`Loaded ${new Date().toLocaleTimeString()}.`);
+    renderTabs();
+    if (!activeTab) activeTab = RECORD_TYPES[0].key;
+    renderPanel(activeTab);
+  } catch (err) {
+    console.error(err);
+    setStatus(`Failed: ${err.message}. Check you're logged in, and that this page is served from an allowed origin (see instructions).`, true);
+  } finally {
+    $('loadBtn').disabled = false;
+  }
+}
+
+function renderTabs() {
+  tabsEl.innerHTML = '';
+  for (const t of RECORD_TYPES) {
+    const rows = dataByType[t.key] || [];
+    const btn = document.createElement('div');
+    btn.className = 'tab' + (t.key === activeTab ? ' active' : '');
+    btn.innerHTML = `${t.label} <span class="count">${rows.length}</span>`;
+    btn.addEventListener('click', () => { activeTab = t.key; renderTabs(); renderPanel(t.key); });
+    tabsEl.appendChild(btn);
+  }
+}
+
+function columnsFor(rows) {
+  const lead = ['id', 'owner', 'updatedAt', 'deleted'];
+  const cols = new Set(lead);
+  for (const r of rows) for (const k of Object.keys(r)) cols.add(k);
+  const rest = [...cols].filter((c) => !lead.includes(c)).sort();
+  return [...lead, ...rest];
+}
+
+function renderPanel(key) {
+  const rows = (dataByType[key] || []).slice();
+  const state = sortState[key];
+  if (state) {
+    rows.sort((a, b) => {
+      const av = a[state.col], bv = b[state.col];
+      if (av == null && bv == null) return 0;
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      if (av < bv) return state.dir === 'asc' ? -1 : 1;
+      if (av > bv) return state.dir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+
+  panelsEl.innerHTML = '';
+  const panel = document.createElement('div');
+  panel.className = 'panel active';
+
+  const header = document.createElement('div');
+  header.className = 'panel-header';
+  header.innerHTML = `<h2>${RECORD_TYPES.find((t) => t.key === key).label} — ${rows.length} row${rows.length === 1 ? '' : 's'}</h2>`;
+  panel.appendChild(header);
+
+  if (!rows.length) {
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.textContent = 'No records loaded yet (or none exist). Click "Load data" above.';
+    panel.appendChild(empty);
+    panelsEl.appendChild(panel);
+    return;
+  }
+
+  const cols = columnsFor(rows);
+  const wrap = document.createElement('div');
+  wrap.className = 'table-wrap';
+  const table = document.createElement('table');
+
+  const thead = document.createElement('thead');
+  const tr = document.createElement('tr');
+  for (const c of cols) {
+    const th = document.createElement('th');
+    th.textContent = c + (state && state.col === c ? (state.dir === 'asc' ? ' ▲' : ' ▼') : '');
+    th.addEventListener('click', () => {
+      const dir = state && state.col === c && state.dir === 'asc' ? 'desc' : 'asc';
+      sortState[key] = { col: c, dir };
+      renderPanel(key);
+    });
+    tr.appendChild(th);
+  }
+  thead.appendChild(tr);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  for (const row of rows) {
+    const rowEl = document.createElement('tr');
+    if (row.deleted) rowEl.className = 'deleted';
+    for (const c of cols) {
+      const td = document.createElement('td');
+      let v = row[c];
+      if (c === 'updatedAt' && typeof v === 'number') v = new Date(v).toLocaleString();
+      if (key === 'media' && c === 'id') {
+        const a = document.createElement('a');
+        a.href = '#';
+        a.className = 'dl';
+        a.textContent = String(v);
+        a.addEventListener('click', (e) => { e.preventDefault(); downloadMedia(String(v)); });
+        td.appendChild(a);
+        rowEl.appendChild(td);
+        continue;
+      }
+      td.textContent = v === undefined || v === null ? '' : String(v);
+      if (typeof row[c] === 'string' && row[c].startsWith('{')) td.classList.add('cell-json');
+      rowEl.appendChild(td);
+    }
+    tbody.appendChild(rowEl);
+  }
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+  panel.appendChild(wrap);
+  panelsEl.appendChild(panel);
+}
+
+async function downloadMedia(id) {
+  setStatus(`Downloading ${id}…`);
+  try {
+    const base = $('apiUrl').value.trim().replace(/\/+$/, '');
+    const res = await fetch(`${base}/sync/media/${encodeURIComponent(id)}`, { headers: { 'Authorization': `Bearer ${session.token}` } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = id;
+    a.click();
+    URL.revokeObjectURL(url);
+    setStatus(`Downloaded ${id}.`);
+  } catch (err) {
+    setStatus(`Download failed: ${err.message}`, true);
+  }
+}
+
+function exportCsv() {
+  const rows = dataByType[activeTab] || [];
+  if (!rows.length) { setStatus('Nothing to export on this tab.', true); return; }
+  const cols = columnsFor(rows);
+  const esc = (v) => {
+    if (v === undefined || v === null) return '';
+    const s = String(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const lines = [cols.join(',')];
+  for (const r of rows) lines.push(cols.map((c) => esc(r[c])).join(','));
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${activeTab}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+$('loginBtn').addEventListener('click', login);
+$('loadBtn').addEventListener('click', loadAll);
+$('exportBtn').addEventListener('click', exportCsv);
+
+renderTabs();
+renderPanel(RECORD_TYPES[0].key);
+</script>
+</body>
+</html>

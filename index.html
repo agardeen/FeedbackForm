@@ -122,7 +122,29 @@
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen py-6 px-4">
 
-    <div class="w-full max-w-lg p-4 space-y-2 bg-white rounded-xl shadow-lg">
+    <!-- Login gate: covers the whole app until a valid session exists. See the
+         auth JS near the top of the DOMContentLoaded handler for the logic. -->
+    <div id="login-screen" class="hidden fixed inset-0 z-[100] bg-gray-100 flex items-center justify-center px-4">
+        <form id="login-form" class="w-full max-w-sm p-6 space-y-4 bg-white rounded-xl shadow-lg">
+            <div class="text-center">
+                <img src="https://altimatemedical.com/wp-content/uploads/2024/02/AltimateMedical-logo-v01-on-transparent-background-1.png" alt="Altimate Medical Logo" class="h-6 w-auto mx-auto mb-2">
+                <h1 class="text-base font-bold text-gray-800">Field Feedback — Log In</h1>
+            </div>
+            <div>
+                <label for="login-username" class="block text-sm font-medium text-gray-700">Username</label>
+                <input type="text" id="login-username" autocomplete="username" required class="mt-1 w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+                <label for="login-password" class="block text-sm font-medium text-gray-700">Password</label>
+                <input type="password" id="login-password" autocomplete="current-password" required class="mt-1 w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <p id="login-error" class="hidden text-sm text-red-600"></p>
+            <button type="submit" id="login-submit-btn" class="w-full px-4 py-3 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">Log In</button>
+            <p class="text-xs text-gray-500 text-center">No account? Ask your admin to create one for you.</p>
+        </form>
+    </div>
+
+    <div id="app-root" class="w-full max-w-lg p-4 space-y-2 bg-white rounded-xl shadow-lg">
         <div class="flex justify-between items-center">
              <a href="https://altimatemedical.com/" target="_blank">
                 <img src="https://altimatemedical.com/wp-content/uploads/2024/02/AltimateMedical-logo-v01-on-transparent-background-1.png" alt="Altimate Medical Logo" class="h-5 w-auto">
@@ -782,91 +804,41 @@
                 </div>
             </div>
 
-            <!-- Tab 4 Content: User -->
+            <!-- Tab 4 Content: User account (username/email from your login, plus a password change) -->
             <div id="tab4" class="tab-content space-y-6">
-                <!-- User and Date Fields -->
                 <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-6 sm:space-y-0">
                     <div class="w-full sm:w-1/2">
-                        <label for="name" class="block text-sm font-medium text-gray-700">User</label>
-                        <div class="mt-1 relative">
-                            <input type="text" id="name" name="user_name" required class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="e.g., Jane Doe">
-                            <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="name" aria-label="Use microphone for User">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
-                            </button>
-                        </div>
+                        <label for="name" class="block text-sm font-medium text-gray-700">Username</label>
+                        <input type="text" id="name" readonly class="mt-1 w-full px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg">
                     </div>
                     <div class="w-full sm:w-1/2">
-                        <label for="date" class="block text-sm font-medium text-gray-700">Date</label>
-                        <div class="mt-1">
-                            <input type="date" id="date" name="request_date" required class="w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out">
+                        <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
+                        <input type="email" id="email" readonly class="mt-1 w-full px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-lg">
+                    </div>
+                </div>
+                <p class="text-xs text-gray-500">Ask your admin to update your username or email.</p>
+
+                <div class="pt-2 border-t border-gray-200">
+                    <h2 class="text-sm font-semibold text-gray-800 pt-4">Change Password</h2>
+                    <div class="mt-3 space-y-3">
+                        <div>
+                            <label for="current-password" class="block text-sm font-medium text-gray-700">Current Password</label>
+                            <input type="password" id="current-password" autocomplete="current-password" class="mt-1 w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
                         </div>
+                        <div>
+                            <label for="new-password" class="block text-sm font-medium text-gray-700">New Password</label>
+                            <input type="password" id="new-password" autocomplete="new-password" class="mt-1 w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="At least 8 characters">
+                        </div>
+                        <div>
+                            <label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirm New Password</label>
+                            <input type="password" id="confirm-password" autocomplete="new-password" class="mt-1 w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <button type="button" id="change-password-btn" class="px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Update Password</button>
                     </div>
                 </div>
 
-                <!-- Email Field -->
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
-                    <div class="mt-1 relative">
-                        <input type="email" id="email" name="user_email" required class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="you@example.com">
-                        <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="email" aria-label="Use microphone for Email Address">
-                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
-                        </button>
-                    </div>
-                </div>
-                 <!-- Event and Location Fields -->
-                <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-6 sm:space-y-0">
-                    <div class="w-full sm:w-1/2">
-                        <label for="event" class="block text-sm font-medium text-gray-700">Event</label>
-                        <div class="mt-1 relative">
-                            <select id="event" name="user_event" required class="w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out">
-                                <option value="" disabled selected>Select an option</option>
-                                <option value="inservice">Inservice</option>
-                                <option value="tradeshow">Tradeshow</option>
-                                <option value="seminar">Seminar</option>
-                                <option value="phone_call">Phone Call</option>
-                                <option value="email">Email</option>
-                            </select>
-                             <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="event" style="padding-right: 2.75rem;" aria-label="Use microphone for Event">
-                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
-                             </button>
-                        </div>
-                    </div>
-                    <div class="w-full sm:w-1/2">
-                        <label for="location" class="block text-sm font-medium text-gray-700">Location</label>
-                        <div class="mt-1 relative">
-                            <input type="text" id="location" name="user_location" required class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="Fetching location...">
-                            <button type="button" id="get-location-btn" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" aria-label="Get current location">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Event Name (shown once an Event is selected) -->
-                <div id="event-name-container" class="hidden">
-                    <label for="event-name" class="block text-sm font-medium text-gray-700">Event Name</label>
-                    <div class="mt-1 relative">
-                        <input type="text" id="event-name" name="user_event_name" class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="e.g., Medtrade 2026">
-                        <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="event-name" aria-label="Use microphone for Event Name">
-                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Event Date Range (shown when Event is Tradeshow) -->
-                <div id="event-date-range-container" class="hidden flex flex-col sm:flex-row sm:space-x-4 space-y-6 sm:space-y-0">
-                    <div class="w-full sm:w-1/2">
-                        <label for="event-start-date" class="block text-sm font-medium text-gray-700">Start Date</label>
-                        <div class="mt-1">
-                            <input type="date" id="event-start-date" name="user_event_start_date" class="w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out">
-                        </div>
-                    </div>
-                    <div class="w-full sm:w-1/2">
-                        <label for="event-end-date" class="block text-sm font-medium text-gray-700">End Date</label>
-                        <div class="mt-1">
-                            <input type="date" id="event-end-date" name="user_event_end_date" class="w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out">
-                        </div>
-                    </div>
+                <div class="pt-2 border-t border-gray-200">
+                    <button type="button" id="logout-btn" class="mt-4 px-3 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50">Log Out</button>
                 </div>
             </div>
 
@@ -1004,7 +976,7 @@
                 quickCaptures: 'ff_quick_captures',
                 meetingNotes: 'ff_meeting_notes',
                 todos: 'ff_todos',
-                profile: 'ff_user_profile',
+                auth: 'ff_auth',
                 syncSettings: 'ff_sync_settings',
                 quickCustomTags: 'ff_quick_custom_tags',
             };
@@ -1025,6 +997,116 @@
                     showToast('Could not save — device storage may be full.');
                 }
             };
+
+            // --- Auth: login gate + session storage ---
+            // The whole app is unusable until logged in, so each person's synced
+            // data is scoped to their own account (see worker/src/index.js). The
+            // token is a signed, expiring JWT — once logged in, its expiry is
+            // checked locally (decoded, no network call), so the app keeps working
+            // fully offline until the session actually expires.
+            const CARD_SCAN_API_URL = 'https://field-feedback-card-scan.andrew-ea2.workers.dev';
+            // Shared secret the Worker's card-scan route optionally checks — unrelated
+            // to login/sync, kept only for that one feature. Not a real secret (it
+            // lives in public client-side code); see worker/README.md.
+            const APP_SHARED_KEY = 'vjr6NmTQvsGj1R7i1LLMbp_4sZwjOUVz';
+
+            const loginScreen = document.getElementById('login-screen');
+            const appRoot = document.getElementById('app-root');
+            const loginForm = document.getElementById('login-form');
+            const loginError = document.getElementById('login-error');
+            const loginSubmitBtn = document.getElementById('login-submit-btn');
+
+            let currentAuth = loadJSON(STORAGE_KEYS.auth, null);
+
+            const decodeJwtPayload = (token) => {
+                try {
+                    const part = token.split('.')[1];
+                    const padded = part.replace(/-/g, '+').replace(/_/g, '/').padEnd(part.length + ((4 - (part.length % 4)) % 4), '=');
+                    return JSON.parse(atob(padded));
+                } catch (err) {
+                    return null;
+                }
+            };
+
+            const isAuthValid = (auth) => {
+                if (!auth || !auth.token) return false;
+                const payload = decodeJwtPayload(auth.token);
+                return !!payload && typeof payload.exp === 'number' && Math.floor(Date.now() / 1000) < payload.exp;
+            };
+
+            const showApp = () => {
+                loginScreen.classList.add('hidden');
+                appRoot.classList.remove('hidden');
+                if (currentAuth && currentAuth.user) {
+                    document.getElementById('name').value = currentAuth.user.username || '';
+                    document.getElementById('email').value = currentAuth.user.email || '';
+                }
+            };
+
+            const showLogin = (message) => {
+                appRoot.classList.add('hidden');
+                loginScreen.classList.remove('hidden');
+                loginError.classList.toggle('hidden', !message);
+                if (message) loginError.textContent = message;
+            };
+
+            const logOut = () => {
+                currentAuth = null;
+                localStorage.removeItem(STORAGE_KEYS.auth);
+                loginForm.reset();
+                showLogin();
+            };
+
+            // Attaches the account's token to every /auth/* and /sync/* call. If the
+            // server says the session is no longer valid (expired/revoked), drop it
+            // locally too so the login screen reappears instead of silently failing.
+            const apiFetch = async (path, options = {}) => {
+                const res = await fetch(`${CARD_SCAN_API_URL}${path}`, {
+                    ...options,
+                    headers: { 'Authorization': `Bearer ${currentAuth ? currentAuth.token : ''}`, ...(options.headers || {}) },
+                });
+                if (res.status === 401) logOut();
+                return res;
+            };
+
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                loginError.classList.add('hidden');
+                loginSubmitBtn.disabled = true;
+                try {
+                    const res = await fetch(`${CARD_SCAN_API_URL}/auth/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            username: document.getElementById('login-username').value.trim(),
+                            password: document.getElementById('login-password').value,
+                        }),
+                    });
+                    if (!res.ok) {
+                        loginError.textContent = res.status === 401 ? 'Incorrect username or password.' : 'Could not log in — try again.';
+                        loginError.classList.remove('hidden');
+                        return;
+                    }
+                    const body = await res.json();
+                    currentAuth = { token: body.token, user: body.user };
+                    saveJSON(STORAGE_KEYS.auth, currentAuth);
+                    loginForm.reset();
+                    showApp();
+                } catch (err) {
+                    loginError.textContent = 'Could not reach the server. Check your connection and try again.';
+                    loginError.classList.remove('hidden');
+                } finally {
+                    loginSubmitBtn.disabled = false;
+                }
+            });
+
+            if (isAuthValid(currentAuth)) {
+                showApp();
+            } else {
+                currentAuth = null;
+                showLogin();
+            }
+
             let feedbackEntries = loadJSON(STORAGE_KEYS.feedback, []);
             let qaEntries = loadJSON(STORAGE_KEYS.qa, []);
             let contactEntries = loadJSON(STORAGE_KEYS.contacts, []);
@@ -1126,11 +1208,7 @@
             };
 
             // --- Server Sync (optional; the Worker also backs the AI card scan feature) ---
-            // Shared secret the Worker requires on every request. Not a real secret — it lives
-            // in public client-side code — it just raises the bar above "found the URL and
-            // curled it" for casual abuse. See worker/README.md.
-            const CARD_SCAN_API_URL = 'https://field-feedback-card-scan.andrew-ea2.workers.dev';
-            const APP_SHARED_KEY = 'vjr6NmTQvsGj1R7i1LLMbp_4sZwjOUVz';
+            // CARD_SCAN_API_URL/APP_SHARED_KEY are declared in the auth block above.
 
             const SYNC_RECORD_TYPES = {
                 feedback: () => feedbackEntries,
@@ -1150,10 +1228,8 @@
             syncSettings.categories = { ...defaultSyncSettings().categories, ...(syncSettings.categories || {}) };
             const saveSyncSettings = () => saveJSON(STORAGE_KEYS.syncSettings, syncSettings);
 
-            const syncFetch = (path, options = {}) => fetch(`${CARD_SCAN_API_URL}${path}`, {
-                ...options,
-                headers: { 'X-App-Key': APP_SHARED_KEY, ...(options.headers || {}) },
-            });
+            // Per-account bearer token (not the old shared key) — see apiFetch in the auth block above.
+            const syncFetch = apiFetch;
 
             const hasSyncedBefore = () => !!syncSettings.lastSyncAt;
 
@@ -1304,34 +1380,43 @@
                 });
             });
 
-            // --- Auto-populate today's date ---
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('date').value = today;
+            // --- Account tab: change password + log out ---
+            // Username/email are populated from currentAuth in showApp() above.
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                logOut();
+                showToast('Logged out.');
+            });
 
-            // --- Remember user profile (name/email) across sessions on this device ---
-            const nameInput = document.getElementById('name');
-            const emailInput = document.getElementById('email');
-            const profile = loadJSON(STORAGE_KEYS.profile, {});
-            if (profile.name) nameInput.value = profile.name;
-            if (profile.email) emailInput.value = profile.email;
-            const saveProfile = () => saveJSON(STORAGE_KEYS.profile, { name: nameInput.value.trim(), email: emailInput.value.trim() });
-            nameInput.addEventListener('change', saveProfile);
-            emailInput.addEventListener('change', saveProfile);
-
-            // --- Event tab: Event Name shows for any event, date range only for Tradeshow ---
-            const eventSelect = document.getElementById('event');
-            const eventNameContainer = document.getElementById('event-name-container');
-            const eventDateRangeContainer = document.getElementById('event-date-range-container');
-            const updateEventFields = () => {
-                eventNameContainer.classList.toggle('hidden', !eventSelect.value);
-                eventDateRangeContainer.classList.toggle('hidden', eventSelect.value !== 'tradeshow');
-            };
-            eventSelect.addEventListener('change', updateEventFields);
-            updateEventFields();
+            document.getElementById('change-password-btn').addEventListener('click', async () => {
+                const currentPassword = document.getElementById('current-password').value;
+                const newPassword = document.getElementById('new-password').value;
+                const confirmPassword = document.getElementById('confirm-password').value;
+                if (!currentPassword || !newPassword) { showToast('Fill out both password fields.'); return; }
+                if (newPassword.length < 8) { showToast('New password must be at least 8 characters.'); return; }
+                if (newPassword !== confirmPassword) { showToast('New passwords do not match.'); return; }
+                try {
+                    const res = await apiFetch('/auth/change-password', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ currentPassword, newPassword }),
+                    });
+                    if (!res.ok) {
+                        const body = await res.json().catch(() => ({}));
+                        showToast(body.error === 'invalid_credentials' ? 'Current password is incorrect.' : 'Could not update password.');
+                        return;
+                    }
+                    document.getElementById('current-password').value = '';
+                    document.getElementById('new-password').value = '';
+                    document.getElementById('confirm-password').value = '';
+                    showToast('Password updated.');
+                } catch (err) {
+                    showToast('Could not reach the server. Try again.');
+                }
+            });
 
             // --- Web Speech API Logic ---
             // Note: no early return here even when unsupported — the rest of this handler
-            // (geolocation, saving, exports) must still run regardless of mic support.
+            // (saving, exports) must still run regardless of mic support.
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
                 console.error("Speech Recognition API not supported in this browser.");
@@ -1373,63 +1458,6 @@
                     toast.classList.remove('show');
                 }, 3000);
             };
-
-            // --- Geolocation Logic ---
-            const locationInput = document.getElementById('location');
-            const getLocationBtn = document.getElementById('get-location-btn');
-
-            const getLocation = () => {
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(async (position) => {
-                        const { latitude, longitude } = position.coords;
-                        locationInput.value = `Lat: ${latitude.toFixed(4)}, Lon: ${longitude.toFixed(4)}`;
-                        try {
-                            // Use a free reverse geocoding service (OpenStreetMap)
-                            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
-                            const data = await response.json();
-                            if (data.address) {
-                                const city = data.address.city || data.address.town || data.address.village || '';
-                                const state = data.address.state || '';
-                                if (city && state) {
-                                    locationInput.value = `${city}, ${state}`;
-                                }
-                            }
-                        } catch (error) {
-                            console.error("Error fetching location details:", error);
-                            showToast("Could not fetch city/state.");
-                        }
-                    }, (error) => {
-                        let errorMessage = "Could not get location.";
-                        switch(error.code) {
-                            case error.PERMISSION_DENIED:
-                                errorMessage = "Location access was denied.";
-                                locationInput.value = "Permission denied";
-                                break;
-                            case error.POSITION_UNAVAILABLE:
-                                errorMessage = "Location information is unavailable.";
-                                locationInput.value = "Unavailable";
-                                break;
-                            case error.TIMEOUT:
-                                errorMessage = "The request to get user location timed out.";
-                                locationInput.value = "Timeout";
-                                break;
-                            case error.UNKNOWN_ERROR:
-                                errorMessage = "An unknown error occurred.";
-                                locationInput.value = "Error";
-                                break;
-                        }
-                        showToast(errorMessage);
-                        console.error("Geolocation error:", error);
-                    });
-                } else {
-                    locationInput.value = "Not supported";
-                    showToast("Geolocation is not supported by this browser.");
-                }
-            };
-
-            getLocation(); // Get location on page load
-            getLocationBtn.addEventListener('click', getLocation);
-
 
             if (SpeechRecognition) {
                 const recognition = new SpeechRecognition();
@@ -1701,6 +1729,10 @@
                 activityLog.scrollTop = activityLog.scrollHeight;
             };
 
+            // Feedback tab (tab1) is hidden from nav (see more-tabs-menu) and unreachable via the
+            // UI, so this is dead code today. NOTE: #date/#event/#location no longer exist (the
+            // User tab was repurposed into the account/login page) — restore them before ever
+            // re-enabling tab1, or this will throw.
             const logFeedback = () => {
                 // Gather data from Feedback and User tabs
                 const quickThoughts = document.getElementById('message').value.trim();
@@ -3852,7 +3884,6 @@
             // --- Form Submission Handler ---
             document.getElementById('feedback-form').addEventListener('submit', (e) => {
                 e.preventDefault();
-                saveProfile();
                 const activeTab = document.querySelector('.tab-content.active');
                 if (activeTab && activeTab.id === 'tab1') {
                     logFeedback();
@@ -3896,8 +3927,6 @@
                         resetCardScan();
                     } else if (activeTab.id === 'tab7') {
                         discardMeetingDraft();
-                    } else if (activeTab.id === 'tab4') {
-                        updateEventFields();
                     }
                 }
             });

@@ -1,12 +1,26 @@
-# Business card scan — Cloudflare Worker
+# Field Feedback Worker — Cloudflare Worker
 
-Holds the OpenAI API key server-side and proxies business-card photos to a
-vision-capable OpenAI model with a strict JSON schema, so the key never has
-to live in the static site's client-side code.
+This Worker backs three things for the static app (`index.html`):
+
+1. **Business card scan proxy** — see below. Holds the OpenAI API key
+   server-side and proxies business-card photos to a vision-capable OpenAI
+   model with a strict JSON schema, so the key never has to live in the
+   static site's client-side code.
+2. **Login** (`/auth/*`) — issues the sessions the app requires before
+   anything is usable. There's no public sign-up; accounts are created by an
+   admin from a terminal. **First-time setup or upgrading an existing
+   deployment: see [migrations/README.md](migrations/README.md).**
+3. **Server sync** (`/sync/*`) — the app's optional per-account backup of its
+   locally stored entries and media to D1/R2. Every request requires a login
+   token (`Authorization: Bearer <token>` from `/auth/login`); every row is
+   scoped to the account that created it. Accounts flagged admin can
+   additionally *read* (never write or delete) every account's data by
+   adding `?all=1` — that's what `sync-viewer.html` uses.
 
 **Status:** already deployed at `https://field-feedback-card-scan.andrew-ea2.workers.dev`
 (code only — see "Finish setup" below, it won't actually work until the
-OpenAI key is set).
+OpenAI key is set, and see [migrations/README.md](migrations/README.md) for
+the login/sync secrets and first account).
 
 ## How it fits together
 
