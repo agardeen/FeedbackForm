@@ -759,7 +759,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Server Sync (optional)</label>
-                    <p class="mt-1 text-xs text-gray-500">Back up the checked categories to the server. Nothing leaves this device until you press Sync Now.</p>
+                    <p class="mt-1 text-xs text-gray-500">Nothing leaves this device until you press one of the buttons below. <strong>Push</strong> only sends this device's data up. <strong>Sync</strong> also pulls down anything from other devices on your account — if something was deleted here but is still on the server, Sync will ask before removing it there too.</p>
                     <div class="mt-2 grid grid-cols-2 gap-y-1 gap-x-2 text-sm text-gray-700">
                         <label class="flex items-center gap-1.5"><input type="checkbox" class="sync-category-cb" data-sync-type="feedback" checked> Feedback</label>
                         <label class="flex items-center gap-1.5"><input type="checkbox" class="sync-category-cb" data-sync-type="qa" checked> Survey</label>
@@ -767,10 +767,11 @@
                         <label class="flex items-center gap-1.5"><input type="checkbox" class="sync-category-cb" data-sync-type="quickCaptures" checked> Quick Captures</label>
                         <label class="flex items-center gap-1.5"><input type="checkbox" class="sync-category-cb" data-sync-type="meetingNotes" checked> Meeting Notes</label>
                         <label class="flex items-center gap-1.5"><input type="checkbox" class="sync-category-cb" data-sync-type="todos" checked> Todos</label>
-                        <label class="flex items-center gap-1.5 col-span-2"><input type="checkbox" class="sync-category-cb" data-sync-type="media" checked> Photos &amp; Audio</label>
+                        <label class="flex items-center gap-1.5 col-span-2"><input type="checkbox" class="sync-category-cb" data-sync-type="media" checked> Photos &amp; Audio (push only, either button)</label>
                     </div>
-                    <div class="mt-2 flex items-center gap-2">
-                        <button type="button" id="sync-now-btn" class="px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">Sync Now</button>
+                    <div class="mt-2 flex items-center gap-2 flex-wrap">
+                        <button type="button" id="push-btn" class="px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">Push</button>
+                        <button type="button" id="sync-btn" class="px-3 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed">Sync</button>
                         <p id="sync-status" class="text-xs text-gray-500"></p>
                     </div>
                 </div>
@@ -1256,13 +1257,50 @@
                 todos: () => todoEntries,
             };
 
+            // How Sync's pull phase adds/removes an entry for each type, and which log
+            // view (if any) needs a redraw afterward. Media isn't handled here — pulling
+            // binary attachments down from R2 is out of scope for now, so both Push and
+            // Sync only ever upload media, never pull it.
+            const LOCAL_ENTRY_HANDLERS = {
+                feedback: {
+                    remove: (id) => { feedbackEntries = feedbackEntries.filter((e) => e.id !== id); saveJSON(STORAGE_KEYS.feedback, feedbackEntries); },
+                    add: (data) => { feedbackEntries.push(data); saveJSON(STORAGE_KEYS.feedback, feedbackEntries); },
+                },
+                qa: {
+                    remove: (id) => { qaEntries = qaEntries.filter((e) => e.id !== id); saveJSON(STORAGE_KEYS.qa, qaEntries); },
+                    add: (data) => { qaEntries.push(data); saveJSON(STORAGE_KEYS.qa, qaEntries); },
+                },
+                contacts: {
+                    remove: (id) => { contactEntries = contactEntries.filter((e) => e.id !== id); saveJSON(STORAGE_KEYS.contacts, contactEntries); },
+                    add: (data) => { contactEntries.push(data); saveJSON(STORAGE_KEYS.contacts, contactEntries); },
+                },
+                quickCaptures: {
+                    remove: (id) => { quickCaptureEntries = quickCaptureEntries.filter((e) => e.id !== id); saveJSON(STORAGE_KEYS.quickCaptures, quickCaptureEntries); },
+                    add: (data) => { quickCaptureEntries.push(data); saveJSON(STORAGE_KEYS.quickCaptures, quickCaptureEntries); },
+                },
+                meetingNotes: {
+                    remove: (id) => { meetingNoteEntries = meetingNoteEntries.filter((e) => e.id !== id); saveJSON(STORAGE_KEYS.meetingNotes, meetingNoteEntries); },
+                    add: (data) => { meetingNoteEntries.push(data); saveJSON(STORAGE_KEYS.meetingNotes, meetingNoteEntries); },
+                },
+                todos: {
+                    remove: (id) => { todoEntries = todoEntries.filter((e) => e.id !== id); saveJSON(STORAGE_KEYS.todos, todoEntries); },
+                    add: (data) => { todoEntries.push(data); saveJSON(STORAGE_KEYS.todos, todoEntries); },
+                },
+            };
+
             const defaultSyncSettings = () => ({
                 categories: { feedback: true, qa: true, contacts: true, quickCaptures: true, meetingNotes: true, todos: true, media: true },
                 lastSyncAt: null,
                 syncedMediaIds: [],
+                // Ids deleted on this device (per type) while a server copy might still
+                // exist — see markLocallyDeleted. Sync uses this both to avoid silently
+                // re-pulling something you just removed, and to know what to offer
+                // deleting from the server (with confirmation) next time it runs.
+                deletedIds: { feedback: [], qa: [], contacts: [], quickCaptures: [], meetingNotes: [], todos: [] },
             });
             let syncSettings = { ...defaultSyncSettings(), ...loadJSON(STORAGE_KEYS.syncSettings, {}) };
             syncSettings.categories = { ...defaultSyncSettings().categories, ...(syncSettings.categories || {}) };
+            syncSettings.deletedIds = { ...defaultSyncSettings().deletedIds, ...(syncSettings.deletedIds || {}) };
             const saveSyncSettings = () => saveJSON(STORAGE_KEYS.syncSettings, syncSettings);
 
             // Per-account bearer token (not the old shared key) — see apiFetch in the auth block above.
@@ -1270,14 +1308,36 @@
 
             const hasSyncedBefore = () => !!syncSettings.lastSyncAt;
 
+            // Records that an id (previously synced) was deleted on this device, so a
+            // later Sync doesn't pull it back down from the server and knows to offer
+            // deleting it there too. No-op if this device has never synced — nothing on
+            // the server to protect against in that case.
+            const markLocallyDeleted = (type, id) => {
+                if (!hasSyncedBefore()) return;
+                if (!syncSettings.deletedIds[type].includes(id)) {
+                    syncSettings.deletedIds[type].push(id);
+                    saveSyncSettings();
+                }
+            };
+            const clearLocallyDeleted = (type, id) => {
+                const idx = syncSettings.deletedIds[type].indexOf(id);
+                if (idx !== -1) {
+                    syncSettings.deletedIds[type].splice(idx, 1);
+                    saveSyncSettings();
+                }
+            };
+
             // Removes one record from the server. Safe to call even if it was never synced —
-            // the Worker just tombstones an id that may not exist.
+            // the Worker just tombstones an id that may not exist. Returns whether it
+            // actually succeeded, so callers know whether it's safe to stop tracking it.
             const deleteSyncedRecord = async (type, id) => {
                 try {
-                    await syncFetch(`/sync/records/${type}/${encodeURIComponent(id)}`, { method: 'DELETE' });
+                    const res = await syncFetch(`/sync/records/${type}/${encodeURIComponent(id)}`, { method: 'DELETE' });
+                    return res.ok;
                 } catch (err) {
                     console.error(`Failed to delete synced ${type} record ${id}:`, err);
                     showToast('Could not reach the server to delete it there. It was removed on this device.');
+                    return false;
                 }
             };
             const deleteSyncedMedia = async (id) => {
@@ -1291,7 +1351,8 @@
                 }
             };
 
-            const syncNowBtn = document.getElementById('sync-now-btn');
+            const pushBtn = document.getElementById('push-btn');
+            const syncBtn = document.getElementById('sync-btn');
             const syncStatus = document.getElementById('sync-status');
             document.querySelectorAll('.sync-category-cb').forEach((cb) => {
                 const type = cb.dataset.syncType;
@@ -1302,46 +1363,136 @@
                 });
             });
 
-            syncNowBtn.addEventListener('click', async () => {
-                syncNowBtn.disabled = true;
+            // Uploads this device's data + unsynced media. Used by both buttons.
+            const pushToServer = async () => {
                 let recordCount = 0;
                 let mediaCount = 0;
-                try {
-                    for (const [type, getEntries] of Object.entries(SYNC_RECORD_TYPES)) {
-                        if (!syncSettings.categories[type]) continue;
-                        const entries = getEntries();
-                        if (!entries.length) continue;
-                        const now = Date.now();
-                        const records = entries.map((entry) => ({ id: entry.id, updatedAt: now, data: entry }));
-                        syncStatus.textContent = `Syncing ${type}…`;
-                        const res = await syncFetch(`/sync/records/${type}`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ records }),
-                        });
-                        if (!res.ok) throw new Error(`${type} sync failed: HTTP ${res.status}`);
-                        recordCount += records.length;
-                    }
+                for (const [type, getEntries] of Object.entries(SYNC_RECORD_TYPES)) {
+                    if (!syncSettings.categories[type]) continue;
+                    const entries = getEntries();
+                    if (!entries.length) continue;
+                    const now = Date.now();
+                    const records = entries.map((entry) => ({ id: entry.id, updatedAt: now, data: entry }));
+                    syncStatus.textContent = `Pushing ${type}…`;
+                    const res = await syncFetch(`/sync/records/${type}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ records }),
+                    });
+                    if (!res.ok) throw new Error(`${type} push failed: HTTP ${res.status}`);
+                    recordCount += records.length;
+                }
 
-                    if (syncSettings.categories.media) {
-                        const attachments = await getAllAttachments();
-                        const unsynced = attachments.filter((att) => att && att.blob && !syncSettings.syncedMediaIds.includes(att.id));
-                        for (const att of unsynced) {
-                            syncStatus.textContent = `Uploading photo/audio ${mediaCount + 1} of ${unsynced.length}…`;
-                            const res = await syncFetch(`/sync/media/${encodeURIComponent(att.id)}`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': att.mimeType || 'application/octet-stream', 'X-Media-Kind': att.kind || 'unknown' },
-                                body: att.blob,
-                            });
-                            if (!res.ok) throw new Error(`media sync failed: HTTP ${res.status}`);
-                            syncSettings.syncedMediaIds.push(att.id);
-                            mediaCount += 1;
+                if (syncSettings.categories.media) {
+                    const attachments = await getAllAttachments();
+                    const unsynced = attachments.filter((att) => att && att.blob && !syncSettings.syncedMediaIds.includes(att.id));
+                    for (const att of unsynced) {
+                        syncStatus.textContent = `Uploading photo/audio ${mediaCount + 1} of ${unsynced.length}…`;
+                        const res = await syncFetch(`/sync/media/${encodeURIComponent(att.id)}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': att.mimeType || 'application/octet-stream', 'X-Media-Kind': att.kind || 'unknown' },
+                            body: att.blob,
+                        });
+                        if (!res.ok) throw new Error(`media push failed: HTTP ${res.status}`);
+                        syncSettings.syncedMediaIds.push(att.id);
+                        mediaCount += 1;
+                    }
+                }
+
+                syncSettings.lastSyncAt = Date.now();
+                saveSyncSettings();
+                return { recordCount, mediaCount };
+            };
+
+            // Pulls every record for the checked categories from the server and
+            // reconciles it with local storage:
+            //  - a server tombstone for something we still have locally -> remove it
+            //    locally (another device already deleted it, already confirmed there)
+            //  - a live server record we've never seen -> pull it in (from another device)
+            //  - a live server record whose id we ourselves deleted locally -> do NOT
+            //    silently resurrect it; collect it and ask before deleting it server-side
+            // Returns how many entries were pulled in.
+            const pullFromServer = async () => {
+                let pulledCount = 0;
+                const pendingServerDeletes = [];
+
+                for (const [type, getEntries] of Object.entries(SYNC_RECORD_TYPES)) {
+                    if (!syncSettings.categories[type]) continue;
+                    syncStatus.textContent = `Checking ${type} on server…`;
+                    const res = await syncFetch(`/sync/records/${type}?since=0`);
+                    if (!res.ok) throw new Error(`${type} pull failed: HTTP ${res.status}`);
+                    const body = await res.json();
+                    const localIds = new Set(getEntries().map((e) => e.id));
+                    const deletedHere = syncSettings.deletedIds[type] || [];
+
+                    for (const rec of body.records || []) {
+                        if (rec.deleted) {
+                            if (localIds.has(rec.id)) {
+                                LOCAL_ENTRY_HANDLERS[type].remove(rec.id);
+                                localIds.delete(rec.id);
+                            }
+                            continue;
+                        }
+                        if (localIds.has(rec.id)) continue;
+                        if (deletedHere.includes(rec.id)) {
+                            pendingServerDeletes.push({ type, id: rec.id });
+                            continue;
+                        }
+                        LOCAL_ENTRY_HANDLERS[type].add(rec.data);
+                        pulledCount += 1;
+                    }
+                }
+
+                if (pendingServerDeletes.length) {
+                    const preview = pendingServerDeletes.slice(0, 5).map(({ type, id }) => `${type}/${id}`).join(', ');
+                    const more = pendingServerDeletes.length > 5 ? `, and ${pendingServerDeletes.length - 5} more` : '';
+                    const ok = confirm(
+                        `${pendingServerDeletes.length} item(s) were deleted on this device but are still on the server ` +
+                        `(${preview}${more}). Delete them from the server now too? This affects every device that syncs. ` +
+                        `Choose Cancel to leave them there.`
+                    );
+                    if (ok) {
+                        for (const { type, id } of pendingServerDeletes) {
+                            const success = await deleteSyncedRecord(type, id);
+                            if (success) clearLocallyDeleted(type, id);
                         }
                     }
+                }
 
-                    syncSettings.lastSyncAt = Date.now();
+                return pulledCount;
+            };
+
+            pushBtn.addEventListener('click', async () => {
+                pushBtn.disabled = true;
+                syncBtn.disabled = true;
+                try {
+                    const { recordCount, mediaCount } = await pushToServer();
+                    syncStatus.textContent = `Pushed ${new Date(syncSettings.lastSyncAt).toLocaleString()} — ${recordCount} record${recordCount === 1 ? '' : 's'}, ${mediaCount} photo/audio file${mediaCount === 1 ? '' : 's'}.`;
+                    showToast('Push complete.');
+                } catch (err) {
+                    console.error('Push failed:', err);
                     saveSyncSettings();
-                    syncStatus.textContent = `Synced ${new Date(syncSettings.lastSyncAt).toLocaleString()} — ${recordCount} record${recordCount === 1 ? '' : 's'}, ${mediaCount} photo/audio file${mediaCount === 1 ? '' : 's'}.`;
+                    syncStatus.textContent = 'Push failed — check your connection and try again.';
+                    showToast('Push failed — check your connection and try again.');
+                } finally {
+                    pushBtn.disabled = false;
+                    syncBtn.disabled = false;
+                }
+            });
+
+            syncBtn.addEventListener('click', async () => {
+                pushBtn.disabled = true;
+                syncBtn.disabled = true;
+                try {
+                    const pulled = await pullFromServer();
+                    renderActivityLog();
+                    renderQuestionLog();
+                    renderContactLog();
+                    renderQuickCaptureLog();
+                    renderMeetingNotesLog();
+                    renderTodoList();
+                    const { recordCount, mediaCount } = await pushToServer();
+                    syncStatus.textContent = `Synced ${new Date(syncSettings.lastSyncAt).toLocaleString()} — pulled ${pulled}, pushed ${recordCount} record${recordCount === 1 ? '' : 's'} / ${mediaCount} file${mediaCount === 1 ? '' : 's'}.`;
                     showToast('Sync complete.');
                 } catch (err) {
                     console.error('Sync failed:', err);
@@ -1349,7 +1500,8 @@
                     syncStatus.textContent = 'Sync failed — check your connection and try again.';
                     showToast('Sync failed — check your connection and try again.');
                 } finally {
-                    syncNowBtn.disabled = false;
+                    pushBtn.disabled = false;
+                    syncBtn.disabled = false;
                 }
             });
 
@@ -2123,6 +2275,7 @@
                 const entry = contactEntries.find((e) => e.id === id);
                 contactEntries = contactEntries.filter((e) => e.id !== id);
                 saveJSON(STORAGE_KEYS.contacts, contactEntries);
+                markLocallyDeleted('contacts', id);
                 renderContactLog();
                 renderActivityLog();
                 if (editingContactId === id) cancelContactEdit();
@@ -2130,7 +2283,8 @@
                     try { await deleteAttachment(entry.cardPhotoId); } catch (err) { console.error('Failed to delete card photo:', err); }
                 }
                 if (hasSyncedBefore() && confirm('Also remove this contact from the server?')) {
-                    await deleteSyncedRecord('contacts', id);
+                    const success = await deleteSyncedRecord('contacts', id);
+                    if (success) clearLocallyDeleted('contacts', id);
                     if (entry && entry.cardPhotoId) await deleteSyncedMedia(entry.cardPhotoId);
                 }
             };
@@ -3697,6 +3851,7 @@
                     deleteBtn.addEventListener('click', () => {
                         todoEntries = todoEntries.filter((t) => t.id !== todo.id);
                         saveJSON(STORAGE_KEYS.todos, todoEntries);
+                        markLocallyDeleted('todos', todo.id);
                         renderTodoList();
                         renderActivityLog();
                     });
@@ -3872,9 +4027,9 @@
 
                 const alsoDeleteFromServer = hasSyncedBefore()
                     && confirm('Also remove all synced data from the server? This deletes it for every device that syncs. Choose Cancel to keep the server backup.');
-                const recordsToDelete = alsoDeleteFromServer
-                    ? Object.entries(SYNC_RECORD_TYPES).map(([type, getEntries]) => ({ type, ids: getEntries().map((e) => e.id) }))
-                    : [];
+                // Needed either way: to delete now (if confirmed) or to remember what to
+                // protect from being silently pulled back down by a later Sync (if not).
+                const recordsToDelete = Object.entries(SYNC_RECORD_TYPES).map(([type, getEntries]) => ({ type, ids: getEntries().map((e) => e.id) }));
                 const mediaIdsToDelete = alsoDeleteFromServer ? (await getAllAttachments()).map((a) => a.id) : [];
 
                 feedbackEntries = [];
@@ -3905,10 +4060,19 @@
 
                 if (alsoDeleteFromServer) {
                     for (const { type, ids } of recordsToDelete) {
-                        for (const id of ids) await deleteSyncedRecord(type, id);
+                        for (const id of ids) {
+                            const success = await deleteSyncedRecord(type, id);
+                            // Keep tracking it if the delete didn't actually go through
+                            // (e.g. offline) — a later Sync will retry, with confirmation.
+                            if (!success) markLocallyDeleted(type, id);
+                        }
                     }
                     for (const id of mediaIdsToDelete) await deleteSyncedMedia(id);
                     showToast('Server copies removed.');
+                } else if (hasSyncedBefore()) {
+                    // Kept the server backup on purpose — remember every id so a later
+                    // Sync doesn't pull any of it back down onto this device.
+                    for (const { type, ids } of recordsToDelete) ids.forEach((id) => markLocallyDeleted(type, id));
                 }
             });
             
