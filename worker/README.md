@@ -76,10 +76,23 @@ opportunistic misuse, not a targeted one. For real rate limiting, add a
 Cloudflare **Rate Limiting Rule** on this Worker's route from the Cloudflare
 dashboard (Security → WAF → Rate limiting rules) — no code change needed.
 
-## Setting up email sharing
+## Email sharing (Resend)
 
 The app's "Email a copy" share option sends through
-[Resend](https://resend.com), a transactional email API. One-time setup:
+[Resend](https://resend.com), a transactional email API.
+
+**Status (done, 2026-09-30):** `RESEND_API_KEY` is set, and `altimate.app` is
+verified with Resend (DNS records added via Cloudflare, where the domain is
+hosted) — sending works to any address, from
+`EMAIL_FROM = "Field Feedback <noreply@altimate.app>"` in `wrangler.toml`.
+"Receiving" was deliberately left off in Resend's domain settings — this
+feature is send-only, no reply-handling, so no MX records were needed and
+nothing about `altimate.app`'s existing (or future) mail setup was touched.
+
+Resend's free tier (3,000 emails/month, 100/day at the time of writing) is
+enough for normal use of this feature.
+
+### Redoing this setup from scratch (e.g. a new domain, or a fresh Worker)
 
 1. **Create a free Resend account** at resend.com.
 2. **Get an API key**: Dashboard → API Keys → Create API Key.
@@ -87,19 +100,15 @@ The app's "Email a copy" share option sends through
    ```
    npx wrangler secret put RESEND_API_KEY
    ```
-4. **Try it** — sharing to email should work immediately, but only to *your
-   own* Resend account email while using the default sandbox sender
-   (`onboarding@resend.dev`, set in `wrangler.toml`'s `EMAIL_FROM`). That's a
-   Resend restriction, not something in this code.
-5. **For real use (sending to anyone)**: verify a domain you control with
-   Resend (Dashboard → Domains → Add Domain, then add the DNS records it
-   gives you — this needs access to your domain's DNS, e.g. at whoever hosts
-   `altimatemedical.com` or `ff.altimate.app`). Once verified, change
-   `EMAIL_FROM` in `wrangler.toml` to an address on that domain (e.g.
-   `Field Feedback <noreply@ff.altimate.app>`) and redeploy.
-
-Resend's free tier (3,000 emails/month, 100/day at the time of writing) is
-enough for normal use of this feature.
+4. **Verify a domain you control**: Resend Dashboard → Domains → Add Domain.
+   If that domain's DNS is on Cloudflare, Resend can auto-configure the
+   records for you; otherwise add the DNS records it shows manually. Leave
+   "Enable Receiving" off unless you specifically want inbound mail handling
+   too — it's not needed here and risks conflicting with any existing mail
+   setup on that domain.
+5. Once verified, set `EMAIL_FROM` in `wrangler.toml` to an address on that
+   domain and redeploy. Until verified, sending only works to the Resend
+   account's own email via the sandbox sender (`onboarding@resend.dev`).
 
 ## Redeploying after code changes
 

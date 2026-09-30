@@ -12,8 +12,8 @@ enabled = true
 OPENAI_MODEL = "gpt-4o-mini"
 ALLOWED_ORIGINS = "https://ff.altimate.app,http://localhost:8791"
 # "From" address for emailed entries — must be on a domain verified with
-# Resend (see README) once you're past their sandbox sender.
-EMAIL_FROM = "Field Feedback <onboarding@resend.dev>"
+# Resend (see README). altimate.app is verified (2026-09-30).
+EMAIL_FROM = "Field Feedback <noreply@altimate.app>"
 
 # D1 database for synced records (feedback, survey, contacts, quick captures,
 # meeting notes, todos) — see schema.sql. Bound as env.SYNC_DB.
