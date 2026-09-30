@@ -1214,6 +1214,33 @@
                 return res;
             };
 
+            // Shared tag tree (not per-account) — loaded/declared here, this early, because
+            // showApp() below calls loadTagsFromServer() synchronously at login time. The
+            // rest of the Tags feature (tree editor, generic picker) is defined later, in
+            // its own "Tags Logic" section near the other tab logic — those pieces are only
+            // ever called later too (after the whole script has finished running), so they
+            // don't need to live up here. This function specifically does, or showApp()
+            // would throw "cannot access before initialization" and halt the entire script.
+            let tagTree = loadJSON(STORAGE_KEYS.tagTreeCache, []);
+            let expandedTagIds = new Set(tagTree.filter((t) => !t.parentId).map((t) => t.id));
+            const loadTagsFromServer = async () => {
+                try {
+                    const res = await apiFetch('/tags');
+                    if (!res.ok) return;
+                    const body = await res.json();
+                    tagTree = body.tags || [];
+                    saveJSON(STORAGE_KEYS.tagTreeCache, tagTree);
+                    tagTree.filter((t) => !t.parentId).forEach((t) => expandedTagIds.add(t.id));
+                    renderTagsTree();
+                    renderContactTagPicker();
+                    renderQuickCaptureTagPicker();
+                    renderMeetingTagPicker();
+                    renderTodoTagPicker();
+                } catch (err) {
+                    console.error('Failed to load tags from server:', err);
+                }
+            };
+
             // Admin-only: refreshes the "Existing Accounts" list on the Account tab.
             const loadUserList = async () => {
                 const listEl = document.getElementById('user-list');
@@ -4668,13 +4695,10 @@
                 }
             });
 
-            // --- Tags Logic: one shared tag tree (not per-account) used to tag Contacts,
-            // Quick Captures, Meeting Notes, and Todos. See worker/src/index.js's "Shared
-            // tag tree" section for the server side. Entries store a tag by its label text
-            // (not its id), so renaming a tag never changes what's already saved on old
-            // entries. ---
-            let tagTree = loadJSON(STORAGE_KEYS.tagTreeCache, []);
-            let expandedTagIds = new Set(tagTree.filter((t) => !t.parentId).map((t) => t.id));
+            // --- Tags Logic (continued): tree helpers + editor UI. `tagTree`,
+            // `expandedTagIds`, and `loadTagsFromServer` itself are declared much earlier
+            // (right after apiFetch) since showApp() calls loadTagsFromServer() — see the
+            // comment there for why. ---
             let draggedTagId = null;
 
             const SHOW_ON_TABS = [
@@ -4695,24 +4719,6 @@
                     hops += 1;
                 }
                 return false;
-            };
-
-            const loadTagsFromServer = async () => {
-                try {
-                    const res = await apiFetch('/tags');
-                    if (!res.ok) return;
-                    const body = await res.json();
-                    tagTree = body.tags || [];
-                    saveJSON(STORAGE_KEYS.tagTreeCache, tagTree);
-                    tagTree.filter((t) => !t.parentId).forEach((t) => expandedTagIds.add(t.id));
-                    renderTagsTree();
-                    renderContactTagPicker();
-                    renderQuickCaptureTagPicker();
-                    renderMeetingTagPicker();
-                    renderTodoTagPicker();
-                } catch (err) {
-                    console.error('Failed to load tags from server:', err);
-                }
             };
 
             // --- Tags tab: tree editor ---
