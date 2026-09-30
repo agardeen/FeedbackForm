@@ -736,6 +736,16 @@
                     </div>
                     <p id="event-location-status" class="mt-1 text-xs text-gray-400"></p>
                 </div>
+                <div>
+                    <label for="event-attendees" class="block text-sm font-medium text-gray-700">Attendees <span class="text-gray-400 font-normal">(optional)</span></label>
+                    <div class="mt-1 relative">
+                        <textarea id="event-attendees" rows="2" class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="e.g., John Smith, Jane Doe"></textarea>
+                        <button type="button" class="mic-btn absolute top-0 right-0 mt-3 mr-3 text-gray-400 hover:text-gray-600" data-target="event-attendees" aria-label="Use microphone for Attendees">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                        </button>
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">Separate names with a comma or a new line.</p>
+                </div>
                 <div class="pt-2">
                     <button type="button" id="add-event-btn" class="w-full px-4 py-2 font-semibold text-blue-600 bg-white border border-blue-600 rounded-lg hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
                         Add Event
@@ -4532,6 +4542,7 @@
             const eventStartDateInput = document.getElementById('event-start-date');
             const eventEndDateInput = document.getElementById('event-end-date');
             const eventAddressInput = document.getElementById('event-address');
+            const eventAttendeesInput = document.getElementById('event-attendees');
             const eventLocationStatus = document.getElementById('event-location-status');
             const eventLog = document.getElementById('event-log');
             const addEventBtn = document.getElementById('add-event-btn');
@@ -4553,6 +4564,7 @@
                 eventStartDateInput.value = '';
                 eventEndDateInput.value = '';
                 eventAddressInput.value = '';
+                eventAttendeesInput.value = '';
                 pendingEventLatLng = null;
                 eventLocationStatus.textContent = '';
                 addEventBtn.textContent = 'Add Event';
@@ -4568,6 +4580,7 @@
                 eventStartDateInput.value = ev.startDate || '';
                 eventEndDateInput.value = ev.endDate || '';
                 eventAddressInput.value = ev.address || '';
+                eventAttendeesInput.value = ev.attendees || '';
                 pendingEventLatLng = (ev.lat != null && ev.lng != null) ? { lat: ev.lat, lng: ev.lng } : null;
                 eventLocationStatus.textContent = pendingEventLatLng
                     ? `Location set (${ev.lat.toFixed(4)}, ${ev.lng.toFixed(4)})` : '';
@@ -4609,6 +4622,7 @@
                     addLogLine(textLines, dateLabel);
                     if (ev.type) addLogLine(textLines, `Type: ${ev.type}`);
                     if (ev.address) addLogLine(textLines, `Location: ${ev.address}`);
+                    if (ev.attendees) addLogLine(textLines, `Attendees: ${ev.attendees}`);
                     if (ev.lat != null && ev.lng != null) {
                         addLogLine(textLines, `Map: ${ev.lat.toFixed(5)}, ${ev.lng.toFixed(5)}`,
                             `https://www.openstreetmap.org/?mlat=${ev.lat}&mlon=${ev.lng}#map=16/${ev.lat}/${ev.lng}`);
@@ -4652,6 +4666,7 @@
                     startDate,
                     endDate,
                     address: eventAddressInput.value.trim(),
+                    attendees: eventAttendeesInput.value.trim(),
                     lat: pendingEventLatLng ? pendingEventLatLng.lat : null,
                     lng: pendingEventLatLng ? pendingEventLatLng.lng : null,
                 };
@@ -4675,6 +4690,7 @@
                     eventStartDateInput.value = '';
                     eventEndDateInput.value = '';
                     eventAddressInput.value = '';
+                    eventAttendeesInput.value = '';
                     pendingEventLatLng = null;
                     eventLocationStatus.textContent = '';
                     showToast('Event added.');
@@ -4890,8 +4906,8 @@
 
             document.getElementById('export-events-csv-btn').addEventListener('click', () => {
                 if (!eventEntries.length) { showToast('No events yet.'); return; }
-                const headers = ['Name', 'Type', 'Start Date', 'End Date', 'Address', 'Latitude', 'Longitude'];
-                const rows = eventEntries.map((e) => [e.name, e.type, e.startDate, e.endDate, e.address, e.lat, e.lng].map(toCSVValue).join(','));
+                const headers = ['Name', 'Type', 'Start Date', 'End Date', 'Address', 'Attendees', 'Latitude', 'Longitude'];
+                const rows = eventEntries.map((e) => [e.name, e.type, e.startDate, e.endDate, e.address, e.attendees, e.lat, e.lng].map(toCSVValue).join(','));
                 downloadFile(`events-${Date.now()}.csv`, [headers.join(','), ...rows].join('\n'), 'text/csv');
             });
 
