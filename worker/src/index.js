@@ -1,7 +1,7 @@
 /**
  * Field Feedback Worker.
  *
- * Four unrelated jobs share this Worker (and its wrangler deploy flow):
+ * Five unrelated jobs share this Worker (and its wrangler deploy flow):
  *
  * 1. Business card scan proxy (`POST /`) — holds the OpenAI API key
  *    server-side and forwards a business-card photo to a vision-capable
@@ -40,6 +40,14 @@
  *    formatting; this route is a dumb relay. Requires the RESEND_API_KEY
  *    secret; see README for setup (a verified sending domain is needed for
  *    production use, not just the sandbox address).
+ *
+ * 5. Shared tag tree (`/tags*`) — unlike everything above, this is NOT
+ *    scoped per account. It's one shared hierarchy of tags (arbitrary
+ *    nesting) used to tag Contacts/Quick Captures/Meeting Notes/Todos,
+ *    visible to every account. Any logged-in account can read the tree
+ *    (`GET /tags`) and add a new node (`POST /tags`, tagged with who added
+ *    it); only accounts with is_admin can rename/move/reorder/delete a node
+ *    (`PUT /tags/:id`, `DELETE /tags/:id`) — see the Tags tab in the app.
  *
  * Provider swap (card scan): everything OpenAI-specific lives in
  * `callOpenAI()` and `CARD_SCHEMA`. Replace `callOpenAI()` with an
@@ -593,6 +601,135 @@ async function handleSendEmail(request, env, headers, auth) {
 	return jsonResponse({ ok: true }, 200, headers);
 }
 
+// --- Shared tag tree ---
+// One tree for the whole team (not scoped per account, unlike everything
+// else in this file). Nodes with parent_id = NULL are top-level categories
+// (e.g. "People", "Companies", "Products"); nesting under those is
+// unlimited. Entries store a tag by its label text (not its id) — see the
+// frontend's tag pickers — so renaming a node never changes what's already
+// saved on old entries, and no migration is needed when labels change.
+
+async function handleTagsGet(env, headers) {
+	const { results } = await env.SYNC_DB.prepare(
+		`SELECT id, label, parent_id, sort_order, show_on, created_by, updated_at FROM tags WHERE deleted_at IS NULL ORDER BY sort_order ASC`
+	).all();
+	const tags = (results || []).map((t) => ({
+		id: t.id,
+		label: t.label,
+		parentId: t.parent_id,
+		sortOrder: t.sort_order,
+		showOn: t.show_on ? JSON.parse(t.show_on) : [],
+		createdBy: t.created_by,
+		updatedAt: t.updated_at,
+	}));
+	return jsonResponse({ tags }, 200, headers);
+}
+
+async function handleTagsCreate(request, env, headers, auth) {
+	let body;
+	try {
+		body = await request.json();
+	} catch (err) {
+		return jsonResponse({ error: 'invalid_request_body' }, 400, headers);
+	}
+
+	const label = ((body && body.label) || '').trim();
+	const parentId = (body && body.parentId) || null;
+	if (!label) return jsonResponse({ error: 'invalid_input' }, 400, headers);
+	// A brand-new top-level category (e.g. another "People"/"Products") is a
+	// structural decision — admin-only. Nesting a tag under an existing node
+	// is open to anyone; that's the "add + suggest where it's nested" case.
+	if (!parentId && !auth.isAdmin) return jsonResponse({ error: 'forbidden' }, 403, headers);
+
+	if (parentId) {
+		const parent = await env.SYNC_DB.prepare(`SELECT id FROM tags WHERE id = ?1 AND deleted_at IS NULL`).bind(parentId).first();
+		if (!parent) return jsonResponse({ error: 'parent_not_found' }, 404, headers);
+	}
+
+	const maxOrder = await env.SYNC_DB.prepare(
+		parentId
+			? `SELECT MAX(sort_order) AS m FROM tags WHERE parent_id = ?1 AND deleted_at IS NULL`
+			: `SELECT MAX(sort_order) AS m FROM tags WHERE parent_id IS NULL AND deleted_at IS NULL`
+	).bind(...(parentId ? [parentId] : [])).first();
+
+	const id = crypto.randomUUID();
+	const now = Date.now();
+	await env.SYNC_DB.prepare(
+		`INSERT INTO tags (id, label, parent_id, sort_order, show_on, created_by, updated_at, deleted_at)
+		 VALUES (?1, ?2, ?3, ?4, NULL, ?5, ?6, NULL)`
+	).bind(id, label, parentId, (maxOrder && maxOrder.m != null ? maxOrder.m + 1 : 0), auth.username, now).run();
+
+	return jsonResponse({ id, label, parentId, sortOrder: (maxOrder && maxOrder.m != null ? maxOrder.m + 1 : 0), showOn: [], createdBy: auth.username, updatedAt: now }, 200, headers);
+}
+
+async function handleTagUpdate(request, env, headers, auth, id) {
+	if (!auth.isAdmin) return jsonResponse({ error: 'forbidden' }, 403, headers);
+
+	let body;
+	try {
+		body = await request.json();
+	} catch (err) {
+		return jsonResponse({ error: 'invalid_request_body' }, 400, headers);
+	}
+
+	const existing = await env.SYNC_DB.prepare(`SELECT id FROM tags WHERE id = ?1 AND deleted_at IS NULL`).bind(id).first();
+	if (!existing) return jsonResponse({ error: 'not_found' }, 404, headers);
+
+	// A node can't become its own descendant — walk up from the proposed new
+	// parent and reject if we ever reach `id`.
+	if (body.parentId) {
+		let cursor = body.parentId;
+		let hops = 0;
+		while (cursor && hops < 100) {
+			if (cursor === id) return jsonResponse({ error: 'cannot_move_into_own_descendant' }, 400, headers);
+			const row = await env.SYNC_DB.prepare(`SELECT parent_id FROM tags WHERE id = ?1`).bind(cursor).first();
+			cursor = row ? row.parent_id : null;
+			hops += 1;
+		}
+	}
+
+	const sets = [];
+	const binds = [];
+	let i = 1;
+	if (typeof body.label === 'string' && body.label.trim()) { sets.push(`label = ?${i++}`); binds.push(body.label.trim()); }
+	if ('parentId' in body) { sets.push(`parent_id = ?${i++}`); binds.push(body.parentId || null); }
+	if (typeof body.sortOrder === 'number') { sets.push(`sort_order = ?${i++}`); binds.push(body.sortOrder); }
+	if ('showOn' in body) { sets.push(`show_on = ?${i++}`); binds.push(JSON.stringify(Array.isArray(body.showOn) ? body.showOn : [])); }
+	if (!sets.length) return jsonResponse({ error: 'no_fields_to_update' }, 400, headers);
+	sets.push(`updated_at = ?${i++}`);
+	binds.push(Date.now());
+	binds.push(id);
+
+	await env.SYNC_DB.prepare(`UPDATE tags SET ${sets.join(', ')} WHERE id = ?${i}`).bind(...binds).run();
+	return jsonResponse({ ok: true }, 200, headers);
+}
+
+async function handleTagDelete(env, headers, auth, id) {
+	if (!auth.isAdmin) return jsonResponse({ error: 'forbidden' }, 403, headers);
+
+	// Cascade: soft-delete this node and every descendant, level by level.
+	let frontier = [id];
+	const toDelete = [id];
+	let hops = 0;
+	while (frontier.length && hops < 50) {
+		const placeholders = frontier.map((_, idx) => `?${idx + 1}`).join(',');
+		const { results } = await env.SYNC_DB.prepare(
+			`SELECT id FROM tags WHERE parent_id IN (${placeholders}) AND deleted_at IS NULL`
+		).bind(...frontier).all();
+		frontier = (results || []).map((r) => r.id);
+		toDelete.push(...frontier);
+		hops += 1;
+	}
+
+	const now = Date.now();
+	const statements = toDelete.map((tagId) =>
+		env.SYNC_DB.prepare(`UPDATE tags SET deleted_at = ?1, updated_at = ?1 WHERE id = ?2`).bind(now, tagId)
+	);
+	await env.SYNC_DB.batch(statements);
+
+	return jsonResponse({ ok: true, deletedCount: toDelete.length }, 200, headers);
+}
+
 // --- Sync: media (photos/audio/scans) ---
 
 async function handleMediaUpload(request, env, headers, id, auth) {
@@ -732,6 +869,25 @@ export default {
 			const auth = await requireAuth(request, env);
 			if (!auth) return jsonResponse({ error: 'unauthorized' }, 401, headers);
 			return handleSendEmail(request, env, headers, auth);
+		}
+
+		// --- Shared tag tree: read/create open to any account, edit/delete admin-only ---
+		if (url.pathname === '/tags' && request.method === 'GET') {
+			const auth = await requireAuth(request, env);
+			if (!auth) return jsonResponse({ error: 'unauthorized' }, 401, headers);
+			return handleTagsGet(env, headers);
+		}
+		if (url.pathname === '/tags' && request.method === 'POST') {
+			const auth = await requireAuth(request, env);
+			if (!auth) return jsonResponse({ error: 'unauthorized' }, 401, headers);
+			return handleTagsCreate(request, env, headers, auth);
+		}
+		if (url.pathname.startsWith('/tags/')) {
+			const auth = await requireAuth(request, env);
+			if (!auth) return jsonResponse({ error: 'unauthorized' }, 401, headers);
+			const tagId = decodeURIComponent(url.pathname.slice('/tags/'.length));
+			if (request.method === 'PUT') return handleTagUpdate(request, env, headers, auth, tagId);
+			if (request.method === 'DELETE') return handleTagDelete(env, headers, auth, tagId);
 		}
 
 		// --- Sync routes: require a logged-in account. Every row is scoped to

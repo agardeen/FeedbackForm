@@ -187,6 +187,9 @@
                 <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab9">
                     Events
                 </button>
+                <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab10">
+                    Tags
+                </button>
                 <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab4">
                     User
                 </button>
@@ -366,40 +369,8 @@
 
                 <!-- Contact Tags -->
                 <div>
-                    <div class="flex items-center justify-between">
-                        <label class="block text-sm font-medium text-gray-700">Tags</label>
-                        <button type="button" id="add-tag-btn" class="text-xs font-medium text-blue-600 hover:underline" aria-label="Add a new tag">+ Add</button>
-                    </div>
-                    <div id="contact-tag-group" class="mt-1 max-h-44 overflow-y-auto content-start flex flex-wrap gap-1.5">
-                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="PT">PT</button>
-                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="OT">OT</button>
-                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Dealer">Dealer</button>
-                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Distributor">Distributor</button>
-                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="ATP">ATP</button>
-                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="RTS">RTS</button>
-                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="EndUser">EndUser</button>
-                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Supplier">Supplier</button>
-                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Funder">Funder</button>
-                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Sales Manager">Sales Manager</button>
-                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Engineer">Engineer</button>
-                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Educator">Educator</button>
-                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Manufacturer">Manufacturer</button>
-                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Competitor">Competitor</button>
-                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Rep">Rep</button>
-                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="User">User</button>
-                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Family">Family</button>
-                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Caretaker">Caretaker</button>
-                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Logistics">Logistics</button>
-                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Supply Chain">Supply Chain</button>
-                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Insurance">Insurance</button>
-                        <button type="button" class="tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50" data-tag="Funding">Funding</button>
-                        <span id="custom-tag-chips" class="contents"></span>
-                    </div>
-                    <div id="add-tag-form" class="hidden mt-2 flex items-center gap-2">
-                        <input type="text" id="new-tag-input" placeholder="New tag name" maxlength="20" class="flex-1 px-2 py-1 text-sm text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
-                        <button type="button" id="confirm-add-tag-btn" class="px-2 py-1 text-xs font-medium text-blue-600 border border-blue-600 rounded hover:bg-blue-50">Add</button>
-                        <button type="button" id="cancel-add-tag-btn" class="px-2 py-1 text-xs text-gray-500 hover:underline">Cancel</button>
-                    </div>
+                    <label class="block text-sm font-medium text-gray-700">Tags</label>
+                    <div id="contact-tag-picker" class="mt-1"></div>
                 </div>
 
                 <!-- Contact Notes -->
@@ -500,20 +471,8 @@
                 </div>
 
                 <div>
-                    <div class="flex items-center justify-between">
-                        <label class="block text-sm font-medium text-gray-700">Tags <span class="text-gray-400 font-normal">(optional)</span></label>
-                        <button type="button" id="quick-add-tag-btn" class="text-xs font-medium text-blue-600 hover:underline" aria-label="Add a new tag">+ Add</button>
-                    </div>
-                    <p class="mt-1 text-xs text-gray-500">Pick a brand to reveal its products. Tags you add go under "Other".</p>
-                    <div id="quick-tag-brands" class="mt-1 flex flex-wrap gap-1.5"></div>
-                    <div id="quick-tag-products-wrap" class="hidden mt-2 pt-2 border-t border-gray-100">
-                        <div id="quick-tag-products" class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto content-start"></div>
-                    </div>
-                    <div id="quick-add-tag-form" class="hidden mt-2 flex items-center gap-2">
-                        <input type="text" id="quick-new-tag-input" placeholder="New tag name" maxlength="20" class="flex-1 px-2 py-1 text-sm text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
-                        <button type="button" id="quick-confirm-add-tag-btn" class="px-2 py-1 text-xs font-medium text-blue-600 border border-blue-600 rounded hover:bg-blue-50">Add</button>
-                        <button type="button" id="quick-cancel-add-tag-btn" class="px-2 py-1 text-xs text-gray-500 hover:underline">Cancel</button>
-                    </div>
+                    <label class="block text-sm font-medium text-gray-700">Tags <span class="text-gray-400 font-normal">(optional)</span></label>
+                    <div id="quick-tag-picker" class="mt-1"></div>
                 </div>
 
                 <div>
@@ -637,6 +596,11 @@
                     </select>
                 </div>
 
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Tags <span class="text-gray-400 font-normal">(optional)</span></label>
+                    <div id="meeting-tag-picker" class="mt-1"></div>
+                </div>
+
                 <!-- Meeting Log: a compact, always-visible scrolling feed — stays a few lines tall,
                      auto-scrolls so the newest line is in view as older ones scroll out of sight. -->
                 <div>
@@ -685,6 +649,10 @@
                     <select id="todo-event" class="mt-1 w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 event-select">
                         <option value="">No Event</option>
                     </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Tags <span class="text-gray-400 font-normal">(optional)</span></label>
+                    <div id="todo-tag-picker" class="mt-1"></div>
                 </div>
                 <div class="pt-2">
                     <button type="button" id="add-todo-btn" class="w-full px-4 py-2 font-semibold text-blue-600 bg-white border border-blue-600 rounded-lg hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
@@ -755,6 +723,22 @@
                     <label class="block text-sm font-medium text-gray-700">Events</label>
                     <div id="event-log" class="mt-2 h-64 overflow-y-auto border border-gray-200 rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-600 leading-6"></div>
                 </div>
+            </div>
+
+            <!-- Tab 10 Content: Tags (shared tag tree used to tag Contacts/Quick Captures/
+                 Meeting Notes/Todos — see the Tags Logic script section) -->
+            <div id="tab10" class="tab-content space-y-4">
+                <p class="text-xs text-gray-500">
+                    One shared set of tags for the whole team. Anyone can add a tag under an
+                    existing one; <span id="tags-admin-note">only admins</span> can rename, move,
+                    reorder, or delete tags, and control which tabs a top-level category appears on.
+                </p>
+                <div id="tags-admin-add-category" class="hidden flex gap-2">
+                    <input type="text" id="new-category-input" placeholder="New top-level category (e.g. Companies)" class="flex-1 px-3 py-2 text-sm text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    <button type="button" id="add-category-btn" class="px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Add Category</button>
+                </div>
+                <div id="tags-tree-container" class="space-y-3"></div>
+                <p id="tags-status" class="text-xs text-gray-500 min-h-[1em]"></p>
             </div>
 
             <!-- Tab 2 Content: Survey -->
@@ -1129,14 +1113,13 @@
                 feedback: 'ff_feedback_entries',
                 qa: 'ff_qa_entries',
                 contacts: 'ff_contacts',
-                contactCustomTags: 'ff_contact_custom_tags',
                 quickCaptures: 'ff_quick_captures',
                 meetingNotes: 'ff_meeting_notes',
                 todos: 'ff_todos',
                 events: 'ff_events',
+                tagTreeCache: 'ff_tag_tree_cache',
                 auth: 'ff_auth',
                 syncSettings: 'ff_sync_settings',
-                quickCustomTags: 'ff_quick_custom_tags',
             };
             const loadJSON = (key, fallback) => {
                 try {
@@ -1201,6 +1184,7 @@
                     const isAdmin = !!currentAuth.user.isAdmin;
                     document.getElementById('admin-users-section').classList.toggle('hidden', !isAdmin);
                     if (isAdmin) loadUserList();
+                    loadTagsFromServer();
                 }
             };
 
@@ -2353,79 +2337,17 @@
             const contactEditingBanner = document.getElementById('contact-editing-banner');
             const saveContactBtn = document.getElementById('save-contact-btn');
 
-            // --- Tags: quick-select chips (built-in + user-added), multiple can be active at once ---
+            // --- Tags: picker sourced from the shared tag tree (see Tags Logic section) ---
             let selectedContactTags = [];
-            let customContactTags = loadJSON(STORAGE_KEYS.contactCustomTags, []);
-            const contactTagGroup = document.getElementById('contact-tag-group');
-            const customTagChipsContainer = document.getElementById('custom-tag-chips');
-            const addTagBtn = document.getElementById('add-tag-btn');
-            const addTagForm = document.getElementById('add-tag-form');
-            const newTagInput = document.getElementById('new-tag-input');
-
-            const renderContactTagButtons = () => {
-                contactTagGroup.querySelectorAll('.tag-chip').forEach((btn) => {
-                    const active = selectedContactTags.includes(btn.dataset.tag);
-                    btn.classList.toggle('bg-blue-600', active);
-                    btn.classList.toggle('text-white', active);
-                    btn.classList.toggle('border-blue-600', active);
-                    btn.classList.toggle('bg-white', !active);
-                    btn.classList.toggle('text-gray-600', !active);
-                    btn.classList.toggle('border-gray-300', !active);
+            const contactTagPickerEl = document.getElementById('contact-tag-picker');
+            const renderContactTagPicker = () => {
+                renderTagPicker(contactTagPickerEl, 'contacts', selectedContactTags, (label) => {
+                    selectedContactTags = selectedContactTags.includes(label)
+                        ? selectedContactTags.filter((t) => t !== label)
+                        : [...selectedContactTags, label];
+                    renderContactTagPicker();
                 });
             };
-            const wireTagChip = (btn) => {
-                btn.addEventListener('click', () => {
-                    const tag = btn.dataset.tag;
-                    selectedContactTags = selectedContactTags.includes(tag)
-                        ? selectedContactTags.filter((t) => t !== tag)
-                        : [...selectedContactTags, tag];
-                    renderContactTagButtons();
-                });
-            };
-            contactTagGroup.querySelectorAll('.tag-chip').forEach(wireTagChip);
-
-            const createTagChip = (tagName) => {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'tag-chip px-2.5 py-1 text-xs font-medium rounded-full border border-gray-300 text-gray-600 bg-white hover:bg-gray-50';
-                btn.dataset.tag = tagName;
-                btn.textContent = tagName;
-                wireTagChip(btn);
-                customTagChipsContainer.appendChild(btn);
-                return btn;
-            };
-            customContactTags.forEach(createTagChip);
-
-            addTagBtn.addEventListener('click', () => {
-                addTagForm.classList.remove('hidden');
-                newTagInput.focus();
-            });
-            const cancelAddTag = () => {
-                addTagForm.classList.add('hidden');
-                newTagInput.value = '';
-            };
-            document.getElementById('cancel-add-tag-btn').addEventListener('click', cancelAddTag);
-            const confirmAddTag = () => {
-                const tagName = newTagInput.value.trim();
-                if (!tagName) { cancelAddTag(); return; }
-                const exists = Array.from(contactTagGroup.querySelectorAll('.tag-chip'))
-                    .some((btn) => btn.dataset.tag.toLowerCase() === tagName.toLowerCase());
-                if (exists) {
-                    showToast('That tag already exists.');
-                    return;
-                }
-                customContactTags.push(tagName);
-                saveJSON(STORAGE_KEYS.contactCustomTags, customContactTags);
-                createTagChip(tagName);
-                selectedContactTags = [...selectedContactTags, tagName];
-                renderContactTagButtons();
-                cancelAddTag();
-            };
-            document.getElementById('confirm-add-tag-btn').addEventListener('click', confirmAddTag);
-            newTagInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') { e.preventDefault(); confirmAddTag(); }
-                else if (e.key === 'Escape') { cancelAddTag(); }
-            });
 
             // --- Save / edit-in-place ---
             let editingContactId = null;
@@ -2535,7 +2457,7 @@
                 contactCountryInput.value = '';
                 contactNotesInput.value = '';
                 selectedContactTags = [];
-                renderContactTagButtons();
+                renderContactTagPicker();
                 resetCardScan();
                 contactEventSelect.value = getActiveEventId();
             };
@@ -2554,7 +2476,7 @@
                 contactCountryInput.value = entry.country || '';
                 contactNotesInput.value = entry.notes || '';
                 selectedContactTags = (entry.tags || []).slice();
-                renderContactTagButtons();
+                renderContactTagPicker();
                 contactEventSelect.value = entry.eventId || '';
                 contactEditingBanner.classList.remove('hidden');
                 saveContactBtn.textContent = 'Update Contact';
@@ -3518,136 +3440,25 @@
                 });
             }
 
-            // --- Tags: hierarchical Brand -> Product picker. Product chips for a brand only
-            // appear once that brand is selected; multi-select at both levels. Deselecting a
-            // brand also clears any of its already-selected products (no orphaned selections
-            // under a hidden parent).
-            let quickCustomTags = loadJSON(STORAGE_KEYS.quickCustomTags, []);
-            const QUICK_TAG_TREE = {
-                'EasyStand': ['Evolv', 'Bantam', 'StrapStand', 'Glider'],
-                'Zing': ['Zing MPS', 'Zing Supine', 'Zing Prone'],
-                'ActiveAid': ['Shower Chairs', 'Commodes', 'Bathing', 'Toileting', 'Accessories'],
-                'Therafin': ['Assistive Tech', 'Device Mounts', 'Mount Brackets', 'Joystick Mounts', 'Sip-N-Puff', 'Dressing Aids', 'Eating Aids', 'Mobility Aids', 'Self-Care Aids', 'Patient Movers', 'Transfer Boards', 'Econoglide', 'Offset Boards', 'Superslide', 'Theraslide', 'Wheelhold', 'Abductors', 'Adductors', 'Anterior Supports', 'Footboxes', 'Shoeholders', 'Toe Straps', 'FlexSure Feet', 'FootSure', 'Shoe Sandals', 'Head Supports', 'Hip Belts', 'Hip Guides', 'Lateral Supports', 'Calf Panels', 'Amputee Supports', 'Leg Supports', 'Thigh Supports', 'Knee Supports', 'Stretch Harness', 'Static Harness', 'Arm Therapy', 'Hand/Wrist Therapy', 'Stander Therapy', 'Sensory Cuffs', 'Snug Hug', 'Squeeze Machine', 'Sensory Vests', 'Adapt-A-Tray', 'Full Trays', 'Half Trays', 'Tray Overlays', 'Tray Hardware', 'Tray Pads', 'Arm Troughs', 'Lateral Pads', 'Elbow Pads', 'Center Mounts', 'Wheelchair Seats', 'Wheelchair Backs', 'Easy Clip Backs', 'SunMate FIPS', 'Back Hardware', 'Seat Hardware', 'Seat-Back Hardware', 'Custom Seating', 'Parts', 'Straps', 'Buckles', 'Clips & Clamps', 'Hardware Kits'],
-                'Leggero': ['Enzo', 'Reach', 'Trak', 'Dyno'],
-                // Flat top-level tags — no products underneath, just a standalone toggle.
-                'Product Idea': [],
-                'Competition': [],
-                // User-added tags (via "+ Add" below) live here — same array object as
-                // quickCustomTags, so pushing a new tag updates both at once.
-                'Other': quickCustomTags,
-            };
-
+            // --- Tags: picker sourced from the shared tag tree (see Tags Logic section) ---
             let selectedQuickTags = [];
-            const quickTagBrandsEl = document.getElementById('quick-tag-brands');
-            const quickTagProductsWrap = document.getElementById('quick-tag-products-wrap');
-            const quickTagProductsEl = document.getElementById('quick-tag-products');
-
-            const renderQuickTagChipState = (btn) => {
-                const active = selectedQuickTags.includes(btn.dataset.tag);
-                btn.classList.toggle('bg-blue-600', active);
-                btn.classList.toggle('text-white', active);
-                btn.classList.toggle('border-blue-600', active);
-                btn.classList.toggle('bg-white', !active);
-                btn.classList.toggle('text-gray-600', !active);
-                btn.classList.toggle('border-gray-300', !active);
-            };
-
-            const renderQuickTagProducts = () => {
-                quickTagProductsEl.innerHTML = '';
-                const selectedBrands = Object.keys(QUICK_TAG_TREE).filter((b) => selectedQuickTags.includes(b));
-                if (!selectedBrands.length) {
-                    quickTagProductsWrap.classList.add('hidden');
-                    return;
-                }
-                const products = [...new Set(selectedBrands.flatMap((b) => QUICK_TAG_TREE[b]))];
-                if (!products.length) {
-                    quickTagProductsWrap.classList.add('hidden');
-                    return;
-                }
-                quickTagProductsWrap.classList.remove('hidden');
-                products.forEach((product) => {
-                    const btn = document.createElement('button');
-                    btn.type = 'button';
-                    btn.textContent = product;
-                    btn.dataset.tag = product;
-                    btn.className = 'px-2.5 py-1 text-xs font-medium rounded-full border';
-                    btn.addEventListener('click', () => {
-                        selectedQuickTags = selectedQuickTags.includes(product)
-                            ? selectedQuickTags.filter((t) => t !== product)
-                            : [...selectedQuickTags, product];
-                        renderQuickTagChipState(btn);
-                    });
-                    renderQuickTagChipState(btn);
-                    quickTagProductsEl.appendChild(btn);
+            const quickTagPickerEl = document.getElementById('quick-tag-picker');
+            const renderQuickCaptureTagPicker = () => {
+                renderTagPicker(quickTagPickerEl, 'quickCaptures', selectedQuickTags, (label) => {
+                    selectedQuickTags = selectedQuickTags.includes(label)
+                        ? selectedQuickTags.filter((t) => t !== label)
+                        : [...selectedQuickTags, label];
+                    renderQuickCaptureTagPicker();
                 });
             };
-
-            Object.keys(QUICK_TAG_TREE).forEach((brand) => {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.textContent = brand;
-                btn.dataset.tag = brand;
-                btn.className = 'px-2.5 py-1 text-xs font-semibold rounded-full border';
-                btn.addEventListener('click', () => {
-                    const nowSelected = !selectedQuickTags.includes(brand);
-                    if (nowSelected) {
-                        selectedQuickTags = [...selectedQuickTags, brand];
-                    } else {
-                        const childSet = new Set(QUICK_TAG_TREE[brand]);
-                        selectedQuickTags = selectedQuickTags.filter((t) => t !== brand && !childSet.has(t));
-                    }
-                    renderQuickTagChipState(btn);
-                    renderQuickTagProducts();
-                });
-                renderQuickTagChipState(btn);
-                quickTagBrandsEl.appendChild(btn);
-            });
-
             const resetQuickTags = () => {
                 selectedQuickTags = [];
-                Array.from(quickTagBrandsEl.children).forEach(renderQuickTagChipState);
-                renderQuickTagProducts();
+                renderQuickCaptureTagPicker();
             };
-
             const setQuickTagsSelection = (tags) => {
                 selectedQuickTags = [...(tags || [])];
-                Array.from(quickTagBrandsEl.children).forEach(renderQuickTagChipState);
-                renderQuickTagProducts();
+                renderQuickCaptureTagPicker();
             };
-
-            // --- Add a custom tag; it always lands as a "product" under the "Other" brand ---
-            const quickAddTagBtn = document.getElementById('quick-add-tag-btn');
-            const quickAddTagForm = document.getElementById('quick-add-tag-form');
-            const quickNewTagInput = document.getElementById('quick-new-tag-input');
-            quickAddTagBtn.addEventListener('click', () => {
-                quickAddTagForm.classList.remove('hidden');
-                quickNewTagInput.focus();
-            });
-            const cancelQuickAddTag = () => {
-                quickAddTagForm.classList.add('hidden');
-                quickNewTagInput.value = '';
-            };
-            document.getElementById('quick-cancel-add-tag-btn').addEventListener('click', cancelQuickAddTag);
-            const confirmQuickAddTag = () => {
-                const tagName = quickNewTagInput.value.trim();
-                if (!tagName) { cancelQuickAddTag(); return; }
-                const exists = Object.values(QUICK_TAG_TREE).flat().some((t) => t.toLowerCase() === tagName.toLowerCase());
-                if (exists) {
-                    showToast('That tag already exists.');
-                    return;
-                }
-                quickCustomTags.push(tagName);
-                saveJSON(STORAGE_KEYS.quickCustomTags, quickCustomTags);
-                if (!selectedQuickTags.includes('Other')) selectedQuickTags = [...selectedQuickTags, 'Other'];
-                if (!selectedQuickTags.includes(tagName)) selectedQuickTags = [...selectedQuickTags, tagName];
-                Array.from(quickTagBrandsEl.children).forEach(renderQuickTagChipState);
-                renderQuickTagProducts();
-                cancelQuickAddTag();
-            };
-            document.getElementById('quick-confirm-add-tag-btn').addEventListener('click', confirmQuickAddTag);
-            quickNewTagInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') { e.preventDefault(); confirmQuickAddTag(); }
-            });
 
             let quickThumbUrls = [];
             let editingQuickCaptureId = null;
@@ -3847,6 +3658,17 @@
             const meetingPersonInput = document.getElementById('meeting-person');
             const meetingCompanyInput = document.getElementById('meeting-company');
             const meetingEventSelect = document.getElementById('meeting-event');
+            let selectedMeetingTags = [];
+            const meetingTagPickerEl = document.getElementById('meeting-tag-picker');
+            const renderMeetingTagPicker = () => {
+                renderTagPicker(meetingTagPickerEl, 'meetingNotes', selectedMeetingTags, (label) => {
+                    selectedMeetingTags = selectedMeetingTags.includes(label)
+                        ? selectedMeetingTags.filter((t) => t !== label)
+                        : [...selectedMeetingTags, label];
+                    renderMeetingTagPicker();
+                    scheduleMeetingAutosave();
+                });
+            };
             const meetingDateInput = document.getElementById('meeting-date');
             const meetingTimeInput = document.getElementById('meeting-time');
             const meetingPicInput = document.getElementById('meeting-pic-input');
@@ -4038,6 +3860,7 @@
                         if (entry.company) addLogLine(textLines, `Company: ${entry.company}`);
                         if (entry.meetingPrep) addLogLine(textLines, `Meeting Prep: ${entry.meetingPrep}`);
                         if (entry.notes) addLogLine(textLines, `Notes: ${entry.notes}`);
+                        if (entry.tags && entry.tags.length) addLogLine(textLines, `Tags: ${entry.tags.join(', ')}`);
 
                         if (entry.audioSegments && entry.audioSegments.length) {
                             // Each on/off period of audio capture logs its own capture line and transcription line.
@@ -4106,7 +3929,8 @@
                 meetingNotesField.get('notes').trim() || meetingNotesField.get('meetingPrep').trim()
                 || meetingSubjectInput.value.trim()
                 || meetingPersonInput.value.trim() || meetingCompanyInput.value.trim()
-                || audioTranscript.trim() || pendingMeetingAttachments.length > 0;
+                || audioTranscript.trim() || pendingMeetingAttachments.length > 0
+                || selectedMeetingTags.length > 0;
 
             const saveMeetingDraftNow = async () => {
                 clearTimeout(meetingAutosaveTimer);
@@ -4164,6 +3988,7 @@
                     audioSegments: audioSegments.slice(),
                     attachmentIds: pendingMeetingAttachments.map((att) => att.id),
                     eventId: meetingEventSelect.value || null,
+                    tags: selectedMeetingTags.slice(),
                 };
 
                 if (isNew) {
@@ -4212,6 +4037,8 @@
                 audioSegments = [];
                 document.getElementById('audio-transcript-box').value = '';
                 meetingEventSelect.value = getActiveEventId();
+                selectedMeetingTags = [];
+                renderMeetingTagPicker();
                 meetingSaveIndicator.textContent = '';
                 return hadDraft;
             };
@@ -4242,6 +4069,8 @@
                     audioSegments = [];
                     document.getElementById('audio-transcript-box').value = '';
                     meetingEventSelect.value = getActiveEventId();
+                    selectedMeetingTags = [];
+                    renderMeetingTagPicker();
                     meetingSaveIndicator.textContent = '';
                 }
 
@@ -4277,6 +4106,8 @@
                 meetingCompanyInput.value = entry.company || '';
                 meetingNotesField.setAll({ notes: entry.notes || '', meetingPrep: entry.meetingPrep || '' });
                 meetingEventSelect.value = entry.eventId || '';
+                selectedMeetingTags = (entry.tags || []).slice();
+                renderMeetingTagPicker();
                 audioTranscript = entry.audioTranscript || '';
                 audioSegments = (entry.audioSegments || []).slice();
                 document.getElementById('audio-transcript-box').value = audioTranscript;
@@ -4331,6 +4162,8 @@
                 audioSegments = [];
                 document.getElementById('audio-transcript-box').value = '';
                 meetingEventSelect.value = getActiveEventId();
+                selectedMeetingTags = [];
+                renderMeetingTagPicker();
                 meetingSaveIndicator.textContent = '';
             };
 
@@ -4341,6 +4174,16 @@
             const todoTaskInput = document.getElementById('todo-task');
             const todoDueInput = document.getElementById('todo-due');
             const todoEventSelect = document.getElementById('todo-event');
+            let selectedTodoTags = [];
+            const todoTagPickerEl = document.getElementById('todo-tag-picker');
+            const renderTodoTagPicker = () => {
+                renderTagPicker(todoTagPickerEl, 'todos', selectedTodoTags, (label) => {
+                    selectedTodoTags = selectedTodoTags.includes(label)
+                        ? selectedTodoTags.filter((t) => t !== label)
+                        : [...selectedTodoTags, label];
+                    renderTodoTagPicker();
+                });
+            };
             const todoListEl = document.getElementById('todo-list');
             const addTodoBtn = document.getElementById('add-todo-btn');
             let editingTodoId = null;
@@ -4352,6 +4195,8 @@
                 todoTaskInput.value = '';
                 todoDueInput.value = '';
                 todoEventSelect.value = getActiveEventId();
+                selectedTodoTags = [];
+                renderTodoTagPicker();
                 addTodoBtn.textContent = 'Add Follow-up';
                 renderTodoList();
             };
@@ -4365,6 +4210,8 @@
                 todoCompanyInput.value = todo.company || '';
                 todoDueInput.value = todo.due || '';
                 todoEventSelect.value = todo.eventId || '';
+                selectedTodoTags = (todo.tags || []).slice();
+                renderTodoTagPicker();
                 addTodoBtn.textContent = 'Update Follow-up';
                 todoTaskInput.focus();
                 renderTodoList();
@@ -4416,6 +4263,7 @@
                     const subLineParts = [];
                     if (todo.person || todo.company) subLineParts.push([todo.person, todo.company].filter(Boolean).join(' — '));
                     if (todo.due) subLineParts.push(`Due ${todo.due}`);
+                    if (todo.tags && todo.tags.length) subLineParts.push(todo.tags.join(', '));
                     textWrap.appendChild(taskLine);
                     if (subLineParts.length) {
                         const subLine = document.createElement('p');
@@ -4466,6 +4314,7 @@
                             company: todoCompanyInput.value.trim(),
                             due: todoDueInput.value,
                             eventId: todoEventSelect.value || null,
+                            tags: selectedTodoTags.slice(),
                         };
                     }
                     saveJSON(STORAGE_KEYS.todos, todoEntries);
@@ -4484,6 +4333,7 @@
                     due: todoDueInput.value,
                     done: false,
                     eventId: todoEventSelect.value || null,
+                    tags: selectedTodoTags.slice(),
                 });
                 saveJSON(STORAGE_KEYS.todos, todoEntries);
                 renderTodoList();
@@ -4493,6 +4343,8 @@
                 todoTaskInput.value = '';
                 todoDueInput.value = '';
                 todoEventSelect.value = getActiveEventId();
+                selectedTodoTags = [];
+                renderTodoTagPicker();
                 showToast('Follow-up added.');
                 return true;
             };
@@ -4816,6 +4668,366 @@
                 }
             });
 
+            // --- Tags Logic: one shared tag tree (not per-account) used to tag Contacts,
+            // Quick Captures, Meeting Notes, and Todos. See worker/src/index.js's "Shared
+            // tag tree" section for the server side. Entries store a tag by its label text
+            // (not its id), so renaming a tag never changes what's already saved on old
+            // entries. ---
+            let tagTree = loadJSON(STORAGE_KEYS.tagTreeCache, []);
+            let expandedTagIds = new Set(tagTree.filter((t) => !t.parentId).map((t) => t.id));
+            let draggedTagId = null;
+
+            const SHOW_ON_TABS = [
+                { key: 'contacts', label: 'Contact' },
+                { key: 'quickCaptures', label: 'Quick Capture' },
+                { key: 'meetingNotes', label: 'Meeting Notes' },
+                { key: 'todos', label: 'Todo' },
+            ];
+
+            const tagChildren = (parentId) => tagTree.filter((t) => t.parentId === parentId).sort((a, b) => a.sortOrder - b.sortOrder);
+            const findTag = (id) => tagTree.find((t) => t.id === id);
+            const isDescendantOf = (node, ancestorId) => {
+                let cur = node;
+                let hops = 0;
+                while (cur && cur.parentId && hops < 100) {
+                    if (cur.parentId === ancestorId) return true;
+                    cur = findTag(cur.parentId);
+                    hops += 1;
+                }
+                return false;
+            };
+
+            const loadTagsFromServer = async () => {
+                try {
+                    const res = await apiFetch('/tags');
+                    if (!res.ok) return;
+                    const body = await res.json();
+                    tagTree = body.tags || [];
+                    saveJSON(STORAGE_KEYS.tagTreeCache, tagTree);
+                    tagTree.filter((t) => !t.parentId).forEach((t) => expandedTagIds.add(t.id));
+                    renderTagsTree();
+                    renderContactTagPicker();
+                    renderQuickCaptureTagPicker();
+                    renderMeetingTagPicker();
+                    renderTodoTagPicker();
+                } catch (err) {
+                    console.error('Failed to load tags from server:', err);
+                }
+            };
+
+            // --- Tags tab: tree editor ---
+            const promptAddTag = async (parentId) => {
+                const label = prompt(parentId ? 'New tag name:' : 'New top-level category name:');
+                if (!label || !label.trim()) return;
+                try {
+                    const res = await apiFetch('/tags', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ label: label.trim(), parentId }),
+                    });
+                    if (!res.ok) {
+                        const body = await res.json().catch(() => ({}));
+                        showToast(body.error === 'forbidden' ? 'Only admins can add a new top-level category.' : 'Could not add that tag.');
+                        return;
+                    }
+                    await loadTagsFromServer();
+                    showToast('Tag added.');
+                } catch (err) {
+                    showToast('Could not reach the server.');
+                }
+            };
+
+            const promptRenameTag = async (node) => {
+                const label = prompt('Rename tag:', node.label);
+                if (!label || !label.trim() || label.trim() === node.label) return;
+                try {
+                    const res = await apiFetch(`/tags/${node.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ label: label.trim() }),
+                    });
+                    if (!res.ok) { showToast('Could not rename that tag.'); return; }
+                    await loadTagsFromServer();
+                } catch (err) {
+                    showToast('Could not reach the server.');
+                }
+            };
+
+            const reorderTag = async (node, direction) => {
+                const siblings = tagChildren(node.parentId);
+                const idx = siblings.findIndex((s) => s.id === node.id);
+                const swapIdx = idx + direction;
+                if (swapIdx < 0 || swapIdx >= siblings.length) return;
+                const other = siblings[swapIdx];
+                try {
+                    await apiFetch(`/tags/${node.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sortOrder: other.sortOrder }) });
+                    await apiFetch(`/tags/${other.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sortOrder: node.sortOrder }) });
+                    await loadTagsFromServer();
+                } catch (err) {
+                    showToast('Could not reorder — check your connection.');
+                }
+            };
+
+            const deleteTagNode = async (node) => {
+                const childCount = tagTree.filter((t) => isDescendantOf(t, node.id)).length;
+                const msg = childCount
+                    ? `Delete "${node.label}" and its ${childCount} nested tag${childCount === 1 ? '' : 's'}? This cannot be undone.`
+                    : `Delete "${node.label}"? This cannot be undone.`;
+                if (!confirm(msg)) return;
+                try {
+                    const res = await apiFetch(`/tags/${node.id}`, { method: 'DELETE' });
+                    if (!res.ok) { showToast('Could not delete that tag.'); return; }
+                    await loadTagsFromServer();
+                    showToast('Tag deleted.');
+                } catch (err) {
+                    showToast('Could not reach the server.');
+                }
+            };
+
+            const toggleShowOn = async (node, key, checked) => {
+                const current = new Set(node.showOn || []);
+                if (checked) current.add(key); else current.delete(key);
+                try {
+                    await apiFetch(`/tags/${node.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ showOn: [...current] }) });
+                    await loadTagsFromServer();
+                } catch (err) {
+                    showToast('Could not update — check your connection.');
+                }
+            };
+
+            const moveTagToParent = async (draggedId, newParentId) => {
+                if (draggedId === newParentId) return;
+                if (newParentId && isDescendantOf(findTag(newParentId), draggedId)) {
+                    showToast("Can't move a tag into its own descendant.");
+                    return;
+                }
+                try {
+                    const res = await apiFetch(`/tags/${draggedId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ parentId: newParentId }) });
+                    if (!res.ok) { showToast('Could not move that tag.'); return; }
+                    await loadTagsFromServer();
+                    showToast('Tag moved.');
+                } catch (err) {
+                    showToast('Could not reach the server.');
+                }
+            };
+
+            const renderTagNode = (node, container, depth) => {
+                const isAdmin = !!(currentAuth && currentAuth.user && currentAuth.user.isAdmin);
+                const children = tagChildren(node.id);
+                const hasChildren = children.length > 0;
+                const expanded = expandedTagIds.has(node.id);
+
+                const row = document.createElement('div');
+                row.className = 'flex flex-wrap items-center gap-1.5 py-1';
+                row.style.paddingLeft = `${depth * 1.1}rem`;
+
+                if (isAdmin) {
+                    row.draggable = true;
+                    row.addEventListener('dragstart', () => { draggedTagId = node.id; });
+                    row.addEventListener('dragover', (e) => { e.preventDefault(); row.classList.add('bg-blue-50'); });
+                    row.addEventListener('dragleave', () => row.classList.remove('bg-blue-50'));
+                    row.addEventListener('drop', async (e) => {
+                        e.preventDefault();
+                        row.classList.remove('bg-blue-50');
+                        if (draggedTagId && draggedTagId !== node.id) await moveTagToParent(draggedTagId, node.id);
+                        draggedTagId = null;
+                    });
+                }
+
+                const toggle = document.createElement('button');
+                toggle.type = 'button';
+                toggle.className = 'w-4 text-gray-400 text-xs flex-shrink-0';
+                toggle.textContent = hasChildren ? (expanded ? '▾' : '▸') : '';
+                toggle.addEventListener('click', () => {
+                    if (!hasChildren) return;
+                    if (expanded) expandedTagIds.delete(node.id); else expandedTagIds.add(node.id);
+                    renderTagsTree();
+                });
+                row.appendChild(toggle);
+
+                const labelEl = document.createElement('span');
+                labelEl.className = depth === 0 ? 'text-sm font-semibold text-gray-800' : 'text-sm text-gray-700';
+                labelEl.textContent = node.label;
+                row.appendChild(labelEl);
+
+                const actions = document.createElement('div');
+                actions.className = 'flex items-center gap-2 flex-shrink-0';
+
+                const addBtn = document.createElement('button');
+                addBtn.type = 'button';
+                addBtn.textContent = '+';
+                addBtn.title = 'Add a tag nested under this one';
+                addBtn.className = 'text-xs text-blue-600 hover:text-blue-800 w-5 h-5 flex items-center justify-center border border-blue-200 rounded';
+                addBtn.addEventListener('click', () => promptAddTag(node.id));
+                actions.appendChild(addBtn);
+
+                if (isAdmin) {
+                    const renameBtn = document.createElement('button');
+                    renameBtn.type = 'button';
+                    renameBtn.textContent = 'Rename';
+                    renameBtn.className = 'text-xs text-gray-500 hover:text-gray-700';
+                    renameBtn.addEventListener('click', () => promptRenameTag(node));
+                    actions.appendChild(renameBtn);
+
+                    const upBtn = document.createElement('button');
+                    upBtn.type = 'button';
+                    upBtn.textContent = '↑';
+                    upBtn.title = 'Move up';
+                    upBtn.className = 'text-xs text-gray-400 hover:text-gray-600';
+                    upBtn.addEventListener('click', () => reorderTag(node, -1));
+                    actions.appendChild(upBtn);
+
+                    const downBtn = document.createElement('button');
+                    downBtn.type = 'button';
+                    downBtn.textContent = '↓';
+                    downBtn.title = 'Move down';
+                    downBtn.className = 'text-xs text-gray-400 hover:text-gray-600';
+                    downBtn.addEventListener('click', () => reorderTag(node, 1));
+                    actions.appendChild(downBtn);
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.type = 'button';
+                    deleteBtn.textContent = 'Delete';
+                    deleteBtn.className = 'text-xs text-red-600 hover:text-red-800';
+                    deleteBtn.addEventListener('click', () => deleteTagNode(node));
+                    actions.appendChild(deleteBtn);
+                }
+                row.appendChild(actions);
+                container.appendChild(row);
+
+                if (depth === 0 && isAdmin) {
+                    const showOnWrap = document.createElement('div');
+                    showOnWrap.className = 'flex flex-wrap items-center gap-2 text-xs text-gray-500';
+                    showOnWrap.style.paddingLeft = `${(depth + 1) * 1.1}rem`;
+                    SHOW_ON_TABS.forEach(({ key, label }) => {
+                        const wrap = document.createElement('label');
+                        wrap.className = 'flex items-center gap-1';
+                        const cb = document.createElement('input');
+                        cb.type = 'checkbox';
+                        cb.checked = (node.showOn || []).includes(key);
+                        cb.addEventListener('change', () => toggleShowOn(node, key, cb.checked));
+                        wrap.append(cb, document.createTextNode(label));
+                        showOnWrap.appendChild(wrap);
+                    });
+                    container.appendChild(showOnWrap);
+                }
+
+                if (hasChildren && expanded) {
+                    children.forEach((child) => renderTagNode(child, container, depth + 1));
+                }
+            };
+
+            const renderTagsTree = () => {
+                const container = document.getElementById('tags-tree-container');
+                const isAdmin = !!(currentAuth && currentAuth.user && currentAuth.user.isAdmin);
+                container.innerHTML = '';
+
+                if (isAdmin) {
+                    const dropZone = document.createElement('div');
+                    dropZone.textContent = '⬍ Drop a tag here to make it a top-level category';
+                    dropZone.className = 'text-xs text-center text-gray-400 border-2 border-dashed border-gray-200 rounded-lg py-2';
+                    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('bg-blue-50'); });
+                    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('bg-blue-50'));
+                    dropZone.addEventListener('drop', async (e) => {
+                        e.preventDefault();
+                        dropZone.classList.remove('bg-blue-50');
+                        if (draggedTagId) { await moveTagToParent(draggedTagId, null); draggedTagId = null; }
+                    });
+                    container.appendChild(dropZone);
+                }
+
+                const roots = tagChildren(null);
+                if (!roots.length) {
+                    const empty = document.createElement('p');
+                    empty.className = 'text-sm text-gray-400';
+                    empty.textContent = 'No tags yet.';
+                    container.appendChild(empty);
+                } else {
+                    roots.forEach((root) => renderTagNode(root, container, 0));
+                }
+
+                document.getElementById('tags-admin-add-category').classList.toggle('hidden', !isAdmin);
+                document.getElementById('tags-admin-note').textContent = isAdmin ? 'you (as an admin)' : 'only admins';
+            };
+
+            document.getElementById('add-category-btn').addEventListener('click', async () => {
+                const input = document.getElementById('new-category-input');
+                const label = input.value.trim();
+                if (!label) return;
+                try {
+                    const res = await apiFetch('/tags', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ label, parentId: null }),
+                    });
+                    if (!res.ok) { showToast('Could not add that category.'); return; }
+                    input.value = '';
+                    await loadTagsFromServer();
+                    showToast('Category added.');
+                } catch (err) {
+                    showToast('Could not reach the server.');
+                }
+            });
+
+            // --- Generic tag picker, reused by Contact/Quick Capture/Meeting Notes/Todo ---
+            // Selection is tracked as an array of tag LABELS (matching how entries already
+            // store `.tags`), not ids. `onToggle` is called with the clicked label; the
+            // caller owns the selection array and re-renders via its own wrapper function.
+            const renderTagPicker = (container, tabKey, selectedLabels, onToggle) => {
+                container.innerHTML = '';
+                const roots = tagChildren(null).filter((r) => (r.showOn || []).includes(tabKey));
+                if (!roots.length) {
+                    container.innerHTML = '<p class="text-xs text-gray-400">No tag categories are set up for this tab yet — add some on the Tags page.</p>';
+                    return;
+                }
+
+                const renderPickerNode = (node, depth) => {
+                    if (depth === 0) {
+                        const heading = document.createElement('div');
+                        heading.className = 'text-xs font-semibold text-gray-500 mt-2 mb-1 first:mt-0';
+                        heading.textContent = node.label;
+                        container.appendChild(heading);
+                    } else {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        const active = selectedLabels.includes(node.label);
+                        btn.textContent = node.label;
+                        btn.className = `px-2.5 py-1 text-xs font-medium rounded-full border mr-1.5 mb-1.5 ${active ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`;
+                        btn.addEventListener('click', () => onToggle(node.label));
+                        container.appendChild(btn);
+                    }
+                    tagChildren(node.id).forEach((child) => renderPickerNode(child, depth + 1));
+                };
+                roots.forEach((root) => renderPickerNode(root, 0));
+
+                const addBtn = document.createElement('button');
+                addBtn.type = 'button';
+                addBtn.textContent = '+ Add tag';
+                addBtn.className = 'block mt-1 text-xs text-blue-600 hover:underline';
+                addBtn.addEventListener('click', async () => {
+                    const label = prompt('New tag name:');
+                    if (!label || !label.trim()) return;
+                    let root = roots[0];
+                    if (roots.length > 1) {
+                        const choice = prompt(`Which category?\n${roots.map((r) => r.label).join(', ')}`, roots[0].label);
+                        root = roots.find((r) => r.label.toLowerCase() === (choice || '').trim().toLowerCase()) || roots[0];
+                    }
+                    try {
+                        const res = await apiFetch('/tags', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ label: label.trim(), parentId: root.id }),
+                        });
+                        if (!res.ok) { showToast('Could not add that tag.'); return; }
+                        await loadTagsFromServer();
+                        onToggle(label.trim());
+                    } catch (err) {
+                        showToast('Could not reach the server.');
+                    }
+                });
+                container.appendChild(addBtn);
+            };
+
             renderActivityLog();
             renderQuestionLog();
             renderContactLog();
@@ -4824,6 +5036,11 @@
             renderTodoList();
             renderEventsLog();
             refreshEventSelects();
+            renderTagsTree();
+            renderContactTagPicker();
+            renderQuickCaptureTagPicker();
+            renderMeetingTagPicker();
+            renderTodoTagPicker();
 
             // --- Export / Clear Logic ---
             const toCSVValue = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
@@ -4875,16 +5092,16 @@
 
             document.getElementById('export-meeting-csv-btn').addEventListener('click', () => {
                 if (!meetingNoteEntries.length) { showToast('No meeting notes yet.'); return; }
-                const headers = ['Timestamp', 'Subject', 'Person', 'Company', 'Meeting Prep', 'Notes', 'Audio Transcript', 'Audio Segments', 'Attachments'];
+                const headers = ['Timestamp', 'Subject', 'Person', 'Company', 'Meeting Prep', 'Notes', 'Tags', 'Audio Transcript', 'Audio Segments', 'Attachments'];
                 const formatSegments = (segs) => (segs || []).map((s) => `[${s.start}–${s.end}] ${s.text}`).join(' | ');
-                const rows = meetingNoteEntries.map((e) => [e.timestamp, e.subject, e.person, e.company, e.meetingPrep, e.notes, e.audioTranscript, formatSegments(e.audioSegments), (e.attachmentIds || []).length].map(toCSVValue).join(','));
+                const rows = meetingNoteEntries.map((e) => [e.timestamp, e.subject, e.person, e.company, e.meetingPrep, e.notes, (e.tags || []).join('; '), e.audioTranscript, formatSegments(e.audioSegments), (e.attachmentIds || []).length].map(toCSVValue).join(','));
                 downloadFile(`meeting-notes-${Date.now()}.csv`, [headers.join(','), ...rows].join('\n'), 'text/csv');
             });
 
             document.getElementById('export-todo-csv-btn').addEventListener('click', () => {
                 if (!todoEntries.length) { showToast('No follow-ups yet.'); return; }
-                const headers = ['Timestamp', 'Task', 'Person', 'Company', 'Due', 'Done'];
-                const rows = todoEntries.map((e) => [e.timestamp, e.task, e.person, e.company, e.due, e.done ? 'Yes' : 'No'].map(toCSVValue).join(','));
+                const headers = ['Timestamp', 'Task', 'Person', 'Company', 'Due', 'Tags', 'Done'];
+                const rows = todoEntries.map((e) => [e.timestamp, e.task, e.person, e.company, e.due, (e.tags || []).join('; '), e.done ? 'Yes' : 'No'].map(toCSVValue).join(','));
                 downloadFile(`todos-${Date.now()}.csv`, [headers.join(','), ...rows].join('\n'), 'text/csv');
             });
 
@@ -4993,6 +5210,8 @@
                     audioTranscript = '';
                     audioSegments = [];
                     document.getElementById('audio-transcript-box').value = '';
+                    selectedMeetingTags = [];
+                    renderMeetingTagPicker();
                     meetingSaveIndicator.textContent = '';
                 }
                 todoEntries = [];

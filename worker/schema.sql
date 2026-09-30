@@ -50,3 +50,24 @@ CREATE TABLE IF NOT EXISTS media (
 );
 
 CREATE INDEX IF NOT EXISTS idx_media_user_updated ON media(user_id, updated_at);
+
+-- Shared tag tree — NOT scoped per account, unlike every table above. One
+-- hierarchy for the whole team, used to tag Contacts/Quick Captures/Meeting
+-- Notes/Todos. parent_id = NULL means a top-level category (e.g. "People",
+-- "Companies", "Products"); nesting under those is unlimited. `show_on` (a
+-- JSON array of tab keys, only meaningful on a top-level category) controls
+-- which of the four tabs' tag pickers offer that category. Any account can
+-- add a node; only is_admin accounts can rename/move/reorder/delete one —
+-- enforced in the Worker, not by this schema.
+CREATE TABLE IF NOT EXISTS tags (
+  id TEXT PRIMARY KEY,
+  label TEXT NOT NULL,
+  parent_id TEXT,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  show_on TEXT,              -- JSON array, e.g. '["contacts","quickCaptures"]'
+  created_by TEXT,
+  updated_at INTEGER NOT NULL,
+  deleted_at INTEGER
+);
+
+CREATE INDEX IF NOT EXISTS idx_tags_parent ON tags(parent_id);
