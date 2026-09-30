@@ -184,6 +184,9 @@
                 <button class="hidden tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab2">
                     Survey
                 </button>
+                <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab9">
+                    Events
+                </button>
                 <button class="tab-btn flex-shrink-0 whitespace-nowrap py-2.5 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tab4">
                     User
                 </button>
@@ -432,6 +435,13 @@
                     </div>
                 </div>
 
+                <div>
+                    <label for="contact-event" class="block text-sm font-medium text-gray-700">Event <span class="text-gray-400 font-normal">(optional)</span></label>
+                    <select id="contact-event" class="mt-1 w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 event-select">
+                        <option value="">No Event</option>
+                    </select>
+                </div>
+
                 <div id="contact-editing-banner" class="hidden flex items-center justify-between text-sm bg-blue-50 text-blue-700 px-3 py-2 rounded-lg">
                     <span>Editing this contact — saving will update it.</span>
                     <button type="button" id="cancel-contact-edit-btn" class="text-blue-700 font-medium hover:underline">Cancel</button>
@@ -504,6 +514,13 @@
                         <button type="button" id="quick-confirm-add-tag-btn" class="px-2 py-1 text-xs font-medium text-blue-600 border border-blue-600 rounded hover:bg-blue-50">Add</button>
                         <button type="button" id="quick-cancel-add-tag-btn" class="px-2 py-1 text-xs text-gray-500 hover:underline">Cancel</button>
                     </div>
+                </div>
+
+                <div>
+                    <label for="quick-event" class="block text-sm font-medium text-gray-700">Event <span class="text-gray-400 font-normal">(optional)</span></label>
+                    <select id="quick-event" class="mt-1 w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 event-select">
+                        <option value="">No Event</option>
+                    </select>
                 </div>
 
                 <div class="pt-2">
@@ -613,6 +630,13 @@
                     <div id="meeting-attach-preview" class="mt-2 flex flex-wrap gap-2"></div>
                 </div>
 
+                <div>
+                    <label for="meeting-event" class="block text-sm font-medium text-gray-700">Event <span class="text-gray-400 font-normal">(optional)</span></label>
+                    <select id="meeting-event" class="mt-1 w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 event-select">
+                        <option value="">No Event</option>
+                    </select>
+                </div>
+
                 <!-- Meeting Log: a compact, always-visible scrolling feed — stays a few lines tall,
                      auto-scrolls so the newest line is in view as older ones scroll out of sight. -->
                 <div>
@@ -656,6 +680,12 @@
                     <label for="todo-due" class="block text-sm font-medium text-gray-700">Due Date <span class="text-gray-400 font-normal">(optional)</span></label>
                     <input type="date" id="todo-due" name="todo_due" class="mt-1 w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out">
                 </div>
+                <div>
+                    <label for="todo-event" class="block text-sm font-medium text-gray-700">Event <span class="text-gray-400 font-normal">(optional)</span></label>
+                    <select id="todo-event" class="mt-1 w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 event-select">
+                        <option value="">No Event</option>
+                    </select>
+                </div>
                 <div class="pt-2">
                     <button type="button" id="add-todo-btn" class="w-full px-4 py-2 font-semibold text-blue-600 bg-white border border-blue-600 rounded-lg hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
                         Add Follow-up
@@ -664,6 +694,56 @@
                 <div class="pt-4">
                     <label class="block text-sm font-medium text-gray-700">Follow-ups</label>
                     <div id="todo-list" class="mt-2 space-y-2"></div>
+                </div>
+            </div>
+
+            <!-- Tab 9 Content: Events -->
+            <div id="tab9" class="tab-content space-y-6">
+                <div>
+                    <label for="event-name" class="block text-sm font-medium text-gray-700">Event Name</label>
+                    <div class="mt-1 relative">
+                        <input type="text" id="event-name" class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="e.g., Medtrade 2026">
+                        <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="event-name" aria-label="Use microphone for Event Name">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label for="event-type" class="block text-sm font-medium text-gray-700">Event Type</label>
+                    <input type="text" id="event-type" list="event-type-list" class="mt-1 w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="Select or type a type...">
+                </div>
+                <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-6 sm:space-y-0">
+                    <div class="w-full sm:w-1/2">
+                        <label for="event-start-date" class="block text-sm font-medium text-gray-700">Start Date</label>
+                        <input type="date" id="event-start-date" class="mt-1 w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div class="w-full sm:w-1/2">
+                        <label for="event-end-date" class="block text-sm font-medium text-gray-700">End Date <span class="text-gray-400 font-normal">(same day if blank)</span></label>
+                        <input type="date" id="event-end-date" class="mt-1 w-full px-4 py-2 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label for="event-address" class="block text-sm font-medium text-gray-700">Location <span class="text-gray-400 font-normal">(optional)</span></label>
+                    <div class="mt-1 relative">
+                        <input type="text" id="event-address" class="w-full px-4 py-2 pr-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" placeholder="Address, venue, or city">
+                        <button type="button" class="mic-btn absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" data-target="event-address" aria-label="Use microphone for Location">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/><path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/></svg>
+                        </button>
+                    </div>
+                    <div class="mt-2 flex gap-2">
+                        <button type="button" id="event-use-location-btn" class="px-3 py-1.5 text-xs font-medium text-blue-600 bg-white border border-blue-600 rounded-lg hover:bg-blue-50">Use Current Location</button>
+                        <button type="button" id="event-open-map-btn" class="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Pick on Map</button>
+                    </div>
+                    <p id="event-location-status" class="mt-1 text-xs text-gray-400"></p>
+                </div>
+                <div class="pt-2">
+                    <button type="button" id="add-event-btn" class="w-full px-4 py-2 font-semibold text-blue-600 bg-white border border-blue-600 rounded-lg hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                        Add Event
+                    </button>
+                </div>
+                <div class="pt-4">
+                    <label class="block text-sm font-medium text-gray-700">Events</label>
+                    <div id="event-log" class="mt-2 h-64 overflow-y-auto border border-gray-200 rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-600 leading-6"></div>
                 </div>
             </div>
 
@@ -767,6 +847,7 @@
                         <label class="flex items-center gap-1.5"><input type="checkbox" class="sync-category-cb" data-sync-type="quickCaptures" checked> Quick Captures</label>
                         <label class="flex items-center gap-1.5"><input type="checkbox" class="sync-category-cb" data-sync-type="meetingNotes" checked> Meeting Notes</label>
                         <label class="flex items-center gap-1.5"><input type="checkbox" class="sync-category-cb" data-sync-type="todos" checked> Todos</label>
+                        <label class="flex items-center gap-1.5"><input type="checkbox" class="sync-category-cb" data-sync-type="events" checked> Events</label>
                         <label class="flex items-center gap-1.5 col-span-2"><input type="checkbox" class="sync-category-cb" data-sync-type="media" checked> Photos &amp; Audio (push only, either button)</label>
                     </div>
                     <div class="mt-2 flex items-center gap-2 flex-wrap">
@@ -786,6 +867,7 @@
                             <option value="export-quick-csv-btn">Export Quick Captures CSV</option>
                             <option value="export-meeting-csv-btn">Export Meeting Notes CSV</option>
                             <option value="export-todo-csv-btn">Export Todos CSV</option>
+                            <option value="export-events-csv-btn">Export Events CSV</option>
                             <option value="export-json-btn">Export All (JSON)</option>
                             <option value="export-photos-zip-btn">Export Photos (ZIP)</option>
                         </select>
@@ -799,6 +881,7 @@
                         <button type="button" id="export-quick-csv-btn">Export Quick Captures CSV</button>
                         <button type="button" id="export-meeting-csv-btn">Export Meeting Notes CSV</button>
                         <button type="button" id="export-todo-csv-btn">Export Todos CSV</button>
+                        <button type="button" id="export-events-csv-btn">Export Events CSV</button>
                         <button type="button" id="export-json-btn">Export All (JSON)</button>
                         <button type="button" id="export-photos-zip-btn">Export Photos (ZIP)</button>
                     </div>
@@ -872,6 +955,14 @@
             
         </form>
         <!-- Datalists -->
+        <datalist id="event-type-list">
+            <option value="Tradeshow">
+            <option value="Inservice">
+            <option value="Rep Visit">
+            <option value="Dealer Visit">
+            <option value="Seminar">
+            <option value="Call">
+        </datalist>
         <datalist id="subject-list">
             <option data-category="Demos" value="AMI Sample Sales">
             <option data-category="Service" value="AMI Installation">
@@ -999,6 +1090,19 @@
         </div>
     </div>
 
+    <!-- Map Picker Modal (Event location — Leaflet is loaded lazily on first open) -->
+    <div id="map-picker-modal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center p-4">
+        <div class="w-full max-w-lg bg-white rounded-xl shadow-lg p-4 space-y-3">
+            <div class="flex justify-between items-center">
+                <h2 class="text-base font-bold text-gray-800">Pick a Location</h2>
+                <button type="button" id="map-picker-close-btn" class="text-gray-400 hover:text-gray-600 text-xl leading-none" aria-label="Close">&times;</button>
+            </div>
+            <p class="text-xs text-gray-500">Tap or drag the pin to set the exact spot.</p>
+            <div id="map-picker-container" style="height: 320px;" class="rounded-lg overflow-hidden border border-gray-200 bg-gray-100"></div>
+            <button type="button" id="map-picker-confirm-btn" class="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">Use This Location</button>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
     <div id="toast-notification"></div>
 
@@ -1019,6 +1123,7 @@
                 quickCaptures: 'ff_quick_captures',
                 meetingNotes: 'ff_meeting_notes',
                 todos: 'ff_todos',
+                events: 'ff_events',
                 auth: 'ff_auth',
                 syncSettings: 'ff_sync_settings',
                 quickCustomTags: 'ff_quick_custom_tags',
@@ -1203,6 +1308,7 @@
             let quickCaptureEntries = loadJSON(STORAGE_KEYS.quickCaptures, []);
             let meetingNoteEntries = loadJSON(STORAGE_KEYS.meetingNotes, []);
             let todoEntries = loadJSON(STORAGE_KEYS.todos, []);
+            let eventEntries = loadJSON(STORAGE_KEYS.events, []);
             let audioTranscript = '';
             let audioSegments = []; // each on/off period logged separately: {start, end, text}
             let audioCaptureOn = false;
@@ -1281,6 +1387,7 @@
                 quickCaptures: () => quickCaptureEntries,
                 meetingNotes: () => meetingNoteEntries,
                 todos: () => todoEntries,
+                events: () => eventEntries,
             };
 
             // How Sync's pull phase adds/removes an entry for each type, and which log
@@ -1312,17 +1419,21 @@
                     remove: (id) => { todoEntries = todoEntries.filter((e) => e.id !== id); saveJSON(STORAGE_KEYS.todos, todoEntries); },
                     add: (data) => { todoEntries.push(data); saveJSON(STORAGE_KEYS.todos, todoEntries); },
                 },
+                events: {
+                    remove: (id) => { eventEntries = eventEntries.filter((e) => e.id !== id); saveJSON(STORAGE_KEYS.events, eventEntries); },
+                    add: (data) => { eventEntries.push(data); saveJSON(STORAGE_KEYS.events, eventEntries); },
+                },
             };
 
             const defaultSyncSettings = () => ({
-                categories: { feedback: true, qa: true, contacts: true, quickCaptures: true, meetingNotes: true, todos: true, media: true },
+                categories: { feedback: true, qa: true, contacts: true, quickCaptures: true, meetingNotes: true, todos: true, events: true, media: true },
                 lastSyncAt: null,
                 syncedMediaIds: [],
                 // Ids deleted on this device (per type) while a server copy might still
                 // exist — see markLocallyDeleted. Sync uses this both to avoid silently
                 // re-pulling something you just removed, and to know what to offer
                 // deleting from the server (with confirmation) next time it runs.
-                deletedIds: { feedback: [], qa: [], contacts: [], quickCaptures: [], meetingNotes: [], todos: [] },
+                deletedIds: { feedback: [], qa: [], contacts: [], quickCaptures: [], meetingNotes: [], todos: [], events: [] },
             });
             let syncSettings = { ...defaultSyncSettings(), ...loadJSON(STORAGE_KEYS.syncSettings, {}) };
             syncSettings.categories = { ...defaultSyncSettings().categories, ...(syncSettings.categories || {}) };
@@ -1546,6 +1657,7 @@
                 quickCaptures: 'Quick Capture',
                 meetingNotes: 'Meeting Note',
                 todos: 'Follow-up',
+                events: 'Event',
             };
             const SHARE_FIELD_SKIP = new Set(['id', 'ts', 'attachmentIds', 'cardPhotoId', 'sharedFrom']);
             const prettifyFieldKey = (key) => key.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase());
@@ -1559,6 +1671,11 @@
                 Object.entries(entry).forEach(([key, value]) => {
                     if (SHARE_FIELD_SKIP.has(key)) return;
                     if (value === undefined || value === null || value === '') return;
+                    if (key === 'eventId') {
+                        const ev = eventEntries.find((e) => e.id === value);
+                        if (ev) lines.push(`Event: ${eventOptionLabel(ev)}`);
+                        return;
+                    }
                     if (Array.isArray(value)) {
                         if (!value.length) return;
                         if (key === 'audioSegments') {
@@ -2068,6 +2185,11 @@
             const formatTodoActivityEntry = (entry) =>
                 `Follow-up — ${entry.task}${entry.person || entry.company ? ` (${[entry.person, entry.company].filter(Boolean).join(' — ')})` : ''}${entry.due ? ` — due ${entry.due}` : ''}`;
 
+            const formatEventActivityEntry = (entry) => {
+                const dateLabel = entry.startDate === entry.endDate ? entry.startDate : `${entry.startDate} – ${entry.endDate}`;
+                return `Event — ${entry.name || '(untitled)'}${entry.type ? ` (${entry.type})` : ''} — ${dateLabel}${entry.address ? ` @ ${entry.address}` : ''}`;
+            };
+
             // A unified, chronological feed across every tab's log — each source array is
             // mapped to {ts, timestamp, text} so they can be merged and sorted together.
             // Legacy entries saved before the `ts` field existed fall back to parsing the
@@ -2084,6 +2206,7 @@
                     ...quickCaptureEntries.map((e) => ({ ts: activityTs(e), timestamp: e.timestamp, text: formatQuickActivityEntry(e) })),
                     ...meetingNoteEntries.map((e) => ({ ts: activityTs(e), timestamp: e.timestamp, text: formatMeetingActivityEntry(e) })),
                     ...todoEntries.map((e) => ({ ts: activityTs(e), timestamp: e.timestamp, text: formatTodoActivityEntry(e) })),
+                    ...eventEntries.map((e) => ({ ts: activityTs(e), timestamp: e.timestamp, text: formatEventActivityEntry(e) })),
                 ];
                 items.sort((a, b) => a.ts - b.ts);
 
@@ -2155,6 +2278,7 @@
 
             // --- Contact Logic (manual entry + business card / badge scan) ---
             const contactNameInput = document.getElementById('contact-name');
+            const contactEventSelect = document.getElementById('contact-event');
             const contactCompanyInput = document.getElementById('contact-company');
             const contactPhoneInput = document.getElementById('contact-phone');
             const contactTitleInput = document.getElementById('contact-title');
@@ -2403,6 +2527,7 @@
                 selectedContactTags = [];
                 renderContactTagButtons();
                 resetCardScan();
+                contactEventSelect.value = getActiveEventId();
             };
 
             const startEditContact = (id) => {
@@ -2420,6 +2545,7 @@
                 contactNotesInput.value = entry.notes || '';
                 selectedContactTags = (entry.tags || []).slice();
                 renderContactTagButtons();
+                contactEventSelect.value = entry.eventId || '';
                 contactEditingBanner.classList.remove('hidden');
                 saveContactBtn.textContent = 'Update Contact';
                 contactNameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -2473,7 +2599,7 @@
                     return false;
                 }
 
-                const fields = { ts: Date.now(), name, title, company, phone, mobile, email, email2, website, address, country, tags, notes };
+                const fields = { ts: Date.now(), name, title, company, phone, mobile, email, email2, website, address, country, tags, notes, eventId: contactEventSelect.value || null };
 
                 // The card photo (if one was just captured/scanned) is only written to
                 // IndexedDB now, at save time — not while still just being previewed/scanned.
@@ -3210,6 +3336,7 @@
 
             // --- Quick Capture Logic (zero required fields — fastest possible entry) ---
             const quickCaptureText = document.getElementById('quick-capture-text');
+            const quickEventSelect = document.getElementById('quick-event');
             const quickCaptureLog = document.getElementById('quick-capture-log');
             const quickPicInput = document.getElementById('quick-pic-input');
             const quickDocInput = document.getElementById('quick-doc-input');
@@ -3581,6 +3708,7 @@
                 pendingQuickAttachments.forEach((att) => URL.revokeObjectURL(att.previewUrl));
                 pendingQuickAttachments = [];
                 renderPendingQuickAttachments();
+                quickEventSelect.value = getActiveEventId();
                 quickCaptureBtn.textContent = 'Capture';
                 renderQuickCaptureLog();
             };
@@ -3591,6 +3719,7 @@
                 editingQuickCaptureId = id;
                 quickCaptureText.value = entry.text || '';
                 setQuickTagsSelection(entry.tags || []);
+                quickEventSelect.value = entry.eventId || '';
                 quickCaptureBtn.textContent = 'Update Capture';
                 quickCaptureText.focus();
                 renderQuickCaptureLog();
@@ -3653,6 +3782,7 @@
                             text,
                             tags,
                             attachmentIds: [...(quickCaptureEntries[idx].attachmentIds || []), ...pendingQuickAttachments.map((att) => att.id)],
+                            eventId: quickEventSelect.value || null,
                         };
                     }
                     saveJSON(STORAGE_KEYS.quickCaptures, quickCaptureEntries);
@@ -3667,6 +3797,7 @@
                         text,
                         tags,
                         attachmentIds: pendingQuickAttachments.map((att) => att.id),
+                        eventId: quickEventSelect.value || null,
                     });
                     saveJSON(STORAGE_KEYS.quickCaptures, quickCaptureEntries);
                     showToast('Captured.');
@@ -3682,6 +3813,7 @@
                 quickDocInput.value = '';
                 quickDocScanStatus.textContent = '';
                 renderPendingQuickAttachments();
+                quickEventSelect.value = getActiveEventId();
 
                 return true;
             };
@@ -3704,6 +3836,7 @@
             const meetingSubjectInput = document.getElementById('meeting-subject');
             const meetingPersonInput = document.getElementById('meeting-person');
             const meetingCompanyInput = document.getElementById('meeting-company');
+            const meetingEventSelect = document.getElementById('meeting-event');
             const meetingDateInput = document.getElementById('meeting-date');
             const meetingTimeInput = document.getElementById('meeting-time');
             const meetingPicInput = document.getElementById('meeting-pic-input');
@@ -4020,6 +4153,7 @@
                     audioTranscript: audioTranscript.trim(),
                     audioSegments: audioSegments.slice(),
                     attachmentIds: pendingMeetingAttachments.map((att) => att.id),
+                    eventId: meetingEventSelect.value || null,
                 };
 
                 if (isNew) {
@@ -4043,7 +4177,7 @@
             [meetingNotesText, meetingSubjectInput, meetingPersonInput, meetingCompanyInput].forEach((el) => {
                 el.addEventListener('input', scheduleMeetingAutosave);
             });
-            [meetingDateInput, meetingTimeInput].forEach((el) => {
+            [meetingDateInput, meetingTimeInput, meetingEventSelect].forEach((el) => {
                 el.addEventListener('change', scheduleMeetingAutosave);
             });
 
@@ -4067,6 +4201,7 @@
                 audioTranscript = '';
                 audioSegments = [];
                 document.getElementById('audio-transcript-box').value = '';
+                meetingEventSelect.value = getActiveEventId();
                 meetingSaveIndicator.textContent = '';
                 return hadDraft;
             };
@@ -4096,6 +4231,7 @@
                     audioTranscript = '';
                     audioSegments = [];
                     document.getElementById('audio-transcript-box').value = '';
+                    meetingEventSelect.value = getActiveEventId();
                     meetingSaveIndicator.textContent = '';
                 }
 
@@ -4130,6 +4266,7 @@
                 meetingPersonInput.value = entry.person || '';
                 meetingCompanyInput.value = entry.company || '';
                 meetingNotesField.setAll({ notes: entry.notes || '', meetingPrep: entry.meetingPrep || '' });
+                meetingEventSelect.value = entry.eventId || '';
                 audioTranscript = entry.audioTranscript || '';
                 audioSegments = (entry.audioSegments || []).slice();
                 document.getElementById('audio-transcript-box').value = audioTranscript;
@@ -4183,6 +4320,7 @@
                 audioTranscript = '';
                 audioSegments = [];
                 document.getElementById('audio-transcript-box').value = '';
+                meetingEventSelect.value = getActiveEventId();
                 meetingSaveIndicator.textContent = '';
             };
 
@@ -4192,6 +4330,7 @@
             const todoCompanyInput = document.getElementById('todo-company');
             const todoTaskInput = document.getElementById('todo-task');
             const todoDueInput = document.getElementById('todo-due');
+            const todoEventSelect = document.getElementById('todo-event');
             const todoListEl = document.getElementById('todo-list');
             const addTodoBtn = document.getElementById('add-todo-btn');
             let editingTodoId = null;
@@ -4202,6 +4341,7 @@
                 todoCompanyInput.value = '';
                 todoTaskInput.value = '';
                 todoDueInput.value = '';
+                todoEventSelect.value = getActiveEventId();
                 addTodoBtn.textContent = 'Add Follow-up';
                 renderTodoList();
             };
@@ -4214,6 +4354,7 @@
                 todoPersonInput.value = todo.person || '';
                 todoCompanyInput.value = todo.company || '';
                 todoDueInput.value = todo.due || '';
+                todoEventSelect.value = todo.eventId || '';
                 addTodoBtn.textContent = 'Update Follow-up';
                 todoTaskInput.focus();
                 renderTodoList();
@@ -4314,6 +4455,7 @@
                             person: todoPersonInput.value.trim(),
                             company: todoCompanyInput.value.trim(),
                             due: todoDueInput.value,
+                            eventId: todoEventSelect.value || null,
                         };
                     }
                     saveJSON(STORAGE_KEYS.todos, todoEntries);
@@ -4331,6 +4473,7 @@
                     company: todoCompanyInput.value.trim(),
                     due: todoDueInput.value,
                     done: false,
+                    eventId: todoEventSelect.value || null,
                 });
                 saveJSON(STORAGE_KEYS.todos, todoEntries);
                 renderTodoList();
@@ -4339,11 +4482,323 @@
                 todoCompanyInput.value = '';
                 todoTaskInput.value = '';
                 todoDueInput.value = '';
+                todoEventSelect.value = getActiveEventId();
                 showToast('Follow-up added.');
                 return true;
             };
 
             addTodoBtn.addEventListener('click', addTodo);
+
+            // --- Events Logic ---
+            // Any event whose date range includes today is the "active" event — new
+            // entries on the other four tabs default to it (see EVENT_SELECT_IDS below),
+            // but each entry's dropdown can always be changed before saving.
+            const eventOptionLabel = (ev) => {
+                const dateLabel = ev.startDate === ev.endDate ? ev.startDate : `${ev.startDate} – ${ev.endDate}`;
+                return `${ev.name || '(untitled)'} — ${dateLabel}`;
+            };
+
+            const getActiveEventId = () => {
+                const today = new Date().toISOString().split('T')[0];
+                const matches = eventEntries.filter((ev) => ev.startDate <= today && today <= ev.endDate);
+                if (!matches.length) return '';
+                return matches.slice().sort((a, b) => b.ts - a.ts)[0].id;
+            };
+
+            // Only called on load and whenever the events list itself changes (add/edit/
+            // delete an event) — NOT after every entry save, so a manually-picked event on
+            // e.g. Quick Capture persists across consecutive captures instead of resetting
+            // each time.
+            const EVENT_SELECT_IDS = ['contact-event', 'quick-event', 'meeting-event', 'todo-event'];
+            const refreshEventSelects = () => {
+                const activeId = getActiveEventId();
+                const sorted = eventEntries.slice().sort((a, b) => b.startDate.localeCompare(a.startDate));
+                EVENT_SELECT_IDS.forEach((id) => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    el.innerHTML = '<option value="">No Event</option>';
+                    sorted.forEach((ev) => {
+                        const opt = document.createElement('option');
+                        opt.value = ev.id;
+                        opt.textContent = eventOptionLabel(ev);
+                        el.appendChild(opt);
+                    });
+                    el.value = activeId;
+                });
+            };
+
+            const eventNameInput = document.getElementById('event-name');
+            const eventTypeInput = document.getElementById('event-type');
+            const eventStartDateInput = document.getElementById('event-start-date');
+            const eventEndDateInput = document.getElementById('event-end-date');
+            const eventAddressInput = document.getElementById('event-address');
+            const eventLocationStatus = document.getElementById('event-location-status');
+            const eventLog = document.getElementById('event-log');
+            const addEventBtn = document.getElementById('add-event-btn');
+            let editingEventId = null;
+            let pendingEventLatLng = null; // { lat, lng } from geolocation or the map picker
+
+            // Convenience default for the common single-day case — never overrides an
+            // end date the user already set to something later.
+            eventStartDateInput.addEventListener('change', () => {
+                if (!eventEndDateInput.value || eventEndDateInput.value < eventStartDateInput.value) {
+                    eventEndDateInput.value = eventStartDateInput.value;
+                }
+            });
+
+            const cancelEventEdit = () => {
+                editingEventId = null;
+                eventNameInput.value = '';
+                eventTypeInput.value = '';
+                eventStartDateInput.value = '';
+                eventEndDateInput.value = '';
+                eventAddressInput.value = '';
+                pendingEventLatLng = null;
+                eventLocationStatus.textContent = '';
+                addEventBtn.textContent = 'Add Event';
+                renderEventsLog();
+            };
+
+            const startEditEvent = (id) => {
+                const ev = eventEntries.find((e) => e.id === id);
+                if (!ev) return;
+                editingEventId = id;
+                eventNameInput.value = ev.name || '';
+                eventTypeInput.value = ev.type || '';
+                eventStartDateInput.value = ev.startDate || '';
+                eventEndDateInput.value = ev.endDate || '';
+                eventAddressInput.value = ev.address || '';
+                pendingEventLatLng = (ev.lat != null && ev.lng != null) ? { lat: ev.lat, lng: ev.lng } : null;
+                eventLocationStatus.textContent = pendingEventLatLng
+                    ? `Location set (${ev.lat.toFixed(4)}, ${ev.lng.toFixed(4)})` : '';
+                addEventBtn.textContent = 'Update Event';
+                eventNameInput.focus();
+                renderEventsLog();
+            };
+
+            const deleteEvent = async (id) => {
+                if (!confirm("Delete this event? Entries already tagged with it keep showing its name, but it won't be selectable anymore.")) return;
+                eventEntries = eventEntries.filter((e) => e.id !== id);
+                saveJSON(STORAGE_KEYS.events, eventEntries);
+                markLocallyDeleted('events', id);
+                if (editingEventId === id) cancelEventEdit();
+                renderEventsLog();
+                refreshEventSelects();
+                if (hasSyncedBefore() && confirm('Also remove this event from the server?')) {
+                    const success = await deleteSyncedRecord('events', id);
+                    if (success) clearLocallyDeleted('events', id);
+                }
+            };
+
+            const renderEventsLog = () => {
+                eventLog.innerHTML = '';
+                if (!eventEntries.length) {
+                    addLogLine(eventLog, 'No events yet.');
+                    return;
+                }
+                eventEntries.slice().sort((a, b) => b.startDate.localeCompare(a.startDate)).forEach((ev) => {
+                    const row = document.createElement('div');
+                    row.className = ev.id === editingEventId
+                        ? 'mb-2 pb-2 border-b border-blue-200 bg-blue-50 -mx-1 px-1 rounded'
+                        : 'mb-2 pb-2 border-b border-gray-200';
+
+                    const textLines = document.createElement('div');
+                    row.appendChild(textLines);
+                    addLogLine(textLines, ev.name || '(untitled event)');
+                    const dateLabel = ev.startDate === ev.endDate ? ev.startDate : `${ev.startDate} – ${ev.endDate}`;
+                    addLogLine(textLines, dateLabel);
+                    if (ev.type) addLogLine(textLines, `Type: ${ev.type}`);
+                    if (ev.address) addLogLine(textLines, `Location: ${ev.address}`);
+                    if (ev.lat != null && ev.lng != null) {
+                        addLogLine(textLines, `Map: ${ev.lat.toFixed(5)}, ${ev.lng.toFixed(5)}`,
+                            `https://www.openstreetmap.org/?mlat=${ev.lat}&mlon=${ev.lng}#map=16/${ev.lat}/${ev.lng}`);
+                    }
+
+                    const actions = document.createElement('div');
+                    actions.className = 'mt-1 flex gap-3';
+                    const editBtn = document.createElement('button');
+                    editBtn.type = 'button';
+                    editBtn.textContent = 'Edit';
+                    editBtn.className = 'text-xs text-blue-600 hover:text-blue-800';
+                    editBtn.addEventListener('click', () => startEditEvent(ev.id));
+                    const shareBtn = document.createElement('button');
+                    shareBtn.type = 'button';
+                    shareBtn.textContent = 'Share';
+                    shareBtn.className = 'text-xs text-gray-600 hover:text-gray-800';
+                    shareBtn.addEventListener('click', () => openShareModal('events', ev.id));
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.type = 'button';
+                    deleteBtn.textContent = 'Delete';
+                    deleteBtn.className = 'text-xs text-red-600 hover:text-red-800';
+                    deleteBtn.addEventListener('click', () => deleteEvent(ev.id));
+                    actions.append(editBtn, shareBtn, deleteBtn);
+                    row.appendChild(actions);
+
+                    eventLog.appendChild(row);
+                });
+            };
+
+            const addEvent = () => {
+                const name = eventNameInput.value.trim();
+                const startDate = eventStartDateInput.value;
+                if (!name || !startDate) {
+                    showToast('Give the event a name and a start date.');
+                    return false;
+                }
+                const endDate = (eventEndDateInput.value && eventEndDateInput.value >= startDate) ? eventEndDateInput.value : startDate;
+                const fields = {
+                    name,
+                    type: eventTypeInput.value.trim(),
+                    startDate,
+                    endDate,
+                    address: eventAddressInput.value.trim(),
+                    lat: pendingEventLatLng ? pendingEventLatLng.lat : null,
+                    lng: pendingEventLatLng ? pendingEventLatLng.lng : null,
+                };
+
+                if (editingEventId) {
+                    const idx = eventEntries.findIndex((e) => e.id === editingEventId);
+                    if (idx !== -1) eventEntries[idx] = { ...eventEntries[idx], ...fields };
+                    saveJSON(STORAGE_KEYS.events, eventEntries);
+                    showToast('Event updated.');
+                    cancelEventEdit();
+                } else {
+                    eventEntries.push({
+                        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                        ts: Date.now(),
+                        timestamp: new Date().toLocaleString(),
+                        ...fields,
+                    });
+                    saveJSON(STORAGE_KEYS.events, eventEntries);
+                    eventNameInput.value = '';
+                    eventTypeInput.value = '';
+                    eventStartDateInput.value = '';
+                    eventEndDateInput.value = '';
+                    eventAddressInput.value = '';
+                    pendingEventLatLng = null;
+                    eventLocationStatus.textContent = '';
+                    showToast('Event added.');
+                }
+                renderEventsLog();
+                renderActivityLog();
+                refreshEventSelects();
+                return true;
+            };
+
+            addEventBtn.addEventListener('click', addEvent);
+
+            // "Use Current Location" — same GPS + free reverse-geocoding (OpenStreetMap
+            // Nominatim) approach this app used previously on the old Feedback tab.
+            document.getElementById('event-use-location-btn').addEventListener('click', () => {
+                if (!navigator.geolocation) {
+                    eventLocationStatus.textContent = 'Geolocation is not supported by this browser.';
+                    return;
+                }
+                eventLocationStatus.textContent = 'Getting current location…';
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    const { latitude, longitude } = position.coords;
+                    pendingEventLatLng = { lat: latitude, lng: longitude };
+                    eventLocationStatus.textContent = `Location set (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
+                    try {
+                        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                        const data = await response.json();
+                        if (data.address && !eventAddressInput.value.trim()) {
+                            const city = data.address.city || data.address.town || data.address.village || '';
+                            const state = data.address.state || '';
+                            if (city || state) eventAddressInput.value = [city, state].filter(Boolean).join(', ');
+                        }
+                    } catch (err) {
+                        console.error('Reverse geocoding failed:', err);
+                    }
+                }, (error) => {
+                    eventLocationStatus.textContent = 'Could not get your location — check permissions.';
+                    console.error('Geolocation error:', error);
+                });
+            });
+
+            // "Pick on Map" — Leaflet + OpenStreetMap tiles, loaded lazily (no API key,
+            // matching the free/no-key pattern already used for reverse geocoding).
+            let leafletLoadPromise = null;
+            const loadLeaflet = () => {
+                if (window.L) return Promise.resolve();
+                if (leafletLoadPromise) return leafletLoadPromise;
+                leafletLoadPromise = new Promise((resolve, reject) => {
+                    const link = document.createElement('link');
+                    link.rel = 'stylesheet';
+                    link.href = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css';
+                    document.head.appendChild(link);
+                    const script = document.createElement('script');
+                    script.src = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js';
+                    script.onload = () => resolve();
+                    script.onerror = () => reject(new Error('Failed to load map library'));
+                    document.head.appendChild(script);
+                });
+                return leafletLoadPromise;
+            };
+
+            const mapPickerModal = document.getElementById('map-picker-modal');
+            let mapPickerInstance = null;
+            let mapPickerMarker = null;
+            let mapPickerLatLng = null;
+
+            const closeMapPicker = () => mapPickerModal.classList.add('hidden');
+
+            document.getElementById('event-open-map-btn').addEventListener('click', async () => {
+                try {
+                    await loadLeaflet();
+                } catch (err) {
+                    showToast('Could not load the map — check your connection.');
+                    return;
+                }
+                mapPickerModal.classList.remove('hidden');
+                const startLat = pendingEventLatLng ? pendingEventLatLng.lat : 39.8283;
+                const startLng = pendingEventLatLng ? pendingEventLatLng.lng : -98.5795;
+                const startZoom = pendingEventLatLng ? 14 : 4;
+                // Leaflet needs the container visible (not display:none) before it can
+                // measure it, so initialize after the modal's own hidden class is removed.
+                requestAnimationFrame(() => {
+                    if (mapPickerInstance) { mapPickerInstance.remove(); mapPickerInstance = null; }
+                    mapPickerInstance = L.map('map-picker-container').setView([startLat, startLng], startZoom);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors',
+                        maxZoom: 19,
+                    }).addTo(mapPickerInstance);
+                    mapPickerMarker = L.marker([startLat, startLng], { draggable: true }).addTo(mapPickerInstance);
+                    mapPickerLatLng = { lat: startLat, lng: startLng };
+                    mapPickerMarker.on('dragend', () => {
+                        const pos = mapPickerMarker.getLatLng();
+                        mapPickerLatLng = { lat: pos.lat, lng: pos.lng };
+                    });
+                    mapPickerInstance.on('click', (e) => {
+                        mapPickerMarker.setLatLng(e.latlng);
+                        mapPickerLatLng = { lat: e.latlng.lat, lng: e.latlng.lng };
+                    });
+                    mapPickerInstance.invalidateSize();
+                    setTimeout(() => { if (mapPickerInstance) mapPickerInstance.invalidateSize(); }, 150);
+                });
+            });
+
+            document.getElementById('map-picker-close-btn').addEventListener('click', closeMapPicker);
+
+            document.getElementById('map-picker-confirm-btn').addEventListener('click', async () => {
+                if (!mapPickerLatLng) { closeMapPicker(); return; }
+                pendingEventLatLng = { ...mapPickerLatLng };
+                eventLocationStatus.textContent = `Location set (${pendingEventLatLng.lat.toFixed(4)}, ${pendingEventLatLng.lng.toFixed(4)})`;
+                closeMapPicker();
+                if (!eventAddressInput.value.trim()) {
+                    try {
+                        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pendingEventLatLng.lat}&lon=${pendingEventLatLng.lng}`);
+                        const data = await response.json();
+                        if (data.address) {
+                            const city = data.address.city || data.address.town || data.address.village || '';
+                            const state = data.address.state || '';
+                            if (city || state) eventAddressInput.value = [city, state].filter(Boolean).join(', ');
+                        }
+                    } catch (err) {
+                        console.error('Reverse geocoding failed:', err);
+                    }
+                }
+            });
 
             renderActivityLog();
             renderQuestionLog();
@@ -4351,6 +4806,8 @@
             renderQuickCaptureLog();
             renderMeetingNotesLog();
             renderTodoList();
+            renderEventsLog();
+            refreshEventSelects();
 
             // --- Export / Clear Logic ---
             const toCSVValue = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
@@ -4416,7 +4873,7 @@
             });
 
             const hasAnyEntries = () => feedbackEntries.length || qaEntries.length || contactEntries.length
-                || quickCaptureEntries.length || meetingNoteEntries.length || todoEntries.length;
+                || quickCaptureEntries.length || meetingNoteEntries.length || todoEntries.length || eventEntries.length;
 
             document.getElementById('export-json-btn').addEventListener('click', () => {
                 if (!hasAnyEntries()) { showToast('Nothing to export yet.'); return; }
@@ -4427,7 +4884,15 @@
                     quickCaptures: quickCaptureEntries,
                     meetingNotes: meetingNoteEntries,
                     todos: todoEntries,
+                    events: eventEntries,
                 }, null, 2), 'application/json');
+            });
+
+            document.getElementById('export-events-csv-btn').addEventListener('click', () => {
+                if (!eventEntries.length) { showToast('No events yet.'); return; }
+                const headers = ['Name', 'Type', 'Start Date', 'End Date', 'Address', 'Latitude', 'Longitude'];
+                const rows = eventEntries.map((e) => [e.name, e.type, e.startDate, e.endDate, e.address, e.lat, e.lng].map(toCSVValue).join(','));
+                downloadFile(`events-${Date.now()}.csv`, [headers.join(','), ...rows].join('\n'), 'text/csv');
             });
 
             let fflateLoadPromise = null;
@@ -4516,12 +4981,16 @@
                 }
                 todoEntries = [];
                 if (editingTodoId) cancelTodoEdit();
+                eventEntries = [];
+                if (editingEventId) cancelEventEdit();
+                pendingEventLatLng = null;
                 saveJSON(STORAGE_KEYS.feedback, feedbackEntries);
                 saveJSON(STORAGE_KEYS.qa, qaEntries);
                 saveJSON(STORAGE_KEYS.contacts, contactEntries);
                 saveJSON(STORAGE_KEYS.quickCaptures, quickCaptureEntries);
                 saveJSON(STORAGE_KEYS.meetingNotes, meetingNoteEntries);
                 saveJSON(STORAGE_KEYS.todos, todoEntries);
+                saveJSON(STORAGE_KEYS.events, eventEntries);
                 try {
                     await clearAttachmentStore();
                 } catch (err) {
@@ -4533,6 +5002,8 @@
                 renderQuickCaptureLog();
                 renderMeetingNotesLog();
                 renderTodoList();
+                renderEventsLog();
+                refreshEventSelects();
                 showToast('Logs cleared.');
 
                 if (alsoDeleteFromServer) {
@@ -4638,6 +5109,13 @@
                         discardMeetingDraft();
                     } else if (activeTab.id === 'tab8' && editingTodoId) {
                         cancelTodoEdit();
+                    } else if (activeTab.id === 'tab9') {
+                        if (editingEventId) {
+                            cancelEventEdit();
+                        } else {
+                            pendingEventLatLng = null;
+                            eventLocationStatus.textContent = '';
+                        }
                     }
                 }
             });

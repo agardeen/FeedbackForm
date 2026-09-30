@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- devices "this id was removed" instead of just silently no longer sending it.
 CREATE TABLE IF NOT EXISTS records (
   user_id TEXT NOT NULL,
-  type TEXT NOT NULL,        -- 'feedback' | 'qa' | 'contacts' | 'quickCaptures' | 'meetingNotes' | 'todos'
+  type TEXT NOT NULL,        -- 'feedback' | 'qa' | 'contacts' | 'quickCaptures' | 'meetingNotes' | 'todos' | 'events'
   id TEXT NOT NULL,
   data TEXT NOT NULL,        -- JSON-encoded entry
   updated_at INTEGER NOT NULL,

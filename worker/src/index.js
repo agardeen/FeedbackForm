@@ -23,8 +23,8 @@
  *
  * 3. Optional server sync (`/sync/*`) — lets the app back up its locally
  *    stored records (feedback, survey answers, contacts, quick captures,
- *    meeting notes, todos) and media (photos/audio/scans) to a D1 database
- *    and R2 bucket, so a device wipe or reinstall isn't a full data loss.
+ *    meeting notes, todos, events) and media (photos/audio/scans) to a D1
+ *    database and R2 bucket, so a device wipe or reinstall isn't a full loss.
  *    Sync is opt-in from the app; nothing here runs unless the frontend
  *    calls it. Every /sync/* route requires a valid `Authorization: Bearer
  *    <token>` from /auth/login, and every record/media row is scoped to the
@@ -118,7 +118,7 @@ Rules:
 // Record types the sync endpoints will accept. Kept in sync with the app's
 // STORAGE_KEYS in index.html — the Worker treats `data` as an opaque JSON
 // blob either way, this is just an allowlist against typos/abuse.
-const RECORD_TYPES = new Set(['feedback', 'qa', 'contacts', 'quickCaptures', 'meetingNotes', 'todos']);
+const RECORD_TYPES = new Set(['feedback', 'qa', 'contacts', 'quickCaptures', 'meetingNotes', 'todos', 'events']);
 
 function corsHeaders(origin, allowedOrigins) {
 	const allowOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
