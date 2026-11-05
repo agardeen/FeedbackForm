@@ -862,6 +862,7 @@
                             <option value="export-meeting-csv-btn">Export Meeting Notes CSV</option>
                             <option value="export-todo-csv-btn">Export Todos CSV</option>
                             <option value="export-events-csv-btn">Export Events CSV</option>
+                            <option value="export-xlsx-btn">Export All (Excel)</option>
                             <option value="export-json-btn">Export All (JSON)</option>
                             <option value="export-photos-zip-btn">Export Photos (ZIP)</option>
                         </select>
@@ -876,6 +877,7 @@
                         <button type="button" id="export-meeting-csv-btn">Export Meeting Notes CSV</button>
                         <button type="button" id="export-todo-csv-btn">Export Todos CSV</button>
                         <button type="button" id="export-events-csv-btn">Export Events CSV</button>
+                        <button type="button" id="export-xlsx-btn">Export All (Excel)</button>
                         <button type="button" id="export-json-btn">Export All (JSON)</button>
                         <button type="button" id="export-photos-zip-btn">Export Photos (ZIP)</button>
                     </div>
@@ -1100,6 +1102,11 @@
     <!-- Toast Notification -->
     <div id="toast-notification"></div>
 
+    <!-- In-house .xlsx writer (no third-party spreadsheet library); see xlsx-writer.js. -->
+    <script type="module">
+        import { downloadXlsx } from './xlsx-writer.js';
+        window.AltimateXlsx = { downloadXlsx };
+    </script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -5256,6 +5263,46 @@
                     todos: todoEntries,
                     events: eventEntries,
                 }, null, 2), 'application/json');
+            });
+
+            // One workbook, one sheet per log type (empty logs are left out).
+            document.getElementById('export-xlsx-btn').addEventListener('click', () => {
+                if (!hasAnyEntries()) { showToast('Nothing to export yet.'); return; }
+                if (!window.AltimateXlsx) { showToast('The Excel exporter is still loading. Try again in a moment.'); return; }
+                const tags = (e) => (e.tags || []).join('; ');
+                const attachments = (e) => (e.attachmentIds || []).length;
+                const segments = (segs) => (segs || []).map((s) => `[${s.start}–${s.end}] ${s.text}`).join(' | ');
+                const text = (header, width = 18) => ({ header, width });
+                const long = (header, width = 50) => ({ header, width, wrap: true });
+                const date = (header) => ({ header, width: 12, type: 'date' });
+                const number = (header, width = 10) => ({ header, width, type: 'number' });
+                const sheet = (name, columns, entries, row) => ({ name, columns, rows: entries.map(row) });
+                const sheets = [
+                    sheet('Feedback',
+                        [text('Timestamp'), text('User'), text('Email', 24), date('Date'), text('Person'), text('Company'), text('Subject', 24), text('Product'), text('Event'), text('Location'), long('Thoughts')],
+                        feedbackEntries, (e) => [e.timestamp, e.user, e.email, e.date, e.person, e.company, e.subject, e.product, e.event, e.location, e.thoughts]),
+                    sheet('Survey',
+                        [text('Timestamp'), text('Person'), text('Company'), text('Topic'), text('Product'), long('Question', 40), long('Answer')],
+                        qaEntries, (e) => [e.timestamp, e.person, e.company, e.topic, e.product, e.question, e.answer]),
+                    sheet('Contacts',
+                        [text('Timestamp'), text('Name', 22), text('Title'), text('Company', 22), text('Phone', 16), text('Mobile', 16), text('Email', 26), text('Email 2', 26), text('Tags'), text('Website', 24), long('Address', 30), text('Country', 12), long('Notes')],
+                        contactEntries, (e) => [e.timestamp, e.name, e.title, e.company, e.phone, e.mobile, e.email, e.email2, tags(e), e.website, e.address, e.country, e.notes]),
+                    sheet('Quick Captures',
+                        [text('Timestamp'), long('Text', 60), text('Tags'), number('Attachments', 12)],
+                        quickCaptureEntries, (e) => [e.timestamp, e.text, tags(e), attachments(e)]),
+                    sheet('Meeting Notes',
+                        [text('Timestamp'), text('Subject', 24), text('Person'), text('Company'), long('Meeting Prep', 40), long('Notes'), text('Tags'), long('Audio Transcript'), long('Audio Segments'), number('Attachments', 12)],
+                        meetingNoteEntries, (e) => [e.timestamp, e.subject, e.person, e.company, e.meetingPrep, e.notes, tags(e), e.audioTranscript, segments(e.audioSegments), attachments(e)]),
+                    sheet('To-dos',
+                        [text('Timestamp'), long('Task', 40), text('Person'), text('Company'), date('Due'), text('Tags'), text('Done', 8)],
+                        todoEntries, (e) => [e.timestamp, e.task, e.person, e.company, e.due, tags(e), e.done ? 'Yes' : 'No']),
+                    sheet('Events',
+                        [text('Name', 28), text('Type'), date('Start Date'), date('End Date'), long('Address', 34), text('Attendees'), number('Latitude', 11), number('Longitude', 11)],
+                        eventEntries, (e) => [e.name, e.type, e.startDate, e.endDate, e.address, e.attendees, e.lat, e.lng]),
+                ].filter((s) => s.rows.length);
+                const now = new Date();
+                const today = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, '0'), String(now.getDate()).padStart(2, '0')].join('-');
+                window.AltimateXlsx.downloadXlsx(`field-feedback-${today}.xlsx`, { sheets });
             });
 
             document.getElementById('export-events-csv-btn').addEventListener('click', () => {

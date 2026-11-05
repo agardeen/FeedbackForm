@@ -1,10 +1,11 @@
 // Bump this on every deploy that changes cached files so clients pick up the update.
-const CACHE_NAME = 'field-feedback-v3';
+const CACHE_NAME = 'field-feedback-v4';
 
 const APP_SHELL = [
     './',
     './index.html',
     './manifest.json',
+    './xlsx-writer.js',
     './icons/icon-192.png',
     './icons/icon-512.png',
     './icons/icon-maskable-512.png',
